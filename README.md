@@ -69,41 +69,6 @@ Think of it as **LeetCode + Chess.com** — you get the problem-solving challeng
 - **Admin Dashboard** — Manage problems, users, and settings
 - **LeetCode Sync** — Fetch full problem content from LeetCode API
 
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT (Browser)                         │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────┐  │
-│  │   Next.js App    │  │  Monaco Editor  │  │   Socket.IO    │  │
-│  │   (React 18)     │  │   (VS Code)     │  │   Client       │  │
-│  └────────┬────────┘  └────────┬────────┘  └───────┬────────┘  │
-└───────────┼────────────────────┼────────────────────┼───────────┘
-            │ REST API           │ REST API           │ WebSocket
-            ▼                    ▼                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     API SERVER (Express)                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │
-│  │   Auth    │  │ Battles  │  │ Problems │  │   Matchmaking  │  │
-│  │  Module   │  │  Module  │  │  Module  │  │     Module     │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬────────┘  │
-│       │              │              │                │           │
-│  ┌────┴──────────────┴──────────────┴────────────────┴────────┐ │
-│  │                    Prisma ORM                               │ │
-│  └────────────────────────┬───────────────────────────────────┘ │
-└───────────────────────────┼─────────────────────────────────────┘
-                            │
-            ┌───────────────┼───────────────┐
-            ▼               ▼               ▼
-     ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-     │  PostgreSQL  │ │    Redis    │ │  LeetCode   │
-     │   (Neon)     │ │  (Upstash)  │ │   GraphQL   │
-     └─────────────┘ └─────────────┘ └─────────────┘
-```
-
----
 
 ## 🚀 Getting Started
 
@@ -410,21 +375,3 @@ refactor: Code refactoring
 test:     Adding tests
 chore:    Build process / dependencies
 ```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-**Made with ❤️ by developers, for developers**
-
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com)
-
-</div>
-# cc-themcp
