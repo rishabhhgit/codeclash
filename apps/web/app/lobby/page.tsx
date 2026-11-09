@@ -15,8 +15,11 @@ import {
   Copy,
   Check,
   Share2,
+  Flame,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { getWsUrl, getClientAuthToken } from '@/lib/api';
+import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
 interface Battle {
   id: string;
@@ -159,25 +162,25 @@ export default function LobbyPage() {
         {/* Join by Unique Code or Link */}
         <div className="flex items-center gap-2 self-start md:self-auto">
           <div className="relative">
-            <Hash className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <Hash className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleJoinByCode('fighter')}
-              placeholder="Room code (e.g. DUEL-ABCD) or paste link"
-              className="pl-8 pr-3 py-2 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary w-72 transition-colors"
+              placeholder="Room code (e.g. DUEL-9X7B) or paste link"
+              className="pl-8 pr-3 py-2 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary w-72 transition-colors uppercase"
             />
           </div>
           <button
             onClick={() => handleJoinByCode('fighter')}
-            className="px-3.5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-semibold transition-all shadow-sm active:scale-[0.98]"
+            className="btn-radiant-primary px-4 py-2 text-primary-foreground rounded-xl text-xs font-semibold shadow-sm"
           >
             Join Battle
           </button>
           <button
             onClick={() => handleJoinByCode('spectator')}
-            className="px-3 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl text-xs font-medium transition-colors active:scale-[0.98]"
+            className="px-3 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl text-xs font-medium transition-colors duration-150 active:scale-[0.96]"
           >
             Spectate
           </button>
@@ -195,31 +198,31 @@ export default function LobbyPage() {
             </div>
             <button
               onClick={fetchBattles}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors duration-150 active:scale-[0.96]"
               title="Refresh"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`}
+                className={`size-3.5 ${loading ? 'animate-spin' : ''}`}
               />
             </button>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="size-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search rooms..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 bg-muted border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 w-40 transition-colors"
+                className="pl-8 pr-3 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 w-44 transition-colors"
               />
             </div>
             <Link
               href="/battle/create"
-              className="text-xs text-foreground font-medium flex items-center gap-1 px-3 py-1.5 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors"
+              className="text-xs text-foreground font-medium flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-muted border border-border rounded-lg transition-colors duration-150 active:scale-[0.96]"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="size-3.5" />
               Create room
             </Link>
           </div>
@@ -227,34 +230,34 @@ export default function LobbyPage() {
 
         {loading ? (
           <div className="py-20 text-center">
-            <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-3 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              Loading active rooms...
+            <RefreshCw className="size-5 animate-spin mx-auto mb-3 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground font-mono">
+              Connecting to live arena rooms...
             </p>
           </div>
         ) : filteredBattles.length === 0 ? (
-          <div className="py-20 text-center border border-dashed border-border rounded-xl">
-            <Swords className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-            <p className="text-sm font-medium text-foreground mb-1">
-              No active rooms
+          <SpotlightCard className="py-16 text-center border-dashed">
+            <Swords className="size-8 mx-auto mb-3 text-muted-foreground opacity-40" />
+            <p className="text-sm font-semibold text-foreground mb-1">
+              No active rooms waiting
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              Be the first to create a battle room.
+              Host the first match and share the link with friends.
             </p>
             <Link
               href="/battle/create"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-foreground hover:opacity-90 text-background text-xs font-medium rounded-lg transition-opacity"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-foreground hover:opacity-90 text-background text-xs font-semibold rounded-xl transition-all duration-150 active:scale-[0.96] shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" />
-              Create Battle
+              <Plus className="size-3.5" />
+              Create Battle Room
             </Link>
-          </div>
+          </SpotlightCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredBattles.map((b) => (
-              <div
+              <SpotlightCard
                 key={b.code}
-                className="p-5 rounded-2xl border border-border bg-card hover:border-primary/40 transition-all space-y-4 shadow-sm"
+                className="p-5 space-y-4 group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -297,7 +300,7 @@ export default function LobbyPage() {
                     </span>
                     {b.spectatorCount != null && b.spectatorCount > 0 && (
                       <span className="flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5 text-blue-400" />
+                        <Eye className="size-3.5 text-blue-400" />
                         {b.spectatorCount} Spectating
                       </span>
                     )}
@@ -307,20 +310,20 @@ export default function LobbyPage() {
                 <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
                   <Link
                     href={`/battle/${b.code}?role=spectator`}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1.5 active:scale-[0.98]"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 flex items-center gap-1.5 active:scale-[0.96]"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="size-3.5" />
                     Spectate
                   </Link>
                   <Link
                     href={`/battle/${b.code}?role=fighter`}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm flex items-center gap-1.5 active:scale-[0.98]"
+                    className="btn-radiant-primary px-4 py-1.5 rounded-lg text-xs font-semibold text-primary-foreground shadow-sm flex items-center gap-1.5"
                   >
-                    <Swords className="w-3.5 h-3.5" />
+                    <Swords className="size-3.5" />
                     Enter Duel
                   </Link>
                 </div>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         )}

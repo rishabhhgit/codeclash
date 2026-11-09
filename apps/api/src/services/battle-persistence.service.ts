@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { LiveBattleState } from '../socket';
 
-const DATA_DIR = path.join(process.cwd(), '.data', 'battles');
+const rootDir = process.cwd().endsWith('apps/api') ? path.join(process.cwd(), '..', '..') : process.cwd();
+const DATA_DIR = path.join(rootDir, '.data', 'battles');
 
 // Ensure storage directory exists
 if (!fs.existsSync(DATA_DIR)) {

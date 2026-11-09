@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Swords, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
 import { getClientAuthToken, getApiUrl } from '../../../lib/api';
+import { SpotlightCard } from '../../../components/ui/SpotlightCard';
 
 const TOPICS = [
   'arrays', 'strings', 'linked_lists', 'stacks', 'queues', 'heaps',
@@ -181,8 +182,8 @@ export default function CreateBattlePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Battle Mode */}
-        <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-          <label className="block text-xs font-medium text-foreground">Battle Mode</label>
+        <SpotlightCard className="p-5 space-y-3">
+          <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Battle Mode</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {MODES.map((mode) => {
               const isSelected = form.mode === mode.value || (mode.value === 'battle_royale' && form.mode === 'royal');
@@ -195,10 +196,10 @@ export default function CreateBattlePage() {
                     const newMax = isBR ? (form.maxPlayers === 2 ? 10 : form.maxPlayers) : form.maxPlayers;
                     setForm({ ...form, mode: mode.value, maxPlayers: newMax });
                   }}
-                  className={`p-3 border rounded-xl text-left transition-colors duration-150 active:scale-[0.99] ${
+                  className={`p-3.5 border rounded-xl text-left transition-all duration-150 active:scale-[0.96] ${
                     isSelected
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
-                      : 'border-border hover:border-foreground/30 bg-background'
+                      : 'border-border/60 hover:border-foreground/30 bg-background/60'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -228,7 +229,7 @@ export default function CreateBattlePage() {
               </ul>
             </div>
           )}
-        </div>
+        </SpotlightCard>
 
         {/* Player Count & Difficulty */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -348,7 +349,7 @@ export default function CreateBattlePage() {
         <button
           type="submit"
           disabled={loading || form.topics.length === 0}
-          className="w-full py-3 bg-foreground hover:opacity-90 text-background rounded-xl text-xs sm:text-sm font-semibold disabled:opacity-50 transition-colors duration-150 active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
+          className="btn-radiant-primary w-full py-4 text-primary-foreground rounded-xl text-xs sm:text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
         >
           <Swords className="size-4" />
           {loading ? 'Deploying Arena...' : 'Launch Battle Arena'}

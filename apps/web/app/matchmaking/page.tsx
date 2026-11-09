@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Zap, Trophy, Gamepad2, Swords, Shield, Radar, CheckCircle2, X, Flame } from 'lucide-react';
 import { getWsUrl } from '../../lib/api';
+import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
 function getClientAuthToken(): string {
   if (typeof window === 'undefined') return 'guest-token';
@@ -267,22 +268,22 @@ export default function MatchmakingPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
+          <SpotlightCard className="p-6 sm:p-8 space-y-6">
             {/* Mode Selection */}
             <div className="space-y-2.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Game Mode</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Select Game Mode</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setMode('quick')}
-                  className={`p-4 rounded-xl border text-left transition-all ${
+                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
                     mode === 'quick'
-                      ? 'border-primary bg-primary/10 shadow-sm'
+                      ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-2.5">
-                    <Zap className="w-4 h-4" />
+                  <div className="size-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-2.5">
+                    <Zap className="size-4" />
                   </div>
                   <div className="text-sm font-bold text-foreground">Quick Match</div>
                   <div className="text-xs text-muted-foreground mt-0.5">Fastest matching across active fighters</div>
@@ -291,30 +292,30 @@ export default function MatchmakingPage() {
                 <button
                   type="button"
                   onClick={() => setMode('ranked')}
-                  className={`p-4 rounded-xl border text-left transition-all ${
+                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
                     mode === 'ranked'
-                      ? 'border-primary bg-primary/10 shadow-sm'
+                      ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2.5">
-                    <Trophy className="w-4 h-4" />
+                  <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2.5">
+                    <Trophy className="size-4" />
                   </div>
                   <div className="text-sm font-bold text-foreground">Ranked Duel</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Strict ELO rating skill-bracket combat</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Strict Elo rating skill-bracket combat</div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setMode('casual')}
-                  className={`p-4 rounded-xl border text-left transition-all ${
+                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
                     mode === 'casual'
-                      ? 'border-primary bg-primary/10 shadow-sm'
+                      ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-2.5">
-                    <Gamepad2 className="w-4 h-4" />
+                  <div className="size-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-2.5">
+                    <Gamepad2 className="size-4" />
                   </div>
                   <div className="text-sm font-bold text-foreground">Casual Practice</div>
                   <div className="text-xs text-muted-foreground mt-0.5">No rating impact, unranked sparring</div>
@@ -324,14 +325,14 @@ export default function MatchmakingPage() {
 
             {/* Difficulty Filter */}
             <div className="space-y-2.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Difficulty</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Target Difficulty</label>
               <div className="grid grid-cols-4 gap-2">
                 {(['any', 'easy', 'medium', 'hard'] as const).map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setDifficulty(d)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all ${
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all duration-150 active:scale-[0.96] ${
                       difficulty === d
                         ? d === 'easy'
                           ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400'
@@ -352,12 +353,12 @@ export default function MatchmakingPage() {
             {/* Preferred Topics */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Topic Filters (Optional)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Topic Filters (Optional)</label>
                 {selectedTopics.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSelectedTopics([])}
-                    className="text-[11px] text-muted-foreground hover:text-foreground"
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Clear selection ({selectedTopics.length})
                   </button>
@@ -369,7 +370,7 @@ export default function MatchmakingPage() {
                     key={t}
                     type="button"
                     onClick={() => toggleTopic(t)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 active:scale-[0.96] ${
                       selectedTopics.includes(t)
                         ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                         : 'bg-secondary/50 hover:bg-secondary text-muted-foreground border border-border/40'
@@ -391,37 +392,37 @@ export default function MatchmakingPage() {
             <button
               type="button"
               onClick={handleStartMatchmaking}
-              className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm uppercase tracking-wider hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
+              className="btn-radiant-primary w-full py-4 rounded-xl text-primary-foreground font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2"
             >
-              <Swords className="w-4 h-4" />
-              Find Opponent
+              <Swords className="size-4" />
+              <span>Find Opponent</span>
             </button>
-          </div>
+          </SpotlightCard>
         )}
 
         {/* Feature Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
-          <div className="p-3 rounded-xl border border-border/40 bg-card/40 flex items-start gap-2.5">
-            <Flame className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
+          <SpotlightCard className="p-3.5 flex items-start gap-2.5">
+            <Flame className="size-4 text-orange-400 mt-0.5 shrink-0" />
             <div>
               <div className="font-semibold text-foreground">Submission Accuracy Penalties</div>
               <div>Non-accepted submissions deduct 25 accuracy stamina</div>
             </div>
-          </div>
-          <div className="p-3 rounded-xl border border-border/40 bg-card/40 flex items-start gap-2.5">
-            <Trophy className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+          </SpotlightCard>
+          <SpotlightCard className="p-3.5 flex items-start gap-2.5">
+            <Trophy className="size-4 text-amber-400 mt-0.5 shrink-0" />
             <div>
-              <div className="font-semibold text-foreground">True Skill ELO</div>
+              <div className="font-semibold text-foreground">True Skill Elo</div>
               <div>Authoritative server rating updates upon accepted solutions</div>
             </div>
-          </div>
-          <div className="p-3 rounded-xl border border-border/40 bg-card/40 flex items-start gap-2.5">
-            <Zap className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+          </SpotlightCard>
+          <SpotlightCard className="p-3.5 flex items-start gap-2.5">
+            <Zap className="size-4 text-blue-400 mt-0.5 shrink-0" />
             <div>
               <div className="font-semibold text-foreground">Code Privacy Shield</div>
               <div>Opponent source is hidden until match concludes</div>
             </div>
-          </div>
+          </SpotlightCard>
         </div>
       </div>
     </div>
