@@ -22,6 +22,32 @@ import {
 } from 'lucide-react';
 import { getApiUrl } from '../lib/api';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14, filter: 'blur(4px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      type: 'spring',
+      stiffness: 380,
+      damping: 26,
+    },
+  },
+};
 
 interface OpenBattle {
   id: string;
@@ -110,59 +136,92 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
             {/* Left: Value Proposition and Intent */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="space-y-3">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="lg:col-span-7 space-y-6"
+            >
+              <motion.div variants={itemVariants} className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/80 bg-muted/40 text-[11px] font-mono text-muted-foreground shadow-sm">
+                  <span className="relative flex size-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                  </span>
+                  <span>Matchmaking Engine Active</span>
+                  <span className="text-border">&bull;</span>
+                  <span className="text-primary font-semibold">&lt; 25ms Sync</span>
+                </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
                   Multiplayer coding duels.
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
                   Two coders get the same problem. Clocks start together. First to pass all hidden benchmarks wins the match and claims Elo rating points.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Quick Play Matchmaking Grid (Lichess style) */}
-              <div className="space-y-3 pt-2">
+              <motion.div variants={itemVariants} className="space-y-3 pt-2">
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">
                   Quick Pairing
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <Link
-                    href="/matchmaking?mode=quick&difficulty=easy"
-                    className="p-3.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-muted/40 transition-colors active:scale-[0.98] group"
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                   >
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-bold text-foreground">5 min Blitz</span>
-                      <Zap className="size-3.5 text-amber-500" />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">Easy / Medium warmup</div>
-                  </Link>
+                    <Link
+                      href="/matchmaking?mode=quick&difficulty=easy"
+                      className="block p-3.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-muted/40 transition-colors group h-full"
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-bold text-foreground">5 min Blitz</span>
+                        <Zap className="size-3.5 text-amber-500" />
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Easy / Medium warmup</div>
+                    </Link>
+                  </motion.div>
 
-                  <Link
-                    href="/matchmaking?mode=ranked&difficulty=medium"
-                    className="p-3.5 rounded-xl border border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10 transition-colors active:scale-[0.98] group"
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                   >
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-bold text-primary">10 min Ranked</span>
-                      <Swords className="size-3.5 text-primary" />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">Standard Elo duel</div>
-                  </Link>
+                    <Link
+                      href="/matchmaking?mode=ranked&difficulty=medium"
+                      className="block p-3.5 rounded-xl border border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10 transition-colors group h-full"
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-bold text-primary">10 min Ranked</span>
+                        <Swords className="size-3.5 text-primary" />
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Standard Elo duel</div>
+                    </Link>
+                  </motion.div>
 
-                  <Link
-                    href="/battle/create?mode=battle_royale"
-                    className="p-3.5 rounded-xl border border-border bg-card hover:border-orange-500/50 hover:bg-muted/40 transition-colors active:scale-[0.98] group col-span-2 sm:col-span-1"
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                    className="col-span-2 sm:col-span-1"
                   >
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-bold text-foreground">Knockout</span>
-                      <Flame className="size-3.5 text-orange-500" />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">Up to 10 players</div>
-                  </Link>
+                    <Link
+                      href="/battle/create?mode=battle_royale"
+                      className="block p-3.5 rounded-xl border border-border bg-card hover:border-orange-500/50 hover:bg-muted/40 transition-colors group h-full"
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-bold text-foreground">Knockout</span>
+                        <Flame className="size-3.5 text-orange-500" />
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Up to 10 players</div>
+                    </Link>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Inline Room Code Input */}
-              <div className="pt-1">
+              <motion.div variants={itemVariants} className="pt-1">
                 <form onSubmit={handleJoinByCode} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-lg">
                   <div className="relative flex-1">
                     <Hash className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -192,23 +251,56 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={handleCreateDemo}
-                    className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
+                    className="inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Copy className="size-3 text-primary" />
-                    <span>{copiedDemo ? 'Demo link copied!' : 'Generate invite link'}</span>
+                    <AnimatePresence mode="wait" initial={false}>
+                      {copiedDemo ? (
+                        <motion.span
+                          key="check"
+                          initial={{ opacity: 0, scale: 0.8, filter: 'blur(2px)' }}
+                          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, scale: 0.8, filter: 'blur(2px)' }}
+                          transition={{ duration: 0.15 }}
+                          className="inline-flex items-center gap-1 text-emerald-400 font-medium"
+                        >
+                          <Check className="size-3 text-emerald-400" />
+                          <span>Invite link copied</span>
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="copy"
+                          initial={{ opacity: 0, scale: 0.8, filter: 'blur(2px)' }}
+                          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, scale: 0.8, filter: 'blur(2px)' }}
+                          transition={{ duration: 0.15 }}
+                          className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                        >
+                          <Copy className="size-3 text-primary" />
+                          <span>Generate invite link</span>
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </button>
                   <span>&middot;</span>
                   <span>Instant drop-in, no sign-up required</span>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Right: Live Telemetry & Open Arenas */}
-            <div className="lg:col-span-5 space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.45, delay: 0.15 }}
+              className="lg:col-span-5 space-y-4"
+            >
               <SpotlightCard className="p-5 border-border/80 bg-card/70 shadow-sm" spotlightColor="rgba(59, 130, 246, 0.12)">
                 <div className="flex items-center justify-between pb-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                    <span className="relative flex size-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full size-2.5 bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                    </span>
                     <span className="text-xs font-bold text-foreground">Live Arena Rooms</span>
                   </div>
                   <Link href="/lobby" className="text-[11px] text-primary hover:underline font-medium">
@@ -238,39 +330,46 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {lobbyData.items.slice(0, 3).map((room) => (
-                      <div
-                        key={room.code}
-                        className="p-3 rounded-xl border border-border bg-background flex items-center justify-between text-xs"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2 font-mono">
-                            <span className="font-bold text-foreground">{room.code}</span>
-                            <span className="text-[10px] text-muted-foreground uppercase px-1.5 py-0.2 rounded bg-muted">
-                              {room.difficulty}
-                            </span>
+                    <AnimatePresence mode="popLayout">
+                      {lobbyData.items.slice(0, 3).map((room, idx) => (
+                        <motion.div
+                          key={room.code}
+                          initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
+                          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, scale: 0.95, filter: 'blur(3px)' }}
+                          transition={{ delay: idx * 0.05, duration: 0.25 }}
+                          whileHover={{ scale: 1.01 }}
+                          className="p-3 rounded-xl border border-border bg-background/90 flex items-center justify-between text-xs"
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 font-mono">
+                              <span className="font-bold text-foreground">{room.code}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase px-1.5 py-0.2 rounded bg-muted">
+                                {room.difficulty}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground truncate max-w-[180px]">
+                              {room.title || 'Two Sum Duel'}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-muted-foreground truncate max-w-[180px]">
-                            {room.title || 'Two Sum Duel'}
-                          </div>
-                        </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <Link
-                            href={`/battle/${room.code}?role=fighter`}
-                            className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground font-semibold text-[11px] hover:bg-primary/90 transition-colors"
-                          >
-                            Fight
-                          </Link>
-                          <Link
-                            href={`/battle/${room.code}?role=spectator`}
-                            className="px-2 py-1 rounded-md bg-muted text-foreground text-[11px] hover:bg-muted/80 transition-colors"
-                          >
-                            Watch
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              href={`/battle/${room.code}?role=fighter`}
+                              className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground font-semibold text-[11px] hover:bg-primary/90 transition-colors active:scale-[0.96]"
+                            >
+                              Fight
+                            </Link>
+                            <Link
+                              href={`/battle/${room.code}?role=spectator`}
+                              className="px-2 py-1 rounded-md bg-muted text-foreground text-[11px] hover:bg-muted/80 transition-colors active:scale-[0.96]"
+                            >
+                              Watch
+                            </Link>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
 
@@ -290,7 +389,7 @@ export default function Home() {
                   </div>
                 </div>
               </SpotlightCard>
-            </div>
+            </motion.div>
 
           </div>
         </div>
@@ -317,95 +416,116 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link
-              href="/problems?category=top75"
-              className="group block"
+            <motion.div
+              whileHover={{ y: -4, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="h-full"
             >
-              <SpotlightCard
-                className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors"
-                spotlightColor="rgba(16, 185, 129, 0.12)"
+              <Link
+                href="/problems?category=top75"
+                className="group block h-full"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
-                      Top 75 Core
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-semibold">
-                      Essential
+                <SpotlightCard
+                  className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors"
+                  spotlightColor="rgba(16, 185, 129, 0.12)"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
+                        Top 75 Core
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-semibold">
+                        Essential
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The foundational 75 algorithmic patterns covering arrays, two pointers, sliding windows, and trees.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
+                    <span>75 Problems</span>
+                    <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                      Start Track &rarr;
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    The foundational 75 algorithmic patterns covering arrays, two pointers, sliding windows, and trees.
-                  </p>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
-                  <span>75 Problems</span>
-                  <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    Start Track &rarr;
-                  </span>
-                </div>
-              </SpotlightCard>
-            </Link>
+                </SpotlightCard>
+              </Link>
+            </motion.div>
 
-            <Link
-              href="/problems?category=core150"
-              className="group block"
+            <motion.div
+              whileHover={{ y: -4, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="h-full"
             >
-              <SpotlightCard
-                className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-blue-500/40 transition-colors"
-                spotlightColor="rgba(59, 130, 246, 0.12)"
+              <Link
+                href="/problems?category=core150"
+                className="group block h-full"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
-                      Core 150 Syllabus
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">
-                      Comprehensive
+                <SpotlightCard
+                  className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-blue-500/40 transition-colors"
+                  spotlightColor="rgba(59, 130, 246, 0.12)"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
+                        Core 150 Syllabus
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">
+                        Comprehensive
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Full interview syllabus including binary search trees, heaps, graphs, topological sort, and DP.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
+                    <span>150 Problems</span>
+                    <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                      Start Track &rarr;
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Full interview syllabus including binary search trees, heaps, graphs, topological sort, and DP.
-                  </p>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
-                  <span>150 Problems</span>
-                  <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    Start Track &rarr;
-                  </span>
-                </div>
-              </SpotlightCard>
-            </Link>
+                </SpotlightCard>
+              </Link>
+            </motion.div>
 
-            <Link
-              href="/problems?category=mastery250"
-              className="group block sm:col-span-2 lg:col-span-1"
+            <motion.div
+              whileHover={{ y: -4, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="h-full sm:col-span-2 lg:col-span-1"
             >
-              <SpotlightCard
-                className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-colors"
-                spotlightColor="rgba(168, 85, 247, 0.12)"
+              <Link
+                href="/problems?category=mastery250"
+                className="group block h-full"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
-                      Mastery 250
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
-                      Advanced
+                <SpotlightCard
+                  className="p-5 h-full flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-colors"
+                  spotlightColor="rgba(168, 85, 247, 0.12)"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
+                        Mastery 250
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold">
+                        Advanced
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Senior engineering level algorithms: monotonic queues, segment trees, and multi-dimensional state DP.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
+                    <span>250 Problems</span>
+                    <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                      Start Track &rarr;
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Senior engineering level algorithms: monotonic queues, segment trees, and multi-dimensional state DP.
-                  </p>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-2 border-t border-border">
-                  <span>250 Problems</span>
-                  <span className="text-primary font-medium group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    Start Track &rarr;
-                  </span>
-                </div>
-              </SpotlightCard>
-            </Link>
+                </SpotlightCard>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -423,35 +543,50 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SpotlightCard className="p-5 border-border/80 bg-card/60" spotlightColor="rgba(59, 130, 246, 0.1)">
-              <div className="space-y-2">
-                <div className="text-xs font-mono font-bold text-primary uppercase">01. Instant Judgement</div>
-                <h3 className="text-sm font-bold text-foreground">Authoritative Server Execution</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Code runs on isolated native runners with Clang++ and Python 3. The server tests solutions against 50 hidden test cases to prevent hardcoded outputs.
-                </p>
-              </div>
-            </SpotlightCard>
+            <motion.div
+              whileHover={{ y: -3 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <SpotlightCard className="p-5 border-border/80 bg-card/60 h-full" spotlightColor="rgba(59, 130, 246, 0.1)">
+                <div className="space-y-2">
+                  <div className="text-xs font-mono font-bold text-primary uppercase">01. Instant Judgement</div>
+                  <h3 className="text-sm font-bold text-foreground">Authoritative Server Execution</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Code runs on isolated native runners with Clang++ and Python 3. The server tests solutions against 50 hidden test cases to prevent hardcoded outputs.
+                  </p>
+                </div>
+              </SpotlightCard>
+            </motion.div>
 
-            <SpotlightCard className="p-5 border-border/80 bg-card/60" spotlightColor="rgba(245, 158, 11, 0.1)">
-              <div className="space-y-2">
-                <div className="text-xs font-mono font-bold text-amber-500 uppercase">02. Precision Stamina</div>
-                <h3 className="text-sm font-bold text-foreground">Anti-Spray Penalties</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Blind brute-force submissions are punished. Each wrong answer or runtime error costs 25 stamina points. Think through edge cases before clicking submit.
-                </p>
-              </div>
-            </SpotlightCard>
+            <motion.div
+              whileHover={{ y: -3 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <SpotlightCard className="p-5 border-border/80 bg-card/60 h-full" spotlightColor="rgba(245, 158, 11, 0.1)">
+                <div className="space-y-2">
+                  <div className="text-xs font-mono font-bold text-amber-500 uppercase">02. Precision Stamina</div>
+                  <h3 className="text-sm font-bold text-foreground">Anti-Spray Penalties</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Blind brute-force submissions are punished. Each wrong answer or runtime error costs 25 stamina points. Think through edge cases before clicking submit.
+                  </p>
+                </div>
+              </SpotlightCard>
+            </motion.div>
 
-            <SpotlightCard className="p-5 border-border/80 bg-card/60" spotlightColor="rgba(168, 85, 247, 0.1)">
-              <div className="space-y-2">
-                <div className="text-xs font-mono font-bold text-purple-400 uppercase">03. Code Shielding</div>
-                <h3 className="text-sm font-bold text-foreground">Encrypted During Play</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  You see your opponent's typing speed and test progress, but their actual solution code stays encrypted until the match ends to prevent copying.
-                </p>
-              </div>
-            </SpotlightCard>
+            <motion.div
+              whileHover={{ y: -3 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <SpotlightCard className="p-5 border-border/80 bg-card/60 h-full" spotlightColor="rgba(168, 85, 247, 0.1)">
+                <div className="space-y-2">
+                  <div className="text-xs font-mono font-bold text-purple-400 uppercase">03. Code Shielding</div>
+                  <h3 className="text-sm font-bold text-foreground">Encrypted During Play</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    You see your opponent's typing speed and test progress, but their actual solution code stays encrypted until the match ends to prevent copying.
+                  </p>
+                </div>
+              </SpotlightCard>
+            </motion.div>
           </div>
         </div>
       </section>
