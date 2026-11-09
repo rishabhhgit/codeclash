@@ -194,7 +194,7 @@ export default function LiveLeaderboardPage() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={`size-1.5 rounded-full ${
                 socketConnected ? 'bg-emerald-500' : 'bg-muted-foreground/40'
               }`}
             />
@@ -207,7 +207,7 @@ export default function LiveLeaderboardPage() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="p-4 rounded-xl bg-card border border-border">
+        <div className="p-4 rounded-xl bg-card border border-border card-elevated motion-enter">
           <div className="text-xs text-muted-foreground font-medium mb-1">Ranked coders</div>
           <div className="text-2xl font-semibold text-foreground tabular-nums">
             {stats.totalCoders.toLocaleString()}
@@ -217,31 +217,31 @@ export default function LiveLeaderboardPage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border">
+        <div className="p-4 rounded-xl bg-card border border-border card-elevated motion-enter">
           <div className="text-xs text-muted-foreground font-medium mb-1">Active in duels</div>
           <div className="text-2xl font-semibold text-foreground tabular-nums">
             {stats.activeInDuels}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">
-            <Link href="/lobby" className="hover:text-foreground transition-colors underline underline-offset-2">
+            <Link href="/lobby" className="hover:text-foreground transition-colors duration-150 underline underline-offset-2">
               Browse Arena Lobby &rarr;
             </Link>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border">
+        <div className="p-4 rounded-xl bg-card border border-border card-elevated motion-enter">
           <div className="text-xs text-muted-foreground font-medium mb-1">Active Assessments</div>
           <div className="text-2xl font-semibold text-foreground tabular-nums">
             {stats.inProctoredExams}
           </div>
           <div className="text-[11px] text-muted-foreground mt-1">
-            <Link href="/exam/demo-sync-session" className="hover:text-foreground transition-colors underline underline-offset-2">
+            <Link href="/exam/demo-sync-session" className="hover:text-foreground transition-colors duration-150 underline underline-offset-2">
               Assessment Monitor &rarr;
             </Link>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border">
+        <div className="p-4 rounded-xl bg-card border border-border card-elevated motion-enter">
           <div className="text-xs text-muted-foreground font-medium mb-1">Your status</div>
           <div className="text-2xl font-semibold text-emerald-500 tabular-nums">
             {currentUsername ? `#${leaderboard.findIndex(e => e.user.username === currentUsername) + 1 || '—'}` : 'Guest'}
@@ -254,9 +254,9 @@ export default function LiveLeaderboardPage() {
 
       {/* Activity Feed Bar */}
       {activityFeed.length > 0 && (
-        <div className="mb-6 px-3.5 py-2.5 rounded-lg bg-card/60 border border-border flex items-center gap-3 overflow-hidden text-xs">
+        <div className="mb-6 px-3.5 py-2.5 rounded-lg bg-card/60 border border-border flex items-center gap-3 overflow-hidden text-xs card-elevated motion-enter">
           <div className="flex items-center gap-1.5 text-muted-foreground font-mono text-[11px] shrink-0">
-            <Radio className="w-3 h-3 text-emerald-500" />
+            <Radio className="size-3 text-emerald-500" />
             Feed:
           </div>
           <div className="overflow-x-auto no-scrollbar whitespace-nowrap text-foreground flex items-center gap-4">
@@ -282,7 +282,7 @@ export default function LiveLeaderboardPage() {
         <div className="flex items-center gap-1 p-1 bg-muted/80 rounded-lg border border-border w-full sm:w-auto overflow-x-auto text-xs">
           <button
             onClick={() => setActiveTab('global')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
               activeTab === 'global'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -293,7 +293,7 @@ export default function LiveLeaderboardPage() {
 
           <button
             onClick={() => setActiveTab('live')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
               activeTab === 'live'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -304,7 +304,7 @@ export default function LiveLeaderboardPage() {
 
           <button
             onClick={() => setActiveTab('streaks')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
               activeTab === 'streaks'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -315,7 +315,7 @@ export default function LiveLeaderboardPage() {
 
           <button
             onClick={() => setActiveTab('core150')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
               activeTab === 'core150'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -326,7 +326,7 @@ export default function LiveLeaderboardPage() {
 
           <button
             onClick={() => setActiveTab('weekly')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
               activeTab === 'weekly'
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -337,19 +337,19 @@ export default function LiveLeaderboardPage() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search handle..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-card border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 transition-colors"
+            className="w-full bg-card border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 transition-colors duration-150"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm card-elevated motion-enter">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
@@ -367,7 +367,7 @@ export default function LiveLeaderboardPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-muted-foreground text-xs">
-                    <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-muted-foreground" />
+                    <RefreshCw className="size-4 animate-spin mx-auto mb-2 text-muted-foreground" />
                     Loading leaderboard...
                   </td>
                 </tr>
@@ -386,7 +386,7 @@ export default function LiveLeaderboardPage() {
                   return (
                     <tr
                       key={entry.user.id}
-                      className={`hover:bg-muted/40 transition-colors ${
+                      className={`hover:bg-muted/40 transition-colors duration-150 ${
                         isUser ? 'bg-muted/30 font-medium' : ''
                       }`}
                     >
@@ -394,15 +394,15 @@ export default function LiveLeaderboardPage() {
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5 font-mono text-xs tabular-nums">
                           {entry.rank === 1 ? (
-                            <span className="w-6 h-6 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 font-semibold flex items-center justify-center text-xs">
+                            <span className="size-6 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-500 font-semibold flex items-center justify-center text-xs">
                               1
                             </span>
                           ) : entry.rank === 2 ? (
-                            <span className="w-6 h-6 rounded-md bg-muted border border-border text-foreground font-semibold flex items-center justify-center text-xs">
+                            <span className="size-6 rounded-md bg-muted border border-border text-foreground font-semibold flex items-center justify-center text-xs">
                               2
                             </span>
                           ) : entry.rank === 3 ? (
-                            <span className="w-6 h-6 rounded-md bg-amber-700/10 border border-amber-700/30 text-amber-600 font-semibold flex items-center justify-center text-xs">
+                            <span className="size-6 rounded-md bg-amber-700/10 border border-amber-700/30 text-amber-600 font-semibold flex items-center justify-center text-xs">
                               3
                             </span>
                           ) : (
@@ -425,7 +425,7 @@ export default function LiveLeaderboardPage() {
                           <img
                             src={entry.user.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${entry.user.username}`}
                             alt={entry.user.username}
-                            className="w-8 h-8 rounded-lg border border-border bg-muted object-cover"
+                            className="size-8 rounded-lg border border-border bg-muted object-cover"
                           />
 
                           <div>
@@ -458,26 +458,26 @@ export default function LiveLeaderboardPage() {
                         {entry.liveStatus === 'in_duel' ? (
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                              <span className="size-1.5 rounded-full bg-rose-500" />
                               {entry.activeBattleCode || 'Arena'}
                             </span>
                             <Link
                               href={entry.activeBattleCode ? `/battle/${entry.activeBattleCode}?role=spectator` : '/lobby'}
-                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors flex items-center gap-1"
+                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors duration-150 active:scale-[0.98] flex items-center gap-1"
                             >
-                              <Eye className="w-3 h-3" />
+                              <Eye className="size-3" />
                               Spectate
                             </Link>
                           </div>
                         ) : entry.liveStatus === 'in_exam' ? (
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                              <Shield className="w-3 h-3 text-purple-400" />
+                              <Shield className="size-3 text-purple-400" />
                               Assessment
                             </span>
                             <Link
                               href={`/exam/${entry.activeExamId || 'demo-sync-session'}`}
-                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors flex items-center gap-1"
+                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors duration-150 active:scale-[0.98] flex items-center gap-1"
                             >
                               Monitor
                             </Link>
@@ -489,13 +489,13 @@ export default function LiveLeaderboardPage() {
                         ) : (
                           <div className="flex items-center gap-2 text-xs">
                             <span className="inline-flex items-center gap-1 text-muted-foreground text-[11px]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span className="size-1.5 rounded-full bg-emerald-500" />
                               Online
                             </span>
                             {!isUser && (
                               <Link
                                 href="/battle/create"
-                                className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+                                className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-150"
                               >
                                 Duel
                               </Link>
@@ -518,7 +518,7 @@ export default function LiveLeaderboardPage() {
                         </div>
                         <div className="w-24 bg-muted h-1 rounded-full overflow-hidden mt-1">
                           <div
-                            className="bg-foreground/50 h-full rounded-full"
+                            className="bg-foreground/50 h-full rounded-full transition-[width] duration-200 ease-out"
                             style={{
                               width: `${((entry.user.dsaSolved ?? 0) / (entry.user.dsaTotal ?? 150)) * 100}%`,
                             }}
@@ -532,7 +532,7 @@ export default function LiveLeaderboardPage() {
                           <span>{entry.winRate}%</span>
                           {entry.user.winStreak >= 3 && (
                             <span className="text-[10px] text-amber-500 flex items-center gap-0.5">
-                              <Flame className="w-2.5 h-2.5" />
+                              <Flame className="size-2.5" />
                               {entry.user.winStreak} streak
                             </span>
                           )}
@@ -545,7 +545,7 @@ export default function LiveLeaderboardPage() {
                       {/* Trust Score */}
                       <td className="py-3 px-4 text-right font-mono text-xs tabular-nums">
                         <span className="text-muted-foreground inline-flex items-center gap-1">
-                          <Shield className="w-3 h-3 text-muted-foreground" />
+                          <Shield className="size-3 text-muted-foreground" />
                           {entry.user.trustScore}%
                         </span>
                       </td>

@@ -132,14 +132,14 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center">
+        <div className="size-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background p-6">
+    <div className="min-h-[calc(100dvh-4rem)] bg-background p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold">Settings</h1>
 
@@ -154,7 +154,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="p-6 border rounded-2xl bg-card space-y-4">
+        <div className="p-6 border rounded-2xl bg-card card-elevated motion-enter space-y-4">
           <h2 className="text-lg font-semibold">Account Profile</h2>
           <p className="text-sm text-muted-foreground">
             Your CodeClash account handle and competitive statistics.
@@ -165,18 +165,18 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium">{settings.username || settings.handle}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground font-mono tabular-nums">
                     Rating {settings.rating} · Max {settings.maxRating} · {settings.rank}
                   </div>
                 </div>
                 <a
                   href={`/profile/${settings.username || settings.handle}`}
-                  className="px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-accent"
+                  className="px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-accent transition-colors duration-150 active:scale-[0.98]"
                 >
                   View Profile
                 </a>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground font-mono tabular-nums">
                 {settings.battleWins}W / {settings.battleLosses}L · {settings.totalBattles} battles · streak {settings.winStreak}
               </div>
             </div>
@@ -185,14 +185,14 @@ export default function SettingsPage() {
           <button
             onClick={handleSyncProfile}
             disabled={syncing}
-            className="px-4 py-2 border rounded-lg font-medium hover:bg-accent disabled:opacity-50"
+            className="px-4 py-2 border rounded-lg font-medium hover:bg-accent transition-colors duration-150 active:scale-[0.98] disabled:opacity-50"
           >
             {syncing ? 'Syncing...' : 'Sync Profile'}
           </button>
         </div>
 
         {/* Editor Preferences */}
-        <div className="p-6 border rounded-2xl bg-card space-y-4">
+        <div className="p-6 border rounded-2xl bg-card card-elevated motion-enter space-y-4">
           <h2 className="text-lg font-semibold">Editor Preferences</h2>
           <p className="text-sm text-muted-foreground">
             Configure your default programming language and coding environment.
@@ -211,7 +211,7 @@ export default function SettingsPage() {
                     key={item.id}
                     type="button"
                     onClick={() => handleLanguageChange(item.id as 'cpp' | 'python' | 'java')}
-                    className={`p-3.5 border rounded-xl text-left transition-all ${
+                    className={`p-3.5 border rounded-xl text-left transition-colors duration-150 active:scale-[0.98] ${
                       isSelected
                         ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                         : 'border-border bg-card hover:bg-accent'
@@ -229,14 +229,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-6 border rounded-2xl bg-card space-y-4">
+        <div className="p-6 border rounded-2xl bg-card card-elevated motion-enter space-y-4">
           <h2 className="text-lg font-semibold">Profile</h2>
           <div className="space-y-2">
             <label className="text-sm font-medium">Bio</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full p-3 border rounded-lg bg-background resize-none"
+              className="w-full p-3 border rounded-lg bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
               rows={3}
               placeholder="Tell other competitors about yourself..."
             />
@@ -244,7 +244,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSaveProfile}
             disabled={saving}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors duration-150 active:scale-[0.98] disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Profile'}
           </button>

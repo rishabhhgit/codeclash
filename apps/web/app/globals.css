@@ -77,21 +77,23 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 50%;
   height: 100%;
   background: linear-gradient(
     to right,
     transparent,
-    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.05),
     transparent
   );
-  transform: skewX(-25deg);
-  transition: 0.75s;
+  transform: translateX(-100%) skewX(-25deg);
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  pointer-events: none;
 }
 
 .card-shine:hover::after {
-  left: 150%;
+  transform: translateX(350%) skewX(-25deg);
 }
 
 /* Custom scrollbars */

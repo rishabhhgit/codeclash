@@ -194,62 +194,62 @@ export default function Home() {
               <div className="flex items-center gap-1.5 p-1 bg-muted/60 backdrop-blur-sm rounded-xl border border-border/80 text-xs font-medium w-full sm:w-fit overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('royale')}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'royale'
                       ? 'bg-background text-foreground shadow-sm font-semibold border border-border/60'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Flame className="w-3.5 h-3.5 text-primary" />
-                  <span>🏆 Knockout Arena</span>
+                  <Flame className="size-3.5 text-primary" />
+                  <span>Knockout Arena</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('duel')}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'duel'
                       ? 'bg-background text-foreground shadow-sm font-semibold border border-border/60'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Swords className="w-3.5 h-3.5 text-primary" />
-                  <span>⚔️ 1v1 Blitz Duel</span>
+                  <Swords className="size-3.5 text-primary" />
+                  <span>1v1 Blitz Duel</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('radar')}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'radar'
                       ? 'bg-background text-foreground shadow-sm font-semibold border border-border/60'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Activity className="w-3.5 h-3.5 text-blue-400" />
+                  <Activity className="size-3.5 text-blue-400" />
                   <span>Active Coders</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('blueprints')}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'blueprints'
                       ? 'bg-background text-foreground shadow-sm font-semibold border border-border/60'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Package className="w-3.5 h-3.5 text-amber-400" />
+                  <Package className="size-3.5 text-amber-400" />
                   <span>Complexity Intel</span>
                 </button>
               </div>
 
               {/* Live Preview Window Frame */}
-              <div className="rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden font-mono text-xs card-shine">
+              <div className="rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden font-mono text-xs card-elevated">
                 
                 {/* Window Header */}
                 <div className="h-11 px-4 bg-muted/50 border-b border-border flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                    <span className="size-3 rounded-full bg-rose-500/80 inline-block" />
+                    <span className="size-3 rounded-full bg-amber-500/80 inline-block" />
+                    <span className="size-3 rounded-full bg-emerald-500/80 inline-block" />
                     <span className="text-border mx-2">|</span>
                     <span className="text-foreground font-sans font-semibold text-xs flex items-center gap-1.5">
-                      <FileCode className="w-3.5 h-3.5 text-primary" />
+                      <FileCode className="size-3.5 text-primary" />
                       {activeTab === 'royale' && 'knockout_tournament.cpp · Room #KNOCK-8ACK'}
                       {activeTab === 'duel' && 'blitz_duel.cpp · Head-to-Head Speed Clock'}
                       {activeTab === 'radar' && 'competitor_telemetry.ts · 4 / 10 Coders Active'}
@@ -283,7 +283,7 @@ export default function Home() {
 
                 {/* TAB 1: KNOCKOUT ARENA SHOWCASE */}
                 {activeTab === 'royale' && (
-                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px]">
+                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px] motion-enter">
                     {/* Stage Checkpoint HUD */}
                     <div className="p-3 rounded-xl bg-primary/10 border border-primary/25 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2">
@@ -355,7 +355,7 @@ export default function Home() {
 
                 {/* TAB 2: 1v1 BLITZ SPEED DUEL */}
                 {activeTab === 'duel' && (
-                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px]">
+                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px] motion-enter">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 space-y-1 text-center">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground">Your Match Clock</div>
@@ -403,7 +403,7 @@ export default function Home() {
 
                 {/* TAB 3: ACTIVE CODERS RADAR */}
                 {activeTab === 'radar' && (
-                  <div className="p-5 space-y-3 bg-card/60 min-h-[340px]">
+                  <div className="p-5 space-y-3 bg-card/60 min-h-[340px] motion-enter">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-foreground">Live Telemetry &amp; Solves</span>
                       <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold border border-primary/20 text-[10px]">
@@ -472,7 +472,7 @@ export default function Home() {
 
                 {/* TAB 4: ALGORITHMIC BLUEPRINTS */}
                 {activeTab === 'blueprints' && (
-                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px]">
+                  <div className="p-5 space-y-4 bg-card/60 min-h-[340px] motion-enter">
                     <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-3">
                       <div className="size-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300">
                         <Package className="size-6" />

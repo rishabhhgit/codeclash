@@ -195,7 +195,7 @@ export default function CreateBattlePage() {
                     const newMax = isBR ? (form.maxPlayers === 2 ? 10 : form.maxPlayers) : form.maxPlayers;
                     setForm({ ...form, mode: mode.value, maxPlayers: newMax });
                   }}
-                  className={`p-3 border rounded-xl text-left transition-all ${
+                  className={`p-3 border rounded-xl text-left transition-colors duration-150 active:scale-[0.99] ${
                     isSelected
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border hover:border-foreground/30 bg-background'
@@ -348,7 +348,7 @@ export default function CreateBattlePage() {
         <button
           type="submit"
           disabled={loading || form.topics.length === 0}
-          className="w-full py-3 bg-foreground hover:opacity-90 text-background rounded-xl text-xs sm:text-sm font-semibold disabled:opacity-50 transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
+          className="w-full py-3 bg-foreground hover:opacity-90 text-background rounded-xl text-xs sm:text-sm font-semibold disabled:opacity-50 transition-colors duration-150 active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
         >
           <Swords className="size-4" />
           {loading ? 'Deploying Arena...' : 'Launch Battle Arena'}

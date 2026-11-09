@@ -715,7 +715,7 @@ export default function BattleRoomPage() {
                 <span>STAMINA</span>
                 <div className="w-20 bg-muted h-2.5 rounded-full overflow-hidden border border-border">
                   <div
-                    className="bg-emerald-500 h-full transition-all duration-300"
+                    className="bg-emerald-500 h-full transition-[width] duration-200 ease-out"
                     style={{ width: `${Math.max(0, Math.min(100, currentPlayer?.hp ?? 100))}%` }}
                   />
                 </div>
@@ -727,7 +727,7 @@ export default function BattleRoomPage() {
                 <span>BUFFER</span>
                 <div className="w-16 bg-muted h-2.5 rounded-full overflow-hidden border border-border">
                   <div
-                    className="bg-blue-500 h-full transition-all duration-300"
+                    className="bg-blue-500 h-full transition-[width] duration-200 ease-out"
                     style={{ width: `${Math.max(0, Math.min(100, currentPlayer?.shield ?? 50))}%` }}
                   />
                 </div>
@@ -768,7 +768,7 @@ export default function BattleRoomPage() {
               </span>
               <div className="w-28 bg-muted h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-emerald-500 h-full transition-all duration-300"
+                  className="bg-emerald-500 h-full transition-[width] duration-200 ease-out"
                   style={{
                     width: `${((opponentPlayer.passedCases || 0) / (opponentPlayer.totalCases || 3)) * 100}%`,
                   }}
@@ -862,7 +862,7 @@ export default function BattleRoomPage() {
 
                     <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-2">
                       <div
-                        className="bg-primary h-full transition-all duration-300"
+                        className="bg-primary h-full transition-[width] duration-200 ease-out"
                         style={{
                           width: `${((p.passedCases || 0) / (p.totalCases || 3)) * 100}%`,
                         }}

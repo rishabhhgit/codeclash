@@ -538,9 +538,9 @@ export default function AdminPage() {
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="border rounded-lg p-4">
-      <div className="text-sm text-muted-foreground">{label}</div>
-      <div className="text-2xl font-bold mt-1">
+    <div className="border border-border rounded-xl p-4 bg-card card-elevated motion-enter">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-2xl font-bold mt-1 font-mono tabular-nums">
         {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
     </div>
@@ -551,11 +551,11 @@ function DiffBar({ label, count, total, color }: { label: string; count: number;
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm w-16">{label}</span>
+      <span className="text-xs w-16">{label}</span>
       <div className="flex-1 h-2 bg-muted rounded overflow-hidden">
-        <div className={`h-full ${color} rounded`} style={{ width: `${pct}%` }} />
+        <div className={`h-full ${color} rounded transition-[width] duration-200 ease-out`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-sm text-muted-foreground w-12 text-right">{count}</span>
+      <span className="text-xs text-muted-foreground w-12 text-right font-mono tabular-nums">{count}</span>
     </div>
   );
 }
