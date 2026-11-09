@@ -536,7 +536,7 @@ export default function BattleRoomPage() {
 
           <div className="flex items-center gap-2">
             <span className="font-black text-xs text-primary flex items-center gap-1">
-              {isBattleRoyale ? <Flame className="size-4 text-orange-500 animate-pulse" /> : <Swords className="size-4 text-primary" />}
+              {isBattleRoyale ? <Flame className="size-4 text-orange-500" /> : <Swords className="size-4 text-primary" />}
               {isBattleRoyale ? `Knockout Arena ${codeParam}` : `Arena ${codeParam}`}
             </span>
             <span className={`px-2 py-0.5 rounded border text-[11px] font-mono ${
@@ -584,7 +584,7 @@ export default function BattleRoomPage() {
 
           {isBattleRoyale ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-bold font-mono">
-              <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
               <span className="tabular-nums">👥 {aliveSurvivorsCount} / {totalCombatants} Active</span>
             </div>
           ) : (
@@ -638,9 +638,9 @@ export default function BattleRoomPage() {
 
       {/* ================= READY CHECK OR COUNTDOWN OVERLAY BANNER ================= */}
       {battle?.status === 'ready_check' && (
-        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between text-xs shrink-0 z-20">
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between text-xs shrink-0 z-20 motion-enter">
           <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-amber-400 animate-ping" />
+            <span className="size-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" />
             <span className="font-bold text-amber-300 uppercase tracking-wider">Ready Check Active:</span>
             <span className="text-muted-foreground text-pretty">Both fighters must confirm readiness to unlock the arena</span>
           </div>
@@ -655,7 +655,7 @@ export default function BattleRoomPage() {
               className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 shadow-sm active:scale-95 ${
                 currentPlayer?.isReady
                   ? 'bg-secondary border border-border text-foreground hover:bg-muted'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white animate-pulse'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
               }`}
             >
               {currentPlayer?.isReady ? 'Cancel Ready' : 'CONFIRM READY ✓'}
@@ -665,9 +665,9 @@ export default function BattleRoomPage() {
       )}
 
       {(battle?.status === 'countdown' || (countdownVal !== null && countdownVal > 0)) && (
-        <div className="bg-primary/20 border-b border-primary/40 px-4 py-3 flex items-center justify-center text-center text-xs shrink-0 z-20">
+        <div className="bg-primary/20 border-b border-primary/40 px-4 py-3 flex items-center justify-center text-center text-xs shrink-0 z-20 motion-enter">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xl font-black text-primary animate-bounce tabular-nums">
+            <span className="font-mono text-2xl font-black text-primary tabular-nums">
               {countdownVal !== null && countdownVal > 0 ? countdownVal : battle?.countdownSeconds || 3}
             </span>
             <span className="font-bold text-foreground text-sm uppercase tracking-widest text-balance">
@@ -683,7 +683,7 @@ export default function BattleRoomPage() {
           <div className="bg-gradient-to-r from-blue-950/60 via-card to-purple-950/60 border-b border-blue-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs shrink-0 gap-3">
             <div className="flex items-center gap-3">
               <span className="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono text-[11px] font-bold flex items-center gap-1.5">
-                <Zap className="size-3.5 text-blue-400 animate-pulse" />
+                <Zap className="size-3.5 text-blue-400" />
                 <span>{battle?.storm?.phaseName || 'Phase 1: Initial Benchmark Sprint'}</span>
               </span>
 
@@ -695,7 +695,7 @@ export default function BattleRoomPage() {
                 !battle.airdrop.claimedBy ? (
                   <button
                     onClick={handleClaimAirdrop}
-                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-[10px] tracking-wide flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 animate-pulse transition-all duration-150"
+                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-[10px] tracking-wide flex items-center gap-1.5 shadow-sm shadow-amber-500/20 active:scale-95 transition-all duration-150"
                   >
                     <Package className="size-3.5 text-black" />
                     <span>CLAIM ALGORITHMIC BLUEPRINT (+50 Buffer)</span>
@@ -750,7 +750,7 @@ export default function BattleRoomPage() {
                 {opponentPlayer.trustScore}% Trust
               </span>
               {opponentTyping ? (
-                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono animate-pulse">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono">
                   <span className="size-1.5 rounded-full bg-emerald-400" />
                   Typing...
                 </span>
@@ -779,7 +779,7 @@ export default function BattleRoomPage() {
         ) : (
           <div className="h-11 bg-card border-b border-border px-4 flex items-center justify-between text-xs shrink-0 gap-3">
             <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="size-2 rounded-full bg-amber-400" />
               <span className="text-muted-foreground font-medium">Waiting for challenger...</span>
               <span className="text-foreground text-xs hidden sm:inline">
                 Share Code: <strong className="font-mono text-primary font-bold">{codeParam}</strong> or Invite Link
@@ -902,7 +902,7 @@ export default function BattleRoomPage() {
                 <span className="font-bold text-foreground">
                   Live Screen: {activeSpectatorPlayer?.username || 'Player'}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="size-2 rounded-full bg-emerald-400" />
               </div>
               <span className="text-[11px] text-muted-foreground font-mono">Real-time Stream</span>
             </div>
@@ -1612,13 +1612,13 @@ export default function BattleRoomPage() {
 
       {/* ================= BATTLE ROYALE / DUEL CONCLUSION MODAL ================= */}
       {(matchWinner || (isBattleRoyale && currentPlayer?.status === 'eliminated')) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 motion-enter">
+          <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4 card-elevated">
             {matchWinner === username || currentPlayer?.status === 'champion' ? (
               /* #1 1ST PLACE CHAMPION */
               <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 animate-bounce">
-                  <Trophy className="w-8 h-8" />
+                <div className="size-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 shadow-md shadow-amber-500/20">
+                  <Trophy className="size-8" />
                 </div>
 
                 <div>

@@ -276,9 +276,9 @@ export default function LobbyPage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded bg-muted/60 border border-border text-muted-foreground">
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
+                      className={`size-1.5 rounded-full ${
                         b.status === 'active'
-                          ? 'bg-emerald-500 animate-pulse'
+                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
                           : 'bg-amber-500'
                       }`}
                     />
@@ -287,12 +287,12 @@ export default function LobbyPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold text-foreground tracking-tight">
+                  <h3 className="text-sm font-bold text-foreground tracking-tight text-balance">
                     {b.title || `Duel ${b.code}`}
                   </h3>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-mono">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-mono tabular-nums">
                     <span className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5 text-primary" />
+                      <Users className="size-3.5 text-primary" />
                       {b.playerCount} / {b.maxPlayers} Fighters
                     </span>
                     {b.spectatorCount != null && b.spectatorCount > 0 && (

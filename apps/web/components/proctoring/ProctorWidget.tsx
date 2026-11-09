@@ -89,9 +89,9 @@ export default function ProctorWidget({
       <div className="flex items-center justify-between px-3.5 py-2.5 bg-muted/60 border-b border-border text-xs">
         <div className="flex items-center gap-2">
           {trustScore >= 70 && !hasIllicitObjects ? (
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="size-4 text-emerald-400" />
           ) : (
-            <ShieldAlert className="w-4 h-4 text-rose-400 animate-pulse" />
+            <ShieldAlert className="size-4 text-rose-400" />
           )}
           <span className="font-bold text-foreground text-xs">AI Proctor & Vision</span>
         </div>
@@ -102,10 +102,11 @@ export default function ProctorWidget({
           </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors duration-150 active:scale-95"
             title={collapsed ? 'Expand Monitor' : 'Minimize Monitor'}
+            aria-label={collapsed ? 'Expand Monitor' : 'Minimize Monitor'}
           >
-            {collapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {collapsed ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
           </button>
         </div>
       </div>
@@ -218,11 +219,11 @@ export default function ProctorWidget({
               <>
                 <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] z-20 border border-border/40">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
+                    className={`size-1.5 rounded-full ${
                       aiModelStatus === 'ready'
-                        ? 'bg-emerald-500 animate-pulse'
+                        ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
                         : aiModelStatus === 'loading'
-                        ? 'bg-amber-400 animate-ping'
+                        ? 'bg-amber-400'
                         : 'bg-blue-400'
                     }`}
                   />
@@ -236,8 +237,8 @@ export default function ProctorWidget({
                 </div>
 
                 {hasIllicitObjects && (
-                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-rose-600/90 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-md animate-bounce z-20">
-                    <AlertTriangle className="w-3 h-3" />
+                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-rose-600/95 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-md z-20 motion-enter">
+                    <AlertTriangle className="size-3" />
                     <span>ILLICIT OBJECT</span>
                   </div>
                 )}
@@ -252,11 +253,11 @@ export default function ProctorWidget({
                 <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] z-20">
                   {faceDetected ? (
                     <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                      <UserCheck className="w-3 h-3" /> Candidate OK
+                      <UserCheck className="size-3" /> Candidate OK
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-rose-400 font-bold animate-pulse">
-                      <UserX className="w-3 h-3" /> Face Absent
+                    <span className="flex items-center gap-1 text-rose-400 font-bold">
+                      <UserX className="size-3" /> Face Absent
                     </span>
                   )}
                 </div>

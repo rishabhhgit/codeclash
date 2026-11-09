@@ -229,12 +229,12 @@ export default function SynchronizedExamPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] bg-background text-foreground overflow-hidden">
       {/* Real-time Examiner Announcement Banner */}
       {announcement && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-xs text-amber-500 animate-in fade-in">
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-xs text-amber-500 motion-enter">
           <div className="flex items-center gap-2">
-            <Bell className="w-3.5 h-3.5 shrink-0" />
+            <Bell className="size-3.5 shrink-0" />
             <span className="font-semibold">Examiner Notice:</span>
             <span>{announcement.text}</span>
           </div>
@@ -876,12 +876,12 @@ export default function SynchronizedExamPage() {
 
       {/* Candidate Launchpad Pre-flight Check Screen */}
       {role === 'candidate' && !hasStarted && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md p-4 overflow-y-auto motion-enter">
+          <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 card-elevated">
             <div className="flex items-center justify-between pb-2 border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-mono font-bold text-base shrink-0">
-                  <Shield className="w-6 h-6" />
+                <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-mono font-bold text-base shrink-0">
+                  <Shield className="size-6" />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-foreground">
@@ -968,10 +968,10 @@ export default function SynchronizedExamPage() {
 
       {/* Full-Screen Enforcement Overlay */}
       {role === 'candidate' && hasStarted && !isFullscreen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md p-4">
-          <div className="w-full max-w-md bg-card border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-center space-y-4 animate-in zoom-in-95">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 mx-auto flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md p-4 motion-enter">
+          <div className="w-full max-w-md bg-card border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-center space-y-4 card-elevated">
+            <div className="size-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 mx-auto flex items-center justify-center">
+              <ShieldAlert className="size-6" />
             </div>
             <div>
               <h3 className="text-base font-bold text-foreground">Full-Screen Mode Required</h3>

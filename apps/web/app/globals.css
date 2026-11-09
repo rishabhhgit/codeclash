@@ -179,3 +179,71 @@
   background: rgba(168, 85, 247, 0.7);
 }
 
+/* ==========================================================================
+   Design Motion Principles (Emil Kowalski & Jakub Krehel Guidelines)
+   ========================================================================== */
+
+/* 1. Universal Accessibility: prefers-reduced-motion is mandatory */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 2. Jakub Krehel's Materializing Enter Recipe (Opacity + TranslateY + Blur) */
+@keyframes motion-enter-subtle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes motion-exit-subtle {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-3px);
+    filter: blur(2px);
+  }
+}
+
+.motion-enter {
+  animation: motion-enter-subtle 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.motion-exit {
+  animation: motion-exit-subtle 120ms ease-out forwards;
+}
+
+/* 3. Emil Kowalski's Tactile Press Response */
+.press-tactile {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.press-tactile:active {
+  transform: scale(0.98);
+}
+
+/* 4. Jakub Krehel's Multi-Layer Subtle Shadows (adaptive across light/dark) */
+.card-elevated {
+  box-shadow:
+    0px 0px 0px 1px hsl(var(--border) / 0.8),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 8px -2px rgba(0, 0, 0, 0.15);
+}
+
+

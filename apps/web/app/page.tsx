@@ -69,10 +69,10 @@ export default function Home() {
 
       {/* Top Banner Ribbon */}
       <div className="relative z-10 border-b border-border/60 bg-muted/40 backdrop-blur-sm py-2 px-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
-        <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="flex size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
         <span className="font-medium text-foreground">Live 1v1 speed duels and multi-player knockout arenas are active.</span>
         <Link href="/lobby" className="text-primary font-semibold hover:underline inline-flex items-center gap-1 ml-1">
-          Open Lobby <ChevronRight className="w-3 h-3" />
+          Open Lobby <ChevronRight className="size-3" />
         </Link>
       </div>
 
@@ -85,7 +85,7 @@ export default function Home() {
             <div className="lg:col-span-6 space-y-6">
               {/* Product Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary backdrop-blur-sm shadow-sm">
-                <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="flex size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
                 <span>Real-time multiplayer coding arena</span>
               </div>
 
@@ -287,16 +287,16 @@ export default function Home() {
                     {/* Stage Checkpoint HUD */}
                     <div className="p-3 rounded-xl bg-primary/10 border border-primary/25 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-primary animate-pulse" />
+                        <Flame className="size-4 text-primary" />
                         <span className="font-bold text-foreground">Phase 2: Stress Test Checkpoint</span>
                         <span className="text-muted-foreground text-[11px]">(Pass &ge; 2 testcases before cutoff)</span>
                       </div>
                       <div className="flex items-center gap-3 font-mono font-bold text-xs">
                         <span className="text-amber-300 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" /> 02:45
+                          <Clock className="size-3.5" /> 02:45
                         </span>
-                        <span className="text-primary">👥 4 / 10 ACTIVE</span>
-                        <span className="text-emerald-400">🎯 2 BENCHMARKS</span>
+                        <span className="text-primary tabular-nums">👥 4 / 10 ACTIVE</span>
+                        <span className="text-emerald-400 tabular-nums">🎯 2 BENCHMARKS</span>
                       </div>
                     </div>
 
@@ -364,9 +364,9 @@ export default function Home() {
                       </div>
                       <div className="p-3 rounded-xl bg-card border border-border space-y-1 text-center">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground">Rival Clock</div>
-                        <div className="text-2xl font-bold font-mono text-foreground">03:48</div>
-                        <div className="text-[11px] text-amber-400 flex items-center justify-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" /> Typing (78 WPM)
+                        <div className="text-2xl font-bold font-mono text-foreground tabular-nums">03:48</div>
+                        <div className="text-[11px] text-amber-400 flex items-center justify-center gap-1.5">
+                          <span className="size-1.5 rounded-full bg-amber-400" /> Typing (78 WPM)
                         </div>
                       </div>
                     </div>
@@ -474,8 +474,8 @@ export default function Home() {
                 {activeTab === 'blueprints' && (
                   <div className="p-5 space-y-4 bg-card/60 min-h-[340px]">
                     <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300">
-                        <Package className="w-6 h-6 animate-bounce" />
+                      <div className="size-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300">
+                        <Package className="size-6" />
                       </div>
                       <div className="space-y-0.5">
                         <div className="font-bold text-sm text-foreground">Optimal Complexity Blueprint</div>

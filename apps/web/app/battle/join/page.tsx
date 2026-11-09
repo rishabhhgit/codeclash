@@ -334,7 +334,7 @@ export default function JoinBattlePage() {
     <Suspense
       fallback={
         <div className="container mx-auto px-4 py-16 max-w-3xl text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
-          <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+          <RefreshCw className="size-4 animate-spin text-primary" />
           <span>Loading Battle Arena Join...</span>
         </div>
       }

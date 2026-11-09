@@ -162,24 +162,24 @@ export default function MatchmakingPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background text-foreground p-4 sm:p-8 flex flex-col justify-center items-center relative overflow-hidden">
+    <div className="min-h-[calc(100dvh-4rem)] bg-background text-foreground p-4 sm:p-8 flex flex-col justify-center items-center relative overflow-hidden">
       {/* Background radial accent */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Match Found Overlay */}
       {matchedData && (
-        <div className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
-          <div className="bg-card border border-emerald-500/40 p-8 rounded-2xl text-center space-y-6 shadow-2xl max-w-md w-full relative overflow-hidden">
+        <div className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50 p-4 motion-enter">
+          <div className="bg-card border border-emerald-500/40 p-8 rounded-2xl text-center space-y-6 shadow-2xl max-w-md w-full relative overflow-hidden card-elevated">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-8 h-8 animate-pulse" />
+            <div className="size-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 className="size-8" />
             </div>
             <div>
               <div className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-1">
                 Opponent Verified
               </div>
               <h2 className="text-2xl font-black text-foreground">MATCH FOUND</h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 text-pretty">
                 Entering 1v1 Battle Arena <span className="font-mono text-foreground font-semibold">[{matchedData.battleCode}]</span>
               </p>
             </div>
@@ -187,12 +187,12 @@ export default function MatchmakingPage() {
             {matchedData.opponent && (
               <div className="bg-secondary/40 border border-border/60 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-sm text-primary">
+                  <div className="size-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-sm text-primary">
                     {matchedData.opponent.username?.substring(0, 2).toUpperCase() || 'VS'}
                   </div>
                   <div className="text-left">
                     <div className="text-sm font-bold text-foreground">{matchedData.opponent.username || 'Challenger'}</div>
-                    <div className="text-xs text-muted-foreground">Rating: {matchedData.opponent.rating || 1200}</div>
+                    <div className="text-xs text-muted-foreground tabular-nums">Rating: {matchedData.opponent.rating || 1200}</div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -204,7 +204,7 @@ export default function MatchmakingPage() {
             )}
 
             <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-500 h-full w-full animate-pulse" />
+              <div className="bg-emerald-500 h-full w-full" />
             </div>
           </div>
         </div>
@@ -214,28 +214,28 @@ export default function MatchmakingPage() {
         {/* Top Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/60 text-xs font-medium text-muted-foreground">
-            <Radar className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <Radar className="size-3.5 text-primary" />
             <span>Authoritative Real-Time 1v1 Arena</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Competitive Matchmaking</h1>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">Competitive Matchmaking</h1>
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto text-pretty">
             Queue into instantaneous skill-ranked battles. Test your algorithmic speed, solve clean, and climb the global ladder.
           </p>
         </div>
 
         {/* Searching Radar State vs Setup State */}
         {isSearching ? (
-          <div className="bg-card border border-primary/30 rounded-2xl p-8 text-center space-y-6 shadow-xl relative overflow-hidden">
-            <div className="relative w-36 h-36 mx-auto flex items-center justify-center">
-              {/* Outer pulsing ring */}
-              <div className="absolute inset-0 rounded-full border border-primary/20 animate-ping" />
+          <div className="bg-card border border-primary/30 rounded-2xl p-8 text-center space-y-6 shadow-xl relative overflow-hidden card-elevated motion-enter">
+            <div className="relative size-36 mx-auto flex items-center justify-center">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border border-primary/20" />
               {/* Mid ring */}
-              <div className="absolute inset-4 rounded-full border border-primary/30 animate-pulse" />
+              <div className="absolute inset-4 rounded-full border border-primary/30" />
               {/* Inner ring */}
               <div className="absolute inset-8 rounded-full border border-primary/40" />
               {/* Radar sweep */}
               <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-              <div className="relative text-2xl font-black font-mono text-primary">
+              <div className="relative text-2xl font-black font-mono text-primary tabular-nums">
                 {formatTime(elapsed)}
               </div>
             </div>

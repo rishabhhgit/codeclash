@@ -1783,22 +1783,23 @@ export default function ProblemWorkspacePage() {
 
       {/* ================= BATTLEGROUND: FRIEND PRACTICE & 1V1 DUEL MODAL ================= */}
       {isBattleModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-enter">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 card-elevated">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-orange-500/20 text-orange-400">
-                  <Swords className="w-6 h-6" />
+                  <Swords className="size-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Practice With Friends / 1v1 Arena</h3>
-                  <p className="text-xs text-muted-foreground">CodeClash Live Multiplayer Arena</p>
+                  <h3 className="text-lg font-bold text-foreground text-balance">Practice With Friends / 1v1 Arena</h3>
+                  <p className="text-xs text-muted-foreground text-pretty">CodeClash Live Multiplayer Arena</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setIsBattleModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-150 active:scale-95"
+                aria-label="Close duel modal"
               >
                 ✕
               </button>
@@ -1897,22 +1898,22 @@ export default function ProblemWorkspacePage() {
 
       {/* ================= LEETCODE SUBMISSION RESULT MODAL ================= */}
       {showSubmissionModal && submissionSummary && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-enter">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 card-elevated">
             {/* Header with Verdict */}
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-3">
                 {submissionSummary.verdict === 'Accepted' ? (
                   <div className="p-2.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <CheckCircle2 className="w-7 h-7" />
+                    <CheckCircle2 className="size-7" />
                   </div>
                 ) : submissionSummary.verdict === 'Time Limit Exceeded' ? (
                   <div className="p-2.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                    <Clock className="w-7 h-7" />
+                    <Clock className="size-7" />
                   </div>
                 ) : (
                   <div className="p-2.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                    <XCircle className="w-7 h-7" />
+                    <XCircle className="size-7" />
                   </div>
                 )}
                 <div>

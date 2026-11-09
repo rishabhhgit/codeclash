@@ -216,7 +216,7 @@ export default function CreateBattlePage() {
           </div>
 
           {isKnockout && (
-            <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 text-foreground space-y-1.5 text-xs animate-in fade-in">
+            <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 text-foreground space-y-1.5 text-xs motion-enter">
               <div className="font-bold text-primary flex items-center gap-1.5">
                 <span>🏆 Knockout Arena Rules &amp; Phase Checkpoints</span>
               </div>
