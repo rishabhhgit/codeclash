@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Swords,
   Hash,
@@ -19,6 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { getClientUsername, getApiUrl } from '../../../lib/api';
+import { SpotlightCard } from '../../../components/ui/SpotlightCard';
 
 interface BattleSummary {
   id: string;
@@ -187,10 +189,13 @@ function JoinBattleContent() {
               Participation Mode
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => setSelectedRole('fighter')}
-                className={`p-4 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                className={`p-4 rounded-xl border text-left transition-colors flex items-start gap-3 ${
                   selectedRole === 'fighter'
                     ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                     : 'border-border bg-card hover:bg-muted/30'
@@ -205,12 +210,15 @@ function JoinBattleContent() {
                     Compete in the duel. Submit code, pass test cases, and race to first Accepted verdict.
                   </p>
                 </div>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => setSelectedRole('spectator')}
-                className={`p-4 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                className={`p-4 rounded-xl border text-left transition-colors flex items-start gap-3 ${
                   selectedRole === 'spectator'
                     ? 'border-blue-500 bg-blue-500/10 shadow-sm ring-1 ring-blue-500'
                     : 'border-border bg-card hover:bg-muted/30'
@@ -225,20 +233,23 @@ function JoinBattleContent() {
                     Watch the match unfold in real time. View pass telemetry and chat with referees.
                   </p>
                 </div>
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Action Button */}
           <div className="pt-2">
-            <button
+            <motion.button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm tracking-wide transition-all duration-150 shadow-md active:scale-[0.99] flex items-center justify-center gap-2 group"
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm tracking-wide shadow-md flex items-center justify-center gap-2 group cursor-pointer"
             >
               <Swords className="size-4 group-hover:rotate-12 transition-transform" />
               <span>Enter Battle Arena</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </motion.button>
           </div>
         </form>
 
@@ -287,40 +298,44 @@ function JoinBattleContent() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {openBattles.map((b) => (
-              <div
+              <motion.div
                 key={b.code}
-                className="p-4 rounded-xl border border-border bg-card flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors"
+                whileHover={{ y: -3 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                className="h-full"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-primary">{b.code}</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
-                      {b.difficulty || 'Medium'}
-                    </span>
+                <div className="p-4 rounded-xl border border-border bg-card flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors h-full">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-xs text-primary">{b.code}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                        {b.difficulty || 'Medium'}
+                      </span>
+                    </div>
+                    <div className="font-semibold text-xs text-foreground mt-1 line-clamp-1">
+                      {b.title || b.questionSlug || 'Algorithmic Duel'}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 font-mono tabular-nums">
+                      Fighters: {b.playerCount} / {b.maxPlayers || 2}
+                    </div>
                   </div>
-                  <div className="font-semibold text-xs text-foreground mt-1 line-clamp-1">
-                    {b.title || b.questionSlug || 'Algorithmic Duel'}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 font-mono tabular-nums">
-                    Fighters: {b.playerCount} / {b.maxPlayers || 2}
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-border">
-                  <Link
-                    href={`/battle/${b.code}?role=fighter`}
-                    className="flex-1 py-1.5 text-center bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Fight (Join)
-                  </Link>
-                  <Link
-                    href={`/battle/${b.code}?role=spectator`}
-                    className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded-lg transition-colors border border-border"
-                  >
-                    Watch
-                  </Link>
+                  <div className="flex items-center gap-2 pt-2 border-t border-border">
+                    <Link
+                      href={`/battle/${b.code}?role=fighter`}
+                      className="flex-1 py-1.5 text-center bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition-colors active:scale-[0.96]"
+                    >
+                      Fight (Join)
+                    </Link>
+                    <Link
+                      href={`/battle/${b.code}?role=spectator`}
+                      className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded-lg transition-colors border border-border active:scale-[0.96]"
+                    >
+                      Watch
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
