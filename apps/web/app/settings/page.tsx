@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 interface UserSettings {
   id: string;
-  codeforcesHandle: string;
+  handle?: string;
   username: string;
   avatar?: string;
   bio?: string;
@@ -31,18 +31,30 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [bio, setBio] = useState('');
+  const [defaultLanguage, setDefaultLanguage] = useState<'cpp' | 'python' | 'java'>('cpp');
 
   useEffect(() => {
     fetchSettings();
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('codeclash_default_language') as 'cpp' | 'python' | 'java';
+      if (savedLang && ['cpp', 'python', 'java'].includes(savedLang)) {
+        setDefaultLanguage(savedLang);
+      }
+    }
   }, []);
+
+  const handleLanguageChange = (lang: 'cpp' | 'python' | 'java') => {
+    setDefaultLanguage(lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('codeclash_default_language', lang);
+      setSuccess(`Default language set to ${lang === 'cpp' ? 'C++' : lang === 'python' ? 'Python' : 'Java'}`);
+      setTimeout(() => setSuccess(''), 3000);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
+      const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || 'guest-token';
 
       const res = await fetch(`${apiUrl}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -68,7 +80,7 @@ export default function SettingsPage() {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || 'guest-token';
       const res = await fetch(`${apiUrl}/api/users/me`, {
         method: 'PATCH',
         headers: {
@@ -92,13 +104,13 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSyncCodeforces = async () => {
+  const handleSyncProfile = async () => {
     setSyncing(true);
     setError('');
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || 'guest-token';
       const res = await fetch(`${apiUrl}/api/auth/sync`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -106,10 +118,10 @@ export default function SettingsPage() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess('Codeforces profile synced');
+        setSuccess('Profile synced');
         setSettings(data.data);
       } else {
-        setError(data.error || 'Failed to sync Codeforces profile');
+        setError(data.error || 'Failed to sync profile');
       }
     } catch {
       setError('Network error occurred');
@@ -143,24 +155,22 @@ export default function SettingsPage() {
         )}
 
         <div className="p-6 border rounded-2xl bg-card space-y-4">
-          <h2 className="text-lg font-semibold">Codeforces Account</h2>
+          <h2 className="text-lg font-semibold">Account Profile</h2>
           <p className="text-sm text-muted-foreground">
-            Your CodeClash account is linked to your Codeforces handle. Battles track submissions from that account.
+            Your CodeClash account handle and competitive statistics.
           </p>
 
           {settings && (
             <div className="p-4 border rounded-lg bg-muted/20 space-y-2">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-medium">{settings.codeforcesHandle}</div>
+                  <div className="font-medium">{settings.username || settings.handle}</div>
                   <div className="text-sm text-muted-foreground">
                     Rating {settings.rating} · Max {settings.maxRating} · {settings.rank}
                   </div>
                 </div>
                 <a
-                  href={`https://codeforces.com/profile/${settings.codeforcesHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/profile/${settings.username || settings.handle}`}
                   className="px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-accent"
                 >
                   View Profile
@@ -173,12 +183,50 @@ export default function SettingsPage() {
           )}
 
           <button
-            onClick={handleSyncCodeforces}
+            onClick={handleSyncProfile}
             disabled={syncing}
             className="px-4 py-2 border rounded-lg font-medium hover:bg-accent disabled:opacity-50"
           >
-            {syncing ? 'Syncing...' : 'Sync from Codeforces'}
+            {syncing ? 'Syncing...' : 'Sync Profile'}
           </button>
+        </div>
+
+        {/* Editor Preferences */}
+        <div className="p-6 border rounded-2xl bg-card space-y-4">
+          <h2 className="text-lg font-semibold">Editor Preferences</h2>
+          <p className="text-sm text-muted-foreground">
+            Configure your default programming language and coding environment.
+          </p>
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Default Language</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'cpp', label: 'C++ (Default)', desc: 'C++20 with STL' },
+                { id: 'python', label: 'Python', desc: 'Python 3.11' },
+                { id: 'java', label: 'Java', desc: 'OpenJDK 21' },
+              ].map((item) => {
+                const isSelected = defaultLanguage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleLanguageChange(item.id as 'cpp' | 'python' | 'java')}
+                    className={`p-3.5 border rounded-xl text-left transition-all ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
+                        : 'border-border bg-card hover:bg-accent'
+                    }`}
+                  >
+                    <div className="font-semibold text-sm flex items-center justify-between">
+                      <span>{item.label}</span>
+                      {isSelected && <span className="text-primary text-xs font-bold">✓ Active</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">{item.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="p-6 border rounded-2xl bg-card space-y-4">

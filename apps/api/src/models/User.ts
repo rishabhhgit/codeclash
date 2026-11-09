@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  codeforcesHandle: string;
+  handle: string;
   username: string;
   email?: string;
   avatar: string;
@@ -26,7 +26,7 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    codeforcesHandle: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    handle: { type: String, required: true, unique: true, lowercase: true, trim: true },
     username: { type: String, required: true, trim: true },
     email: { type: String, sparse: true, unique: true },
     avatar: { type: String, default: '' },

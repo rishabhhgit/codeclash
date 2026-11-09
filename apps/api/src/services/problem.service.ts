@@ -1,5 +1,6 @@
-import { fetchRandomProblems, CfProblem } from './codeforces';
+import { fetchRandomProblems, CfProblem } from './competitive';
 import { IRoom } from '../models/Room';
+import { pickQuestionForBattle } from '../../../web/lib/questions/data';
 
 interface ProblemFilters {
   tags?: string[];
@@ -62,6 +63,23 @@ export async function getTopicProblems(topic: string, rating?: number): Promise<
 }
 
 export async function getFairProblemForRoom(room: IRoom): Promise<FairProblem | null> {
+  if (room.topics && room.topics.length > 0) {
+    const q = pickQuestionForBattle({
+      topics: room.topics,
+      difficulty: room.difficulty,
+    });
+    if (q) {
+      return {
+        contestId: q.number || 1900,
+        index: 'A',
+        name: q.title,
+        tags: q.topics || room.topics,
+        type: 'PROGRAMMING',
+        rating: room.difficulty === 'easy' ? 1000 : room.difficulty === 'hard' ? 2000 : 1500,
+      };
+    }
+  }
+
   let minRating: number | undefined;
   let maxRating: number | undefined;
 
@@ -76,18 +94,36 @@ export async function getFairProblemForRoom(room: IRoom): Promise<FairProblem | 
     maxRating = 2400;
   }
 
-  const cfProblems = await fetchRandomProblems(
-    1,
-    room.topics.length > 0 ? room.topics : undefined,
-    minRating,
-    maxRating
-  );
+  try {
+    const cfProblems = await fetchRandomProblems(
+      1,
+      room.topics.length > 0 ? room.topics : undefined,
+      minRating,
+      maxRating
+    );
 
-  if (cfProblems.length === 0) {
-    const fallback = await fetchRandomProblems(1);
-    if (fallback.length === 0) return null;
-    return toFairProblem(fallback[0]);
+    if (cfProblems.length > 0) {
+      return toFairProblem(cfProblems[0]);
+    }
+  } catch {
+    // External API failed, fallback to local database
   }
 
-  return toFairProblem(cfProblems[0]);
+  const localFallback = pickQuestionForBattle({
+    topics: room.topics,
+    difficulty: room.difficulty,
+  });
+
+  if (localFallback) {
+    return {
+      contestId: localFallback.number || 1900,
+      index: 'A',
+      name: localFallback.title,
+      tags: localFallback.topics || room.topics,
+      type: 'PROGRAMMING',
+      rating: 1500,
+    };
+  }
+
+  return null;
 }

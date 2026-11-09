@@ -113,7 +113,6 @@ app.use(errorHandler);
 async function start() {
   try {
     await connectDatabase();
-    console.log('MongoDB connected');
 
     httpServer.listen(config.port, () => {
       console.log(`Server running on port ${config.port}`);

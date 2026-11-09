@@ -1,638 +1,1781 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ExternalLink, RefreshCw } from 'lucide-react';
-import { io } from 'socket.io-client';
-import { getWsUrl, getApiUrl } from '../../../lib/api';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { io, Socket } from 'socket.io-client';
+import {
+  Swords,
+  Shield,
+  ShieldAlert,
+  Clock,
+  Eye,
+  Play,
+  Send,
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Users,
+  MessageSquare,
+  Terminal,
+  Trophy,
+  Flame,
+  Zap,
+  Radio,
+  FileCode,
+  Maximize2,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  Check,
+  Copy,
+  Share2,
+  Sparkles,
+  ThumbsUp,
+  Lightbulb,
+  Skull,
+  Crosshair,
+  Package,
+  Heart,
+} from 'lucide-react';
 
-interface Player {
-  id: string;
-  user: {
-    id: string;
-    codeforcesHandle: string;
-    avatar?: string | null;
-    rating: number;
-    rank: string;
-  };
-  score: number;
-  rank: number;
-  problemsSolved: number;
-  isAlive: boolean;
-}
+import { getQuestionBySlug, getAllQuestions } from '../../../lib/questions/data';
+import { LeetCodeQuestion, TestCase } from '../../../lib/questions/types';
+import { runCode, ExecutionSummary } from '../../../lib/execution/runner';
+import { useProctoring } from '../../../lib/proctoring/useProctoring';
+import ProctorWidget from '../../../components/proctoring/ProctorWidget';
+import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
+import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
+import { getWsUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
 
-interface CfProblem {
-  id: string;
-  contestId: number;
-  index: string;
-  name: string;
-  title: string;
-  difficulty: string;
-  description: string;
-  tags: string[];
-  rating?: number;
-  problemLink: string;
-  url: string;
-  contestUrl: string;
-}
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center bg-card text-muted-foreground font-mono text-xs">
+      Loading Combat Code Editor...
+    </div>
+  ),
+});
 
-interface Battle {
-  id: string;
-  code: string;
-  creatorId: string;
-  contestId?: number | null;
-  problemIndex?: string | null;
-  mode: string;
-  status: string;
-  difficulty: string;
-  topics: string[];
-  timeControl: number;
-  playerCount: number;
-  maxPlayers: number;
-  isPublic: boolean;
-  startTime?: string | null;
-  endTime?: string | null;
-  players: Player[];
-  problem?: CfProblem | null;
-  creator: {
-    id: string;
-    codeforcesHandle: string;
-  };
-}
-
-interface CfSubmission {
-  id: number;
-  verdict?: string;
-  programmingLanguage: string;
-  timeConsumedMillis?: number;
-  memoryConsumedBytes?: number;
-  creationTimeSeconds: number;
-}
-
-function displayHandle(player?: { codeforcesHandle?: string | null }) {
-  return player?.codeforcesHandle || 'Codeforces user';
-}
-
-function formatTime(seconds: number) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-function verdictLabel(verdict?: string) {
-  if (!verdict) return 'Judging';
-  if (verdict === 'OK') return 'Accepted';
-  return verdict.replace(/_/g, ' ').toLowerCase();
-}
+type BattleRole = 'fighter' | 'spectator';
+type LeftTab = 'description' | 'roster' | 'feed' | 'challenge';
 
 export default function BattleRoomPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const code = (params.code as string).toUpperCase();
-  const apiUrl = getApiUrl();
 
-  const [battle, setBattle] = useState<Battle | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [activityLog, setActivityLog] = useState<string[]>([]);
-  const [copied, setCopied] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [hasSolved, setHasSolved] = useState(false);
-  const [recentSubmissions, setRecentSubmissions] = useState<CfSubmission[]>([]);
-  const [statusMessage, setStatusMessage] = useState('');
+  const codeParam = (params.code as string).toUpperCase();
+  const initialRole: BattleRole = searchParams.get('role') === 'spectator' ? 'spectator' : 'fighter';
 
-  const socketRef = useRef<any>(null);
+  const [role, setRole] = useState<BattleRole>(initialRole);
+  const [username, setUsername] = useState<string>(() => {
+    return getClientUsername();
+  });
 
+  // Direct drop-in into arena (no blocking proctored modal)
+  const [isVerified, setIsVerified] = useState<boolean>(true);
+  const [cameraChecked, setCameraChecked] = useState(false);
+  const [micChecked, setMicChecked] = useState(false);
+  const [fullscreenChecked, setFullscreenChecked] = useState(false);
+  const [policyAccepted, setPolicyAccepted] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Match & Room State
+  const [battle, setBattle] = useState<any>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(15 * 60);
+  const [spectatorSelectedPlayer, setSpectatorSelectedPlayer] = useState<string>('');
+  const [chatInput, setChatInput] = useState('');
+  const [matchWinner, setMatchWinner] = useState<string | null>(null);
+
+  // Editor & Execution State
+  const [language, setLanguage] = useState<'python' | 'cpp' | 'java'>('cpp');
+  const [code, setCode] = useState<string>('');
+  const [activeLeftTab, setActiveLeftTab] = useState<LeftTab>('description');
+  const [activeConsoleTab, setActiveConsoleTab] = useState<'testcase' | 'result'>('testcase');
+  const [activeTestCaseIndex, setActiveTestCaseIndex] = useState<number>(0);
+  const [customTestCases, setCustomTestCases] = useState<TestCase[]>([]);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [execResult, setExecResult] = useState<ExecutionSummary | null>(null);
+
+  // Opponent code stream for live spectator / combatant
+  const [opponentStreams, setOpponentStreams] = useState<Record<string, { code: string; language: string }>>({});
+  const [opponentTyping, setOpponentTyping] = useState<boolean>(false);
+  const [countdownVal, setCountdownVal] = useState<number | null>(null);
+  const [revealedSolutions, setRevealedSolutions] = useState<Record<string, { code: string; language: string; username: string }>>({});
+  const [inspectingOpponent, setInspectingOpponent] = useState<boolean>(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const socketRef = useRef<Socket | null>(null);
+
+  // Active DSA Question
+  const question = useMemo(() => {
+    const slug = battle?.questionSlug || searchParams.get('slug') || 'two-sum';
+    return getQuestionBySlug(slug) || getAllQuestions()[0];
+  }, [battle?.questionSlug, searchParams]);
+
+  const handleCopyInviteLink = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const challengeUrl = `${window.location.origin}/battle/${codeParam}${question?.slug ? `?slug=${question.slug}` : ''}`;
+    navigator.clipboard.writeText(challengeUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  }, [codeParam, question?.slug]);
+
+  const handleCopyCode = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(codeParam);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2500);
+  }, [codeParam]);
+
+  // Battle Royale Game Mechanics
+  const isBattleRoyale = useMemo(() => {
+    return (
+      battle?.mode === 'battle_royale' ||
+      battle?.mode === 'royal' ||
+      codeParam.startsWith('ROYAL') ||
+      codeParam.startsWith('BR-') ||
+      (battle?.maxPlayers && battle.maxPlayers > 2)
+    );
+  }, [battle?.mode, battle?.maxPlayers, codeParam]);
+
+  const aliveSurvivorsCount = useMemo(() => {
+    if (!battle?.players) return 1;
+    return Object.values(battle.players).filter((p: any) => p.status !== 'eliminated').length;
+  }, [battle?.players]);
+
+  const totalCombatants = useMemo(() => {
+    if (!battle?.players) return 1;
+    return Object.keys(battle.players).length;
+  }, [battle?.players]);
+
+  const handleClaimAirdrop = () => {
+    if (!socketRef.current?.connected) return;
+    socketRef.current.emit('battle:claim_airdrop', {
+      battleCode: codeParam,
+    });
+  };
+
+  // HackerRank Proctoring Hook
+  const {
+    trustScore,
+    violations,
+    isFullscreen,
+    isCameraActive,
+    isMicActive,
+    faceDetected,
+    activeWarning,
+    audioLevel,
+    videoRef,
+    detectedObjects,
+    faceBbox,
+    candidateCentering,
+    aiModelStatus,
+    setAiSensitivity,
+    reconnectCamera,
+    triggerSimulatedIllicit,
+    clearSimulatedIllicit,
+    enterFullscreen,
+    exitFullscreen,
+    startCameraAndMic,
+    stopCameraAndMic,
+    dismissWarning,
+    resetViolations,
+  } = useProctoring({
+    enabled: false,
+    strictMode: false,
+    onViolation: (v) => {
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('battle:violation', {
+          battleCode: codeParam,
+          violation: v,
+        });
+      }
+    },
+  });
+
+  // Sync user's default language preference from settings (defaults to 'cpp')
   useEffect(() => {
-    fetchCurrentUser();
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('codeclash_default_language') as 'cpp' | 'python' | 'java';
+      if (savedLang && ['cpp', 'python', 'java'].includes(savedLang)) {
+        setLanguage(savedLang);
+      }
+    }
   }, []);
 
+  // Socket.IO Connection for Real-Time Duel & Spectating
   useEffect(() => {
-    fetchBattle();
-  }, [code]);
-
-  useEffect(() => {
-    if (battle?.status === 'active' && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            fetchBattle();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [battle?.status, timeLeft]);
-
-  useEffect(() => {
-    if (battle?.status !== 'active' || !currentUser?.id) return;
-    checkCodeforcesStatus(false);
-    const poll = setInterval(() => checkCodeforcesStatus(false), 12000);
-    return () => clearInterval(poll);
-  }, [battle?.status, currentUser?.id]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    socketRef.current = io(getWsUrl(), {
-      auth: { token },
+    const wsUrl = getWsUrl();
+    const token = getClientAuthToken();
+    const socket = io(wsUrl, {
       transports: ['websocket', 'polling'],
+      timeout: 5000,
+      auth: { token, candidateId: username },
     });
 
-    socketRef.current.emit('battle:join', { battleCode: code });
+    socketRef.current = socket;
 
-    socketRef.current.on('battle:started', (updatedBattle: Battle) => {
-      setBattle(updatedBattle);
-      setTimeLeft(updatedBattle.timeControl * 60);
-      setActivityLog((prev) => [...prev, 'Battle started. Submit on Codeforces when ready.']);
+    socket.on('connect', () => {
+      socket.emit('battle:join', {
+        battleCode: codeParam,
+        role,
+        username,
+        questionSlug: searchParams.get('slug') || undefined,
+        mode: searchParams.get('mode') || (codeParam.toUpperCase().startsWith('ROYAL') || codeParam.toUpperCase().startsWith('BR-') ? 'battle_royale' : undefined),
+      });
     });
 
-    socketRef.current.on('battle:player_joined', (data: any) => {
-      fetchBattle();
-      setActivityLog((prev) => [...prev, `${data.username || 'A player'} joined the lobby.`]);
-    });
-
-    socketRef.current.on('battle:player_left', (data: any) => {
-      fetchBattle();
-      setActivityLog((prev) => [...prev, `${data.username || 'A player'} left the lobby.`]);
-    });
-
-    socketRef.current.on('submission:result', (data: any) => {
-      if (data.players) {
-        setBattle((prev) => (prev ? { ...prev, players: data.players } : null));
+    socket.on('battle:role_reassigned', (data: { role: BattleRole; reason: string }) => {
+      if (data?.role) {
+        setRole(data.role);
+        setIsVerified(true);
       }
-      setActivityLog((prev) => [...prev, `${data.username || 'A player'} solved the Codeforces problem.`]);
-      if (data.userId === currentUser?.id) {
-        setHasSolved(true);
-        setStatusMessage('Accepted on Codeforces. Score updated.');
+    });
+
+    socket.on('battle:state_sync', (state: any) => {
+      if (state) {
+        setBattle(state);
+        if (state.endTime && state.status === 'active') {
+          setRemainingSeconds(Math.max(0, Math.floor((state.endTime - Date.now()) / 1000)));
+        }
+        if (state.winner) {
+          setMatchWinner(state.winner);
+        }
       }
+    });
+
+    socket.on('battle:state_update', (state: any) => {
+      if (state) setBattle(state);
+    });
+
+    socket.on('battle:countdown_tick', (data: { count: number }) => {
+      setCountdownVal(data.count);
+    });
+
+    socket.on('battle:countdown_complete', () => {
+      setCountdownVal(0);
+      setTimeout(() => setCountdownVal(null), 1000);
+    });
+
+    socket.on('battle:opponent_typing', (data: any) => {
+      if (data.username !== username) {
+        setOpponentTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setOpponentTyping(false);
+        }, 1500);
+      }
+    });
+
+    socket.on('battle:reveal_codes', (solutions: any) => {
+      if (solutions) setRevealedSolutions(solutions);
+    });
+
+    socket.on('battle:player_code_stream', (data: any) => {
+      setOpponentStreams((prev) => ({
+        ...prev,
+        [data.userId]: { code: data.code, language: data.language },
+      }));
+    });
+
+    socket.on('battle:progress_sync', (data: any) => {
+      setBattle((prev: any) => {
+        if (!prev) return prev;
+        const updatedPlayers = { ...prev.players };
+        if (updatedPlayers[data.userId]) {
+          updatedPlayers[data.userId].passedCases = data.passed;
+          updatedPlayers[data.userId].totalCases = data.total;
+        }
+        return {
+          ...prev,
+          players: updatedPlayers,
+          feed: data.feed || prev.feed,
+        };
+      });
+    });
+
+    socket.on('battle:match_won', (data: any) => {
+      setMatchWinner(data.winner);
+      if (data.battle) setBattle(data.battle);
+      if (data.solutions) setRevealedSolutions(data.solutions);
+    });
+
+    socket.on('battle:submission_result', (data: any) => {
+      if (data.userId === socket.id || data.userId === username) {
+        setExecResult((prev) => ({
+          verdict: data.verdict as any,
+          passedCases: data.passed,
+          totalCases: data.total,
+          totalRuntimeMs: prev?.totalRuntimeMs || 0,
+          memoryMb: prev?.memoryMb || 0,
+          results: prev?.results || [],
+          globalError: data.error,
+        }));
+      }
+    });
+
+    socket.on('battle:player_reconnected', (data: any) => {
+      setBattle((prev: any) => (prev ? { ...prev, feed: data.feed || prev.feed } : prev));
+    });
+
+    socket.on('battle:violation_alert', (data: any) => {
+      setBattle((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          feed: data.feed || prev.feed,
+        };
+      });
+    });
+
+    socket.on('battle:chat_broadcast', (msg: any) => {
+      setBattle((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          chat: [...(prev.chat || []), msg],
+        };
+      });
     });
 
     return () => {
-      socketRef.current?.emit('battle:leave');
-      socketRef.current?.disconnect();
+      socket.disconnect();
     };
-  }, [code, currentUser?.id]);
+  }, [codeParam, role, username]);
 
-  const fetchCurrentUser = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+  // Synchronized countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRemainingSeconds((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    try {
-      const res = await fetch(`${apiUrl}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+  // Set default question code
+  useEffect(() => {
+    if (!question) return;
+    const starter = question.starterCodes[language] || question.starterCodes.cpp || question.starterCodes.python;
+    setCode(starter);
+    setCustomTestCases(question.testCases.map((tc, idx) => ({ ...tc, id: `tc-${idx}` })));
+  }, [question, language]);
+
+  // Stream fighter code in real-time
+  const handleCodeChange = (newCode: string | undefined) => {
+    const val = newCode || '';
+    setCode(val);
+    if (socketRef.current?.connected && role === 'fighter') {
+      socketRef.current.emit('battle:code_stream', {
+        battleCode: codeParam,
+        code: val,
+        language,
       });
-      const data = await res.json();
-      if (data.success) setCurrentUser(data.data);
-    } catch (error) {
-      console.error(error);
     }
   };
 
-  const fetchBattle = async () => {
+  // Native server-side compiler (clang++ / python3) with client-side fallback
+  const executeCode = async (casesToRun: TestCase[], isSubmit: boolean): Promise<ExecutionSummary> => {
     try {
-      const res = await fetch(`${apiUrl}/api/battles/${code}`);
-      const data = await res.json();
-      if (data.success) {
-        setBattle(data.data);
-        if (data.data.status === 'active' && data.data.endTime) {
-          const end = new Date(data.data.endTime).getTime();
-          setTimeLeft(Math.max(0, Math.floor((end - Date.now()) / 1000)));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const resp = await fetch('/api/questions/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: question.slug,
+          code,
+          language,
+          isSubmit,
+          customTestCases: casesToRun,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json.success && json.data) {
+          return json.data;
         }
       }
-    } catch {
-      console.error('Failed to fetch battle');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.warn('Battle execution API timed out or unavailable, using fallback runner:', e);
     }
+    return await runCode(code, language, question, casesToRun);
   };
 
-  const handleJoinBattle = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/auth/login');
-      return;
-    }
+  // Run Testcases
+  const handleRunCode = async () => {
+    if (!question || isRunning) return;
+    setIsRunning(true);
+    setActiveConsoleTab('result');
 
-    const res = await fetch(`${apiUrl}/api/battles/${code}/join`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await res.json();
-    if (data.success) fetchBattle();
-    else alert(data.error || 'Failed to join battle');
-  };
-
-  const handleStartBattle = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const res = await fetch(`${apiUrl}/api/battles/${code}/start`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!data.success) alert(data.error || 'Failed to start battle');
-    else setBattle(data.data);
-  };
-
-  const startTracking = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/auth/login');
-      return;
-    }
-
-    const res = await fetch(`${apiUrl}/api/battles/${code}/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ language: 'codeforces', code: '' }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setStatusMessage(data.data.message);
-      if (data.data.codeforcesUrl) window.open(data.data.codeforcesUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      setStatusMessage(data.error || 'Could not start tracking');
-    }
-  };
-
-  const checkCodeforcesStatus = async (showSpinner = true) => {
-    const token = localStorage.getItem('token');
-    if (!token || checking) return;
-
-    if (showSpinner) setChecking(true);
     try {
-      const res = await fetch(`${apiUrl}/api/battles/${code}/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setHasSolved(data.data.hasSolved);
-        setRecentSubmissions(data.data.submissions || []);
-        setStatusMessage(
-          data.data.hasSolved
-            ? 'Accepted on Codeforces. Score updated.'
-            : 'No accepted Codeforces submission detected yet.'
-        );
-        fetchBattle();
-      } else if (showSpinner) {
-        setStatusMessage(data.error || 'Could not check Codeforces status');
+      const summary = await executeCode(customTestCases, false);
+      setExecResult(summary);
+
+      if (socketRef.current?.connected && role === 'fighter') {
+        socketRef.current.emit('battle:testcase_progress', {
+          battleCode: codeParam,
+          passed: summary.passedCases,
+          total: summary.totalCases,
+        });
       }
-    } catch {
-      if (showSpinner) setStatusMessage('Network error while checking Codeforces');
+    } catch (err: any) {
+      console.error(err);
     } finally {
-      if (showSpinner) setChecking(false);
+      setIsRunning(false);
     }
   };
 
-  const copyInviteLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Submit Solution
+  const handleSubmitCode = async () => {
+    if (!question || isSubmitting) return;
+    setIsSubmitting(true);
+    setActiveConsoleTab('result');
+
+    try {
+      const fullSuite = [...question.testCases, ...(question.hiddenTestCases || [])];
+      const summary = await executeCode(fullSuite, true);
+      setExecResult(summary);
+
+      if (socketRef.current?.connected && role === 'fighter') {
+        socketRef.current.emit('battle:submit_solution', {
+          battleCode: codeParam,
+          code,
+          language,
+          passed: summary.passedCases,
+          total: summary.totalCases,
+          verdict: summary.verdict,
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <div className="text-sm font-medium text-muted-foreground">Loading battle room...</div>
-        </div>
-      </div>
-    );
-  }
+  // Send Spectator Chat / Reaction
+  const handleSendChat = (text: string, isCheer = false) => {
+    if (!text.trim() || !socketRef.current?.connected) return;
+    socketRef.current.emit('battle:chat_message', {
+      battleCode: codeParam,
+      message: text,
+      isCheer,
+    });
+    setChatInput('');
+  };
 
-  if (!battle) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-muted/20">
-        <div className="max-w-sm rounded-lg border bg-card p-8 text-center shadow-md">
-          <h2 className="mb-2 text-2xl font-bold">Battle Not Found</h2>
-          <p className="mb-6 text-sm text-muted-foreground">
-            The battle lobby with code <span className="font-mono font-bold text-foreground">{code}</span> does not exist or has been closed.
-          </p>
-          <button
-            onClick={() => router.push('/lobby')}
-            className="w-full rounded-lg bg-primary py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Back to Lobby
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Format Timer MM:SS
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
-  const isUserJoined = battle.players.some((p) => p.user.id === currentUser?.id);
-  const isHost = battle.creatorId === currentUser?.id;
-  const problem = battle.problem;
-  const sortedPlayers = [...battle.players].sort((a, b) => b.score - a.score);
+  // Players list for spectator views
+  const playersList = useMemo(() => {
+    if (!battle?.players) return [];
+    return Object.values(battle.players) as any[];
+  }, [battle?.players]);
 
-  if (battle.status === 'waiting') {
-    return (
-      <div className="container mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col justify-center px-4 py-8">
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="space-y-6 md:col-span-2">
-            <section className="space-y-4 rounded-lg border bg-card p-6 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Codeforces Battle Lobby
-                  </div>
-                  <h1 className="mt-1 text-3xl font-bold tracking-tight">Room {battle.code}</h1>
-                </div>
-                <span className="rounded-md border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-500">
-                  Waiting
-                </span>
-              </div>
+  const activeSpectatorPlayer = useMemo(() => {
+    if (spectatorSelectedPlayer) {
+      return playersList.find((p) => p.userId === spectatorSelectedPlayer) || playersList[0];
+    }
+    return playersList[0];
+  }, [playersList, spectatorSelectedPlayer]);
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="text-xs text-muted-foreground">Difficulty</div>
-                  <div className="mt-0.5 text-sm font-semibold capitalize">{battle.difficulty}</div>
-                </div>
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="text-xs text-muted-foreground">Time Limit</div>
-                  <div className="mt-0.5 text-sm font-semibold">{battle.timeControl} minutes</div>
-                </div>
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="text-xs text-muted-foreground">Mode</div>
-                  <div className="mt-0.5 text-sm font-semibold capitalize">{battle.mode}</div>
-                </div>
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="text-xs text-muted-foreground">Players</div>
-                  <div className="mt-0.5 text-sm font-semibold">{battle.players.length}/{battle.maxPlayers}</div>
-                </div>
-              </div>
+  const opponentPlayer = useMemo(() => {
+    return playersList.find((p) => p.username !== username) || null;
+  }, [playersList, username]);
 
-              <div>
-                <div className="mb-1.5 text-xs font-medium text-muted-foreground">Selected Topics</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {battle.topics.map((topic) => (
-                    <span key={topic} className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                      {topic.replace(/_/g, ' ')}
-                    </span>
-                  ))}
-                </div>
-              </div>
+  const currentPlayer = useMemo(() => {
+    return playersList.find((p) => p.username === username) || null;
+  }, [playersList, username]);
 
-              <div className="space-y-3 border-t pt-4">
-                <div className="text-sm font-medium">Invite Link</div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={typeof window !== 'undefined' ? window.location.href : ''}
-                    className="flex-1 select-all rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground focus:outline-none"
-                  />
-                  <button
-                    onClick={copyInviteLink}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium transition-all hover:bg-accent"
-                  >
-                    {copied ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-            </section>
+  const isStormHazard = useMemo(() => {
+    if (!isBattleRoyale || battle?.status !== 'active') return false;
+    const req = battle?.storm?.phase || 1;
+    return (currentPlayer?.passedCases || 0) < req || (currentPlayer?.hp ?? 100) < 40;
+  }, [isBattleRoyale, battle?.status, battle?.storm?.phase, currentPlayer?.passedCases, currentPlayer?.hp]);
 
-            {isUserJoined ? (
-              <section className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-6 shadow-sm">
-                <div>
-                  <h3 className="font-semibold text-foreground">Launch Battle</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {isHost ? 'Start when everyone is ready.' : 'Waiting for the host to start the battle.'}
-                  </p>
-                </div>
-                {isHost ? (
-                  <button
-                    onClick={handleStartBattle}
-                    className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90"
-                  >
-                    Start Battle
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <div className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                    Pending host
-                  </div>
-                )}
-              </section>
-            ) : (
-              <section className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-6 shadow-sm">
-                <div>
-                  <h3 className="font-semibold text-emerald-500">Join Lobby</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Join with your Codeforces handle.</p>
-                </div>
-                <button
-                  onClick={handleJoinBattle}
-                  className="rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-600"
-                >
-                  Join Battle
-                </button>
-              </section>
-            )}
-          </div>
-
-          <section className="flex max-h-[500px] flex-col rounded-lg border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-bold">Players ({battle.players.length}/{battle.maxPlayers})</h3>
-            <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-              {battle.players.map((player) => (
-                <div key={player.id} className="flex items-center justify-between rounded-lg border bg-muted/20 p-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">
-                      {displayHandle(player.user).charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{displayHandle(player.user)}</div>
-                      <div className="text-xs text-muted-foreground">Rating: {player.user.rating}</div>
-                    </div>
-                  </div>
-                  {battle.creatorId === player.user.id && (
-                    <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      Host
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
-    );
-  }
+  const handleToggleReady = () => {
+    if (!socketRef.current?.connected) return;
+    socketRef.current.emit('battle:toggle_ready', {
+      battleCode: codeParam,
+    });
+  };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-background">
-      <header className="flex items-center justify-between border-b bg-card px-4 py-3 text-card-foreground">
+    <div
+      className="flex flex-col h-[calc(100dvh-4rem)] bg-background text-foreground overflow-hidden font-sans select-none relative transition-all duration-500"
+      style={isStormHazard ? { boxShadow: 'inset 0 0 50px rgba(59, 130, 246, 0.45)' } : undefined}
+    >
+      {/* ================= TOP ARENA NAVBAR ================= */}
+      <header className="h-13 border-b border-border bg-card px-4 flex items-center justify-between shrink-0 gap-3 z-30">
+        {/* Left: Room & Match Mode */}
         <div className="flex items-center gap-3">
-          <span className="rounded bg-muted px-2 py-1 font-mono text-sm font-bold">Room: {battle.code}</span>
-          <span className="rounded-md border border-green-500/20 bg-green-500/10 px-2.5 py-0.5 text-xs font-semibold text-green-500">
-            {battle.status.toUpperCase()}
-          </span>
-          <span className="hidden text-xs capitalize text-muted-foreground sm:inline">
-            {battle.difficulty} | {battle.mode.replace(/_/g, ' ')}
-          </span>
+          <Link
+            href="/lobby"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            ← Lobby
+          </Link>
+
+          <div className="h-4 w-px bg-muted" />
+
+          <div className="flex items-center gap-2">
+            <span className="font-black text-xs text-primary flex items-center gap-1">
+              {isBattleRoyale ? <Flame className="size-4 text-orange-500 animate-pulse" /> : <Swords className="size-4 text-primary" />}
+              {isBattleRoyale ? `Knockout Arena ${codeParam}` : `Arena ${codeParam}`}
+            </span>
+            <span className={`px-2 py-0.5 rounded border text-[11px] font-mono ${
+              isBattleRoyale
+                ? 'bg-primary/10 text-primary border-primary/20 font-bold'
+                : 'bg-muted border-border text-muted-foreground'
+            }`}>
+              {isBattleRoyale ? 'Knockout Tournament' : '1v1 Deathmatch'}
+            </span>
+            <div className="flex items-center rounded-lg border border-border bg-muted overflow-hidden text-xs">
+              <button
+                onClick={handleCopyCode}
+                className="px-2.5 py-1 hover:bg-muted/80 text-foreground font-mono text-[11px] font-medium flex items-center gap-1 border-r border-border transition-colors duration-150 active:scale-[0.98]"
+                title="Copy unique room code"
+                aria-label="Copy unique room code"
+              >
+                {copiedCode ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5 text-muted-foreground" />}
+                <span>{copiedCode ? 'Code Copied!' : `Code: ${codeParam}`}</span>
+              </button>
+              <button
+                onClick={handleCopyInviteLink}
+                className="px-2.5 py-1 hover:bg-muted/80 text-foreground text-[11px] font-medium flex items-center gap-1 transition-colors duration-150 active:scale-[0.98]"
+                title="Copy direct invite link"
+                aria-label="Copy direct invite link"
+              >
+                {copiedLink ? <Check className="size-3.5 text-emerald-400" /> : <Share2 className="size-3.5 text-muted-foreground" />}
+                <span>{copiedLink ? 'Link Copied!' : 'Invite Link'}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          {battle.status === 'active' && timeLeft > 0 ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium uppercase text-muted-foreground">Remaining</span>
-              <div className={`font-mono text-xl font-bold tracking-tight ${timeLeft < 60 ? 'animate-pulse text-red-500' : 'text-primary'}`}>
-                {formatTime(timeLeft)}
-              </div>
+        {/* Center: Synchronized Timer & Survival / Spectator Count */}
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono font-medium ${
+              remainingSeconds < 180
+                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                : 'bg-muted text-foreground border-border'
+            }`}
+          >
+            <Clock className="size-3.5 text-amber-400" />
+            <span className="tabular-nums">{formatTimer(remainingSeconds)}</span>
+          </div>
+
+          {isBattleRoyale ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-bold font-mono">
+              <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="tabular-nums">👥 {aliveSurvivorsCount} / {totalCombatants} Active</span>
             </div>
           ) : (
-            <div className="text-sm font-semibold uppercase tracking-wider text-red-500">Battle Finished</div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-xs text-muted-foreground">
+              <Eye className="size-3.5 text-blue-400" />
+              <span className="tabular-nums">
+                {Object.keys(battle?.spectators || {}).length > 0
+                  ? `${Object.keys(battle?.spectators || {}).length} ${Object.keys(battle?.spectators || {}).length === 1 ? 'Spectator' : 'Spectators'}`
+                  : '0 Spectators'}
+              </span>
+            </div>
           )}
-          <div className="text-xs font-medium text-muted-foreground">{battle.playerCount}/{battle.maxPlayers} Players</div>
+
+          <button
+            onClick={() => {
+              handleCopyInviteLink();
+              setActiveLeftTab('challenge');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-xs font-bold transition-all duration-150 shadow-sm active:scale-95"
+            title="Invite friends to this battle"
+            aria-label="Invite friends to this battle"
+          >
+            <Share2 className="size-3.5" />
+            <span>{copiedLink ? 'Link Copied! ✓' : '👥 Challenge Friends'}</span>
+          </button>
+        </div>
+
+        {/* Right: Locked Role Badge (Role flipping disabled during active match) */}
+        <div className="flex items-center gap-2">
+          {role === 'fighter' ? (
+            <div
+              data-testid="fighter-mode-badge"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 font-medium text-xs select-none"
+              title="Active Fighter: role is locked to prevent battle corruption"
+            >
+              <Swords className="size-3.5" />
+              <span>Fighter Mode (Combatant)</span>
+            </div>
+          ) : (
+            <div
+              data-testid="spectator-mode-badge"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 font-bold text-xs select-none shadow-sm"
+              title="Spectator: observing live combat"
+            >
+              <Eye className="size-3.5 text-blue-400" />
+              <span>Spectator Mode (Observer)</span>
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="grid flex-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="overflow-y-auto border-r bg-card/40 p-6">
-          {problem ? (
-            <div className="mx-auto max-w-3xl space-y-6">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-2xl font-bold tracking-tight">{problem.name}</h1>
-                  <span className="rounded-md border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-bold uppercase text-primary">
-                    {problem.rating ? `${problem.rating} rated` : problem.difficulty}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {problem.tags.map((tag) => (
-                    <span key={tag} className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+      {/* ================= READY CHECK OR COUNTDOWN OVERLAY BANNER ================= */}
+      {battle?.status === 'ready_check' && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between text-xs shrink-0 z-20">
+          <div className="flex items-center gap-2">
+            <span className="size-2.5 rounded-full bg-amber-400 animate-ping" />
+            <span className="font-bold text-amber-300 uppercase tracking-wider">Ready Check Active:</span>
+            <span className="text-muted-foreground text-pretty">Both fighters must confirm readiness to unlock the arena</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground text-xs font-mono">
+              You: <strong className={currentPlayer?.isReady ? 'text-emerald-400' : 'text-amber-400'}>{currentPlayer?.isReady ? 'READY ✓' : 'NOT READY'}</strong>
+              {' | '}
+              Opponent: <strong className={opponentPlayer?.isReady ? 'text-emerald-400' : 'text-muted-foreground'}>{opponentPlayer?.isReady ? 'READY ✓' : 'WAITING...'}</strong>
+            </span>
+            <button
+              onClick={handleToggleReady}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 shadow-sm active:scale-95 ${
+                currentPlayer?.isReady
+                  ? 'bg-secondary border border-border text-foreground hover:bg-muted'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white animate-pulse'
+              }`}
+            >
+              {currentPlayer?.isReady ? 'Cancel Ready' : 'CONFIRM READY ✓'}
+            </button>
+          </div>
+        </div>
+      )}
 
-              <div className="rounded-lg border bg-background p-5">
-                <p className="text-sm leading-relaxed text-muted-foreground">{problem.description}</p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <a
-                    href={problem.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Open on Codeforces
-                  </a>
-                  <a
-                    href={problem.contestUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent"
-                  >
-                    Contest Page
-                  </a>
-                </div>
-              </div>
+      {(battle?.status === 'countdown' || (countdownVal !== null && countdownVal > 0)) && (
+        <div className="bg-primary/20 border-b border-primary/40 px-4 py-3 flex items-center justify-center text-center text-xs shrink-0 z-20">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-xl font-black text-primary animate-bounce tabular-nums">
+              {countdownVal !== null && countdownVal > 0 ? countdownVal : battle?.countdownSeconds || 3}
+            </span>
+            <span className="font-bold text-foreground text-sm uppercase tracking-widest text-balance">
+              BATTLE COMMENCING — PREPARE TO CODE!
+            </span>
+          </div>
+        </div>
+      )}
 
-              <div className="rounded-lg border bg-background p-5">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Codeforces Tracking</h2>
-                <div className="flex flex-wrap gap-3">
+      {/* ================= FIGHTER HUD: LIVE OPPONENT METER OR KNOCKOUT ARENA HUD ================= */}
+      {role === 'fighter' && (
+        isBattleRoyale ? (
+          <div className="bg-gradient-to-r from-blue-950/60 via-card to-purple-950/60 border-b border-blue-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs shrink-0 gap-3">
+            <div className="flex items-center gap-3">
+              <span className="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono text-[11px] font-bold flex items-center gap-1.5">
+                <Zap className="size-3.5 text-blue-400 animate-pulse" />
+                <span>{battle?.storm?.phaseName || 'Phase 1: Initial Benchmark Sprint'}</span>
+              </span>
+
+              <span className="text-muted-foreground text-xs hidden md:inline">
+                Cutoff Requirement: <strong className="text-foreground">{battle?.storm?.safeZoneRequirement || 'Pass testcases before cutoff'}</strong>
+              </span>
+
+              {battle?.airdrop?.active && (
+                !battle.airdrop.claimedBy ? (
                   <button
-                    onClick={startTracking}
-                    disabled={battle.status !== 'active'}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    onClick={handleClaimAirdrop}
+                    className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-[10px] tracking-wide flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 animate-pulse transition-all duration-150"
                   >
-                    Open and Track Submission
+                    <Package className="size-3.5 text-black" />
+                    <span>CLAIM ALGORITHMIC BLUEPRINT (+50 Buffer)</span>
                   </button>
-                  <button
-                    onClick={() => checkCodeforcesStatus(true)}
-                    disabled={checking}
-                    className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent disabled:opacity-50"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
-                    Check Status
-                  </button>
-                </div>
-                {statusMessage && (
-                  <div className={`mt-4 rounded-lg border p-3 text-sm ${hasSolved ? 'border-green-500/20 bg-green-500/10 text-green-500' : 'bg-muted/30 text-muted-foreground'}`}>
-                    {statusMessage}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-lg border bg-background p-5">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Codeforces Submissions</h2>
-                {recentSubmissions.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No submissions detected for your handle on this problem yet.</div>
                 ) : (
-                  <div className="space-y-2">
-                    {recentSubmissions.map((submission) => (
-                      <div key={submission.id} className="flex items-center justify-between rounded-lg border bg-muted/20 p-3 text-sm">
+                  <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                    <Package className="size-3 text-muted-foreground" />
+                    <span>Blueprint claimed by @{battle.airdrop.claimedBy}</span>
+                  </span>
+                )
+              )}
+            </div>
+
+            <div className="flex items-center gap-4 text-xs font-mono">
+              <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                <Heart className="size-3.5 text-rose-500 fill-rose-500" />
+                <span>STAMINA</span>
+                <div className="w-20 bg-muted h-2.5 rounded-full overflow-hidden border border-border">
+                  <div
+                    className="bg-emerald-500 h-full transition-all duration-300"
+                    style={{ width: `${Math.max(0, Math.min(100, currentPlayer?.hp ?? 100))}%` }}
+                  />
+                </div>
+                <span className="text-foreground tabular-nums">{currentPlayer?.hp ?? 100}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-blue-400 font-bold">
+                <Shield className="size-3.5 text-blue-400" />
+                <span>BUFFER</span>
+                <div className="w-16 bg-muted h-2.5 rounded-full overflow-hidden border border-border">
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-300"
+                    style={{ width: `${Math.max(0, Math.min(100, currentPlayer?.shield ?? 50))}%` }}
+                  />
+                </div>
+                <span className="text-foreground tabular-nums">{currentPlayer?.shield ?? 50}</span>
+              </div>
+
+              <div className="flex items-center gap-2 pl-2 border-l border-border text-foreground font-bold">
+                <span className="text-primary font-mono tabular-nums">👥 {aliveSurvivorsCount} Active Coders</span>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-emerald-400 font-mono tabular-nums">🎯 {currentPlayer?.kills || 0} Solved</span>
+              </div>
+            </div>
+          </div>
+        ) : opponentPlayer ? (
+          <div className="h-10 bg-card border-b border-border px-4 flex items-center justify-between text-xs shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-muted-foreground">Opponent:</span>
+              <span className="font-bold text-foreground">{opponentPlayer.username}</span>
+              <span className="px-2 py-0.5 rounded-full bg-muted border border-border text-[10px] text-muted-foreground tabular-nums">
+                {opponentPlayer.trustScore}% Trust
+              </span>
+              {opponentTyping ? (
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono animate-pulse">
+                  <span className="size-1.5 rounded-full bg-emerald-400" />
+                  Typing...
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground font-mono">Idle</span>
+              )}
+              <span className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.2 rounded bg-muted/50 font-mono hidden sm:inline" title="Opponent code is private during match">
+                🔒 Code Shielded
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground text-xs">
+                Testcases Passed: <strong className="text-emerald-400 tabular-nums">{opponentPlayer.passedCases || 0}</strong> / <span className="tabular-nums">{opponentPlayer.totalCases || 3}</span>
+              </span>
+              <div className="w-28 bg-muted h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-300"
+                  style={{
+                    width: `${((opponentPlayer.passedCases || 0) / (opponentPlayer.totalCases || 3)) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="h-11 bg-card border-b border-border px-4 flex items-center justify-between text-xs shrink-0 gap-3">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-muted-foreground font-medium">Waiting for challenger...</span>
+              <span className="text-foreground text-xs hidden sm:inline">
+                Share Code: <strong className="font-mono text-primary font-bold">{codeParam}</strong> or Invite Link
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyCode}
+                className="px-2.5 py-1 rounded-md bg-secondary hover:bg-muted text-foreground border border-border font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors duration-150 active:scale-[0.98]"
+                aria-label="Copy code"
+              >
+                {copiedCode ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5 text-muted-foreground" />}
+                <span>{copiedCode ? 'Code Copied!' : `Copy Code (${codeParam})`}</span>
+              </button>
+              <button
+                onClick={handleCopyInviteLink}
+                className="px-3 py-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs flex items-center gap-1.5 transition-colors duration-150 active:scale-[0.98]"
+                aria-label="Copy invite link"
+              >
+                {copiedLink ? <Check className="size-3.5" /> : <Share2 className="size-3.5" />}
+                <span>{copiedLink ? 'Link Copied!' : 'Copy Link'}</span>
+              </button>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* ================= MAIN WORKSPACE: FIGHTER OR SPECTATOR ================= */}
+      {role === 'spectator' ? (
+        /* ======================================================== */
+        /* LIVE SPECTATOR MODE (Side-by-Side Dual Code & Telemetry) */
+        /* ======================================================== */
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 overflow-hidden">
+          {/* Left Column: Match Details & Live Combat Log */}
+          <div className="flex flex-col border-r border-border bg-background overflow-hidden">
+            <div className="p-4 border-b border-border bg-card">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-rose-500" />
+                  Live Duel Telemetry
+                </h2>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-medium border border-emerald-500/20">
+                  In Progress
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Problem: {question.title}</p>
+            </div>
+
+            {/* Combatants Leaderboard */}
+            <div className="p-4 space-y-3 border-b border-border">
+              <h3 className="text-xs font-semibold text-muted-foreground">Combatants</h3>
+              <div className="space-y-2">
+                {playersList.map((p, idx) => (
+                  <div
+                    key={p.userId}
+                    onClick={() => setSpectatorSelectedPlayer(p.userId)}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                      activeSpectatorPlayer?.userId === p.userId
+                        ? 'border-primary bg-primary/10 shadow-sm'
+                        : 'border-border bg-card hover:border-border'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-xs text-foreground">
+                        #{idx + 1} {p.username}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          p.trustScore >= 80 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                        }`}
+                      >
+                        {p.trustScore}% Trust
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Cases: {p.passedCases || 0} / {p.totalCases || 3} Passed</span>
+                      <span className="font-mono capitalize text-[11px] text-muted-foreground">{p.language || 'javascript'}</span>
+                    </div>
+
+                    <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-2">
+                      <div
+                        className="bg-primary h-full transition-all duration-300"
+                        style={{
+                          width: `${((p.passedCases || 0) / (p.totalCases || 3)) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Play-by-Play Combat Log */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground mb-2">Combat Feed</h3>
+              {(battle?.feed || []).map((item: any) => (
+                <div
+                  key={item.id}
+                  className={`p-2.5 rounded-lg border text-xs leading-relaxed ${
+                    item.type === 'win'
+                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-200 font-bold'
+                      : item.type === 'violation'
+                      ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                      : 'border-border/80 bg-muted/40 text-foreground'
+                  }`}
+                >
+                  <span className="text-muted-foreground font-mono text-[10px] mr-1.5">[{item.time}]</span>
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Center Column: Live Code Mirror of Selected Fighter */}
+          <div className="flex flex-col border-r border-border bg-card overflow-hidden">
+            <div className="h-10 px-4 bg-card border-b border-border flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <FileCode className="w-4 h-4 text-primary" />
+                <span className="font-bold text-foreground">
+                  Live Screen: {activeSpectatorPlayer?.username || 'Player'}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              </div>
+              <span className="text-[11px] text-muted-foreground font-mono">Real-time Stream</span>
+            </div>
+
+            <div className="flex-1 bg-card">
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language={activeSpectatorPlayer?.language || 'javascript'}
+                value={
+                  opponentStreams[activeSpectatorPlayer?.userId]?.code ||
+                  activeSpectatorPlayer?.code ||
+                  `// Waiting for ${activeSpectatorPlayer?.username || 'player'} code stream...`
+                }
+                options={{
+                  readOnly: true,
+                  fontSize: 13,
+                  minimap: { enabled: false },
+                  lineNumbers: 'on',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Right Column: Live Spectator Chat & Cheer Reactions */}
+          <div className="flex flex-col bg-background overflow-hidden">
+            <div className="h-10 px-4 bg-card border-b border-border flex items-center justify-between text-xs">
+              <span className="font-bold text-foreground flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+                Spectator Chat & Cheers
+              </span>
+              <span className="text-[11px] text-muted-foreground">Live Reaction</span>
+            </div>
+
+            {/* Quick Cheer Buttons */}
+            <div className="p-2 border-b border-border/80 bg-muted/40 flex items-center justify-around gap-1">
+              <button
+                onClick={() => handleSendChat('Sharp code!', true)}
+                className="px-2.5 py-1 rounded bg-muted hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors text-foreground"
+              >
+                <Flame className="w-3 h-3 text-orange-400" />
+                Fire
+              </button>
+              <button
+                onClick={() => handleSendChat('Good match, well played!', true)}
+                className="px-2.5 py-1 rounded bg-muted hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors text-foreground"
+              >
+                <ThumbsUp className="w-3 h-3 text-blue-400" />
+                GG
+              </button>
+              <button
+                onClick={() => handleSendChat('Impressive solve speed!', true)}
+                className="px-2.5 py-1 rounded bg-muted hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors text-foreground"
+              >
+                <Zap className="w-3 h-3 text-amber-400" />
+                Fast
+              </button>
+              <button
+                onClick={() => handleSendChat('Optimal algorithmic approach!', true)}
+                className="px-2.5 py-1 rounded bg-muted hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors text-foreground"
+              >
+                <Lightbulb className="w-3 h-3 text-yellow-400" />
+                Brain
+              </button>
+            </div>
+
+            {/* Chat Messages Feed */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 text-xs">
+              {(battle?.chat || []).map((msg: any) => (
+                <div
+                  key={msg.id}
+                  className={`p-2 rounded-lg border ${
+                    msg.isCheer ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-muted/40 border-border text-foreground'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+                    <span className="font-bold text-foreground">{msg.sender}</span>
+                    <span>{msg.time}</span>
+                  </div>
+                  <p>{msg.message}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-3 border-t border-border bg-card flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Chat or cheer live..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendChat(chatInput)}
+                className="flex-1 bg-muted border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <button
+                onClick={() => handleSendChat(chatInput)}
+                className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ======================================================== */
+        /* FIGHTER MODE (HackerRank Proctored Arena & Monaco Editor) */
+        /* ======================================================== */
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden select-text">
+          {/* Left Pane: Question Details & Live Combat Feed */}
+          <div className="flex flex-col border-r border-border bg-background overflow-hidden">
+            <div className="h-10 px-3 border-b border-border bg-card flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setActiveLeftTab('description')}
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                  activeLeftTab === 'description' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                Problem Statement
+              </button>
+
+              {isBattleRoyale && (
+                <button
+                  onClick={() => setActiveLeftTab('roster')}
+                  className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                    activeLeftTab === 'roster' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5 text-primary" />
+                  <span>Active Coders ({aliveSurvivorsCount}/{totalCombatants})</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setActiveLeftTab('feed')}
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                  activeLeftTab === 'feed' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                Match Feed ({(battle?.feed || []).length})
+              </button>
+
+              <button
+                onClick={() => setActiveLeftTab('challenge')}
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  activeLeftTab === 'challenge' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                <Share2 className="w-3.5 h-3.5 text-primary" />
+                <span>Challenge Friends</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              {activeLeftTab === 'description' && (
+                <div className="space-y-5">
+                  <div>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground">
+                      {question.number}. {question.title}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {question.difficulty}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{question.category}</span>
+                    </div>
+                  </div>
+
+                  <div className="prose prose-invert prose-sm max-w-none text-foreground leading-relaxed">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{question.description}</ReactMarkdown>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-foreground">Examples</h3>
+                    {question.examples.map((ex, idx) => (
+                      <div key={idx} className="p-3.5 rounded-xl border border-border bg-card space-y-1.5 text-xs font-mono">
                         <div>
-                          <div className="font-medium">{verdictLabel(submission.verdict)}</div>
-                          <div className="text-xs text-muted-foreground">{submission.programmingLanguage}</div>
+                          <span className="text-muted-foreground font-sans">Input: </span>
+                          <span className="text-foreground">{ex.input}</span>
                         </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                          <div>{submission.timeConsumedMillis ?? 0} ms</div>
-                          <div>{submission.memoryConsumedBytes ? `${Math.round(submission.memoryConsumedBytes / 1024)} KB` : 'Memory N/A'}</div>
+                        <div>
+                          <span className="text-muted-foreground font-sans">Output: </span>
+                          <span className="text-emerald-400">{ex.expectedOutput}</span>
                         </div>
                       </div>
                     ))}
                   </div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-foreground">Constraints:</h3>
+                    <ul className="list-disc list-inside text-xs text-muted-foreground font-mono space-y-0.5">
+                      {question.constraints.map((c, i) => (
+                        <li key={i}>{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {activeLeftTab === 'roster' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Survivors Radar</h3>
+                      <p className="text-[11px] text-muted-foreground">Real-time status of all combatants in the circle.</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold">
+                      {aliveSurvivorsCount} / {totalCombatants} Alive
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {playersList.map((p, idx) => {
+                      const isAlive = p.status !== 'eliminated';
+                      return (
+                        <div
+                          key={p.userId}
+                          className={`p-3.5 rounded-xl border transition-all ${
+                            p.username === username
+                              ? 'border-primary bg-primary/10 shadow-sm'
+                              : isAlive
+                              ? 'border-border bg-card'
+                              : 'border-border/40 bg-muted/20 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-muted-foreground">#{idx + 1}</span>
+                              <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                                {p.username}
+                                {p.username === username && <span className="text-[10px] text-primary font-mono">(You)</span>}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                p.status === 'champion'
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  : isAlive
+                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              }`}
+                            >
+                              {p.status === 'champion' ? '🏆 Champion' : isAlive ? '🟢 Active' : '⚠️ Cutoff'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-muted-foreground">
+                            <div>Stamina: <strong className="text-emerald-400">{p.hp ?? 100}</strong> / 100</div>
+                            <div>Buffer: <strong className="text-blue-400">{p.shield ?? 50}</strong> / 100</div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-2 pt-2 border-t border-border/40">
+                            <span>Benchmarks: <strong className="text-foreground">{p.passedCases || 0} / {p.totalCases || 4} Passed</strong></span>
+                            {p.eliminatedBy && <span className="text-rose-400 text-[10px]">Cause: {p.eliminatedBy}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeLeftTab === 'feed' && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-bold text-foreground mb-2">Live Match Activity</h3>
+                  {(battle?.feed || []).map((item: any) => (
+                    <div
+                      key={item.id}
+                      className={`p-3 rounded-lg border text-xs leading-relaxed ${
+                        item.type === 'win'
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-200 font-bold'
+                          : item.type === 'violation'
+                          ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                          : 'border-border bg-muted/40 text-foreground'
+                      }`}
+                    >
+                      <span className="text-muted-foreground font-mono text-[10px] mr-1.5">[{item.time}]</span>
+                      <span>{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeLeftTab === 'challenge' && (
+                <div className="space-y-5 animate-in fade-in">
+                  <div className="p-4 rounded-2xl bg-primary/10 border border-primary/25 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Swords className="w-5 h-5 text-primary" />
+                      <h3 className="font-bold text-sm text-foreground">Challenge Your Friends</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Invite a friend or rival to this {isBattleRoyale ? 'Knockout Arena' : '1v1 Blitz Duel'}. Share the room code or direct link to battle in real-time.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Room Access Code
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-4 py-3 bg-muted/60 border border-border rounded-xl font-mono text-base font-bold text-foreground text-center tracking-widest">
+                        {codeParam}
+                      </div>
+                      <button
+                        onClick={handleCopyCode}
+                        className="px-4 py-3 rounded-xl bg-secondary hover:bg-muted text-foreground border border-border font-semibold text-xs flex items-center gap-2 transition-all active:scale-95"
+                      >
+                        {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Direct Battle Link
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/battle/${codeParam}` : `/battle/${codeParam}`}
+                        className="flex-1 px-3 py-2.5 bg-muted/40 border border-border rounded-xl text-xs font-mono text-muted-foreground truncate select-all"
+                      />
+                      <button
+                        onClick={handleCopyInviteLink}
+                        className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap shadow-md shadow-primary/20"
+                      >
+                        {copiedLink ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                        <span>{copiedLink ? 'Link Copied!' : 'Copy Link'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Social Share */}
+                  <div className="space-y-2 pt-1">
+                    <span className="text-xs text-muted-foreground font-medium block">Quick Share:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`⚔️ I challenge you to a coding battle on CodeClash! Drop into my room here: ${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/battle/${codeParam}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                      >
+                        WhatsApp
+                      </a>
+                      <a
+                        href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/battle/${codeParam}` : '')}&text=${encodeURIComponent('⚔️ Join my CodeClash arena battle!')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                      >
+                        Telegram
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Current Combatants in Arena */}
+                  <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground">Current Combatants in Arena</span>
+                      <span className="font-mono text-muted-foreground">{playersList.length} / {battle?.maxPlayers || 2}</span>
+                    </div>
+                    <div className="space-y-1.5 pt-1">
+                      {playersList.map((p) => (
+                        <div key={p.userId} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-muted/40 border border-border/50">
+                          <span className="font-medium text-foreground">{p.username}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${p.isReady ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                            {p.isReady ? 'READY ✓' : 'WAITING...'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Pane: Monaco Editor & Live Console */}
+          <div className="flex flex-col h-full bg-card overflow-hidden">
+            {/* Editor Action Toolbar */}
+            <div className="h-10 px-3 border-b border-border bg-card flex items-center justify-between shrink-0 text-xs">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as any)}
+                className="text-xs bg-card border border-border text-foreground font-semibold px-2.5 py-1.5 rounded-lg"
+              >
+                <option value="cpp">C++</option>
+                <option value="python">Python 3</option>
+                <option value="java">Java</option>
+              </select>
+
+              <div className="flex items-center gap-2">
+                {isBattleRoyale && (
+                  <span className="text-[11px] text-amber-400 font-mono hidden md:inline px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 font-semibold">
+                    ⚠️ Penalty: -25 Stamina on failed tests
+                  </span>
+                )}
+                <button
+                  onClick={handleRunCode}
+                  disabled={isRunning || isSubmitting || battle?.status === 'ready_check' || battle?.status === 'countdown'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted text-foreground text-xs font-semibold border border-border disabled:opacity-50"
+                >
+                  <Play className={`w-3.5 h-3.5 text-emerald-400 ${isRunning ? 'animate-spin' : ''}`} />
+                  <span>{isRunning ? 'Running...' : 'Run Tests'}</span>
+                </button>
+
+                <button
+                  onClick={handleSubmitCode}
+                  disabled={isRunning || isSubmitting || battle?.status === 'ready_check' || battle?.status === 'countdown'}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm shadow-emerald-950 disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isSubmitting ? 'Evaluating...' : 'Submit'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Monaco Editor */}
+            <div className="flex-1 min-h-[160px] w-full overflow-hidden bg-card relative">
+              {(battle?.status === 'ready_check' || battle?.status === 'countdown') && (
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                  <div className="px-4 py-2 rounded-xl bg-card border border-border text-xs font-semibold text-muted-foreground shadow-lg">
+                    🔒 Editor locked until Ready Check & Countdown complete
+                  </div>
+                </div>
+              )}
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language={language}
+                value={code}
+                onChange={handleCodeChange}
+                options={{
+                  fontSize: 14,
+                  readOnly: battle?.status === 'ready_check' || battle?.status === 'countdown',
+                  minimap: { enabled: false },
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace",
+                  fontLigatures: true,
+                  lineNumbers: 'on',
+                  bracketPairColorization: { enabled: true },
+                  automaticLayout: true,
+                  wordWrap: 'on',
+                }}
+              />
+            </div>
+
+            {/* Console */}
+            <div className="h-56 bg-background border-t border-border flex flex-col shrink-0">
+              <div className="h-9 px-3 border-b border-border bg-card flex items-center gap-2 text-xs">
+                <button
+                  onClick={() => setActiveConsoleTab('testcase')}
+                  className={`px-3 py-1 rounded font-semibold ${
+                    activeConsoleTab === 'testcase' ? 'bg-muted text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  Testcases
+                </button>
+                <button
+                  onClick={() => setActiveConsoleTab('result')}
+                  className={`px-3 py-1 rounded font-semibold ${
+                    activeConsoleTab === 'result' ? 'bg-muted text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  Result
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 text-xs font-mono">
+                {activeConsoleTab === 'testcase' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {customTestCases.map((tc, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setActiveTestCaseIndex(idx)}
+                          className={`px-3 py-1 rounded-lg cursor-pointer border ${
+                            activeTestCaseIndex === idx
+                              ? 'bg-muted border-border text-foreground'
+                              : 'bg-muted border-border text-muted-foreground'
+                          }`}
+                        >
+                          Case {idx + 1}
+                        </div>
+                      ))}
+                    </div>
+
+                    {customTestCases[activeTestCaseIndex] && (
+                      <textarea
+                        rows={3}
+                        value={customTestCases[activeTestCaseIndex].input}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomTestCases((prev) =>
+                            prev.map((c, i) => (i === activeTestCaseIndex ? { ...c, input: val } : c))
+                          );
+                        }}
+                        className="w-full p-2.5 rounded-lg bg-card border border-border text-foreground font-mono text-xs focus:outline-none"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {activeConsoleTab === 'result' && (
+                  <div>
+                    {!execResult ? (
+                      <div className="text-muted-foreground text-center py-6 font-sans">
+                        Run tests or submit your code to view results.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`font-bold text-sm ${
+                              execResult.verdict === 'Accepted' ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {execResult.verdict} ({execResult.passedCases}/{execResult.totalCases} passed)
+                          </span>
+                          <span className="text-muted-foreground">{execResult.totalRuntimeMs} ms</span>
+                        </div>
+
+                        {execResult.results.map((res) => (
+                          <div
+                            key={res.index}
+                            className={`p-2.5 rounded-lg border ${
+                              res.passed ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-rose-500/30 bg-rose-500/5'
+                            }`}
+                          >
+                            <div className="flex justify-between font-sans font-semibold mb-1">
+                              <span>Case {res.index}</span>
+                              <span className={res.passed ? 'text-emerald-400' : 'text-rose-400'}>
+                                {res.passed ? 'PASSED' : 'FAILED'}
+                              </span>
+                            </div>
+                            <div>Input: {res.input}</div>
+                            <div>Output: {res.actual}</div>
+                            <div>Expected: {res.expected}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm italic text-muted-foreground">
-              Loading Codeforces problem...
-            </div>
-          )}
-        </section>
+          </div>
+        </div>
+      )}
 
-        <aside className="flex min-h-0 flex-col bg-background">
-          <section className="border-b p-4">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Leaderboard</h2>
-            <div className="space-y-2">
-              {sortedPlayers.map((player, index) => (
-                <div key={player.id} className="flex items-center justify-between rounded-lg border bg-card p-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold">
-                      #{index + 1} {displayHandle(player.user)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{player.problemsSolved ? 'Solved' : 'In progress'}</div>
+      {/* ================= HACKERRANK PRE-ASSESSMENT VERIFICATION MODAL ================= */}
+      {false && role === 'fighter' && !isVerified && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                <Shield className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">HackerRank Proctored Check-In</h2>
+                <p className="text-xs text-muted-foreground">Complete verification to enter the timed combat arena</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 rounded-xl border border-border bg-muted/40 space-y-1.5">
+                <label className="block text-[11px] font-semibold text-foreground">
+                  Fighter Handle / Display Name
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUsername(val);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('battle_username', val);
+                    }
+                  }}
+                  placeholder="Enter your fighter handle..."
+                  className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                />
+              </div>
+
+              <div
+                onClick={() => {
+                  startCameraAndMic();
+                  setCameraChecked(true);
+                  setMicChecked(true);
+                }}
+                className="p-3.5 rounded-xl border border-border bg-muted/40 cursor-pointer hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold text-foreground">1. Webcam & Microphone Access</div>
+                    <div className="text-muted-foreground text-[11px]">Continuously monitors face centering, noise & illicit objects</div>
                   </div>
-                  <div className="text-lg font-bold text-primary">{player.score}</div>
+                  <div
+                    className={`px-2.5 py-1 rounded-md font-bold text-xs ${
+                      cameraChecked
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
+                  >
+                    {cameraChecked ? 'Verified ✓' : 'Allow Camera'}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex min-h-0 flex-1 flex-col">
-            <div className="border-b bg-muted/50 px-4 py-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live Feed</span>
-            </div>
-            <div className="flex-1 space-y-1.5 overflow-y-auto p-4 font-mono text-xs">
-              {activityLog.length === 0 ? (
-                <div className="pt-8 text-center italic text-muted-foreground">No live activity events yet.</div>
-              ) : (
-                activityLog.map((log, index) => (
-                  <div key={index} className="text-foreground/80">
-                    <span className="mr-1 text-primary">&gt;</span> {log}
+                {cameraChecked && (
+                  <div className="mt-3 relative w-full h-32 rounded-lg overflow-hidden bg-black border border-border">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover -scale-x-100"
+                    />
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-emerald-600/90 text-white text-[10px] font-mono flex items-center gap-1.5 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                      Camera Active
+                    </div>
                   </div>
-                ))
+                )}
+              </div>
+
+              <div
+                onClick={() => {
+                  enterFullscreen();
+                  setFullscreenChecked(true);
+                }}
+                className="p-3.5 rounded-xl border border-border bg-muted/40 flex items-center justify-between cursor-pointer hover:border-border"
+              >
+                <div>
+                  <div className="font-semibold text-foreground">2. Fullscreen Lock Enforcement</div>
+                  <div className="text-muted-foreground text-[11px]">Exiting fullscreen flags an integrity violation</div>
+                </div>
+                <div className="px-2.5 py-1 rounded-md bg-muted font-bold text-primary">
+                  {fullscreenChecked ? 'Locked ✓' : 'Enable Fullscreen'}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-rose-500/20 bg-rose-500/5 text-foreground space-y-1">
+                <div className="font-semibold text-rose-300">Strict Anti-Cheating Protocol</div>
+                <ul className="list-disc list-inside text-[11px] text-muted-foreground space-y-0.5">
+                  <li>AI illicit object detection (cell phones, cheat notes, headphones, multi-person)</li>
+                  <li>Tab switching, window blur & minimizing are tracked in real-time</li>
+                  <li>Copy & pasting code from outside is blocked and logged</li>
+                  <li>Spectators & referees will watch your code stream live</li>
+                </ul>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={policyAccepted}
+                  onChange={(e) => setPolicyAccepted(e.target.checked)}
+                  className="rounded text-primary focus:ring-primary w-4 h-4 bg-muted border-border"
+                />
+                <span className="text-foreground font-medium text-xs">
+                  I agree to the proctored assessment honor code
+                </span>
+              </label>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                disabled={!policyAccepted}
+                onClick={() => {
+                  setIsVerified(true);
+                  enterFullscreen();
+                  startCameraAndMic();
+                  if (socketRef.current?.connected) {
+                    socketRef.current.emit('battle:join', {
+                      battleCode: codeParam,
+                      role,
+                      username,
+                      questionSlug: searchParams.get('slug') || undefined,
+                      mode: searchParams.get('mode') || (codeParam.toUpperCase().startsWith('ROYAL') || codeParam.toUpperCase().startsWith('BR-') ? 'battle_royale' : undefined),
+                    });
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all shadow-lg shadow-primary/25 disabled:opacity-40"
+              >
+                Enter Proctored Arena
+              </button>
+              <button
+                onClick={() => {
+                  setIsVerified(true);
+                  if (socketRef.current?.connected) {
+                    socketRef.current.emit('battle:join', {
+                      battleCode: codeParam,
+                      role,
+                      username,
+                      questionSlug: searchParams.get('slug') || undefined,
+                      mode: searchParams.get('mode') || (codeParam.toUpperCase().startsWith('ROYAL') || codeParam.toUpperCase().startsWith('BR-') ? 'battle_royale' : undefined),
+                    });
+                  }
+                }}
+                className="py-3 px-4 rounded-xl bg-secondary hover:bg-muted text-foreground border border-border font-medium text-xs transition-colors"
+                title="Join battle immediately without webcam permissions"
+              >
+                Quick Enter (Casual)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= BATTLE ROYALE / DUEL CONCLUSION MODAL ================= */}
+      {(matchWinner || (isBattleRoyale && currentPlayer?.status === 'eliminated')) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            {matchWinner === username || currentPlayer?.status === 'champion' ? (
+              /* #1 1ST PLACE CHAMPION */
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 animate-bounce">
+                  <Trophy className="w-8 h-8" />
+                </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-xs uppercase tracking-widest border border-amber-500/30 mb-2">
+                    🏆 MATCH WINNER &amp; TOURNAMENT CHAMPION!
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                    🏆 1ST PLACE CHAMPION
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    You cleared all benchmark stages and out-coded all contenders in the arena!
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Placement</div>
+                    <div className="text-base font-bold text-amber-400">#1 / {totalCombatants}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Benchmarks Solved</div>
+                    <div className="text-base font-bold text-foreground">{currentPlayer?.kills || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Rating Gain</div>
+                    <div className="text-base font-bold text-emerald-400">+45 ELO</div>
+                  </div>
+                </div>
+              </div>
+            ) : currentPlayer?.status === 'eliminated' && !matchWinner ? (
+              /* PLAYER ELIMINATED WHILE MATCH CONTINUES */
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
+                  <Skull className="w-8 h-8" />
+                </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold text-xs uppercase tracking-widest border border-rose-500/30 mb-2">
+                    ⚠️ STAGE CUTOFF ELIMINATION
+                  </div>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">
+                    STAGE CUTOFF REACHED
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cause: {currentPlayer?.eliminatedBy || 'Phase Cutoff Time Limit'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
+                  <span className="text-muted-foreground">Final Placement: </span>
+                  <strong className="text-foreground text-sm font-bold">#{currentPlayer?.placement || 2} / {totalCombatants}</strong>
+                </div>
+              </div>
+            ) : (
+              /* MATCH CONCLUDED BY RIVAL */
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto text-amber-500">
+                  <Trophy className="w-8 h-8" />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">
+                    {isBattleRoyale ? 'Knockout Arena Concluded' : 'Match Concluded'}
+                  </h2>
+                  <p className="text-base text-foreground font-bold mt-1">
+                    🏆 {matchWinner} took 1st Place!
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    All benchmark test cases were passed first with authoritative server verification.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {inspectingOpponent && (
+              <div className="text-left mt-3 p-3 rounded-xl bg-background border border-border space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-foreground">
+                    Final Submitted Code ({opponentPlayer?.username || 'Opponent'}):
+                  </span>
+                  <span className="text-muted-foreground font-mono text-[11px]">
+                    {revealedSolutions[opponentPlayer?.userId]?.language || 'cpp'}
+                  </span>
+                </div>
+                <pre className="p-3 bg-muted/60 rounded-lg text-xs font-mono max-h-52 overflow-y-auto whitespace-pre-wrap text-foreground border border-border/50">
+                  {revealedSolutions[opponentPlayer?.userId]?.code ||
+                    opponentStreams[opponentPlayer?.userId]?.code ||
+                    '// Code was evaluated directly on the backend runner'}
+                </pre>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Link
+                href="/lobby"
+                className="px-5 py-2.5 rounded-xl bg-foreground text-background font-semibold text-xs hover:opacity-90 transition-opacity"
+              >
+                Back to Lobby
+              </Link>
+              {currentPlayer?.status === 'eliminated' && role === 'fighter' && (
+                <button
+                  onClick={() => {
+                    setRole('spectator');
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-colors"
+                >
+                  Spectate Competitors
+                </button>
+              )}
+              {matchWinner && (
+                <button
+                  onClick={() => setInspectingOpponent((prev) => !prev)}
+                  className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-muted text-foreground font-medium text-xs border border-border transition-colors"
+                >
+                  {inspectingOpponent ? 'Hide Code' : 'Inspect Winning Code'}
+                </button>
               )}
             </div>
-          </section>
-        </aside>
-      </main>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Candidate Proctoring HUD */}
+      {false && role === 'fighter' && isVerified && (
+        <ProctorWidget
+          trustScore={trustScore}
+          violations={violations}
+          isFullscreen={isFullscreen}
+          isCameraActive={isCameraActive}
+          isMicActive={isMicActive}
+          faceDetected={faceDetected}
+          audioLevel={audioLevel}
+          videoRef={videoRef}
+          detectedObjects={detectedObjects}
+          faceBbox={faceBbox}
+          candidateCentering={candidateCentering}
+          onEnterFullscreen={enterFullscreen}
+          onExitFullscreen={exitFullscreen}
+          onStartCamera={startCameraAndMic}
+          onStopCamera={stopCameraAndMic}
+          onReconnectCamera={reconnectCamera}
+          aiModelStatus={aiModelStatus}
+          onSetSensitivity={setAiSensitivity}
+          onTriggerIllicit={triggerSimulatedIllicit}
+          onClearIllicit={clearSimulatedIllicit}
+        />
+      )}
+
+      {/* Strict Anti-Cheat Alert Modal */}
+      {false && role === 'fighter' && isVerified && (
+        <ProctorViolationModal
+          message={activeWarning}
+          trustScore={trustScore}
+          onDismiss={dismissWarning}
+          onReEnterFullscreen={enterFullscreen}
+        />
+      )}
     </div>
   );
 }

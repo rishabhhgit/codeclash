@@ -6,8 +6,8 @@ export function serializeUser(user: IUser | null | undefined) {
   if (!user) return null;
   return {
     id: user._id.toString(),
-    codeforcesHandle: user.codeforcesHandle,
-    username: user.username || user.codeforcesHandle,
+    handle: user.handle || user.username,
+    username: user.username || user.handle,
     avatar: user.avatar,
     bio: user.bio,
     rating: user.rating,
@@ -20,9 +20,6 @@ export function serializeUser(user: IUser | null | undefined) {
     maxWinStreak: user.maxWinStreak,
     totalBattles: user.totalBattles,
     favoriteTopics: user.favoriteTopics,
-    codeforcesRating: user.rating,
-    codeforcesMaxRating: user.maxRating,
-    codeforcesRank: user.rank,
     isOnline: user.isOnline,
     createdAt: user.createdAt,
   };

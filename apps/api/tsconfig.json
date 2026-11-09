@@ -1,24 +1,19 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist",
     "rootDir": "./src",
+    "outDir": "./dist",
     "noEmit": false,
     "module": "CommonJS",
     "moduleResolution": "node",
     "types": ["node"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@codeclash/shared": ["../../packages/shared/src"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "dist",
     "prisma/seed.ts",
-    "src/models/**/*",
     "src/scripts/**/*",
     "src/services/judge.ts",
     "src/services/problem.service.ts",

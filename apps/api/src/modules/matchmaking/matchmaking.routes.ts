@@ -1,118 +1,184 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { Room } from '../../models/Room';
 import { User } from '../../models/User';
 import { authenticate, AuthRequest } from '../../middleware/auth';
-import { validate } from '../../middleware/validate';
 import { AppError } from '../../middleware/error';
 import {
   joinQueue,
   leaveQueue,
-  findMatch,
+  findAndRemoveMatch,
   getQueueStats,
   isInQueue,
+  pickBattleProblem,
+  purgeExpiredQueueEntries,
 } from '../../services/matchmaking.service';
-import { uniqueRoomCode, populateUsersMap, serializeRoom } from '../../services/battle.service';
-import { serializeRoom as serialize } from '../../utils/serializers';
+import { isUserInActiveBattle } from '../../services/battle-persistence.service';
+import { createOrGetLiveBattle } from '../../socket';
 import { getMatchmakingRange } from '@codeclash/shared';
 
 const router = Router();
 
-const quickMatchSchema = z.object({
-  body: z.object({
-    preferredDifficulty: z.enum(['easy', 'medium', 'hard', 'all']).default('all'),
-    preferredTopics: z.array(z.string()).default([]),
-    mode: z.string().default('1v1_duel'),
-    maxWaitTime: z.number().min(30).max(300).default(120),
-  }),
+// Automatically purge expired queue entries every 30 seconds
+setInterval(() => {
+  purgeExpiredQueueEntries(90);
+}, 30000);
+
+const matchRequestSchema = z.object({
+  preferredDifficulty: z.enum(['easy', 'medium', 'hard', 'all', 'any']).default('all'),
+  preferredTopics: z.array(z.string()).default([]),
+  mode: z.string().default('quick'),
+  maxWaitTime: z.number().min(10).max(300).default(60),
 });
 
-async function createMatchedRoom(entry: ReturnType<typeof joinQueue>, opponent: ReturnType<typeof joinQueue>) {
-  leaveQueue(entry.userId);
-  leaveQueue(opponent.userId);
-
-  const [userA, userB] = await Promise.all([
-    User.findById(entry.userId),
-    User.findById(opponent.userId),
-  ]);
-  if (!userA || !userB) throw new AppError(404, 'User not found');
-
-  const code = await uniqueRoomCode();
-  const difficulty =
-    entry.preferredDifficulty !== 'all'
-      ? entry.preferredDifficulty
-      : opponent.preferredDifficulty !== 'all'
-        ? opponent.preferredDifficulty
-        : 'medium';
-
-  const topics = [...new Set([...entry.preferredTopics, ...opponent.preferredTopics])];
-
-  const room = await Room.create({
-    code,
-    name: `${userA.codeforcesHandle} vs ${userB.codeforcesHandle}`,
-    host: userA._id,
-    mode: entry.mode || 'ranked_duel',
-    maxPlayers: 2,
-    difficulty,
-    topics,
-    timeControl: 30 * 60,
-    isPublic: false,
-    players: [
-      { user: userA._id, status: 'waiting', joinedAt: new Date() },
-      { user: userB._id, status: 'waiting', joinedAt: new Date() },
-    ],
-  });
-
-  return room;
-}
-
-router.post('/quick', authenticate, validate(quickMatchSchema), async (req: AuthRequest, res, next) => {
+async function handleMatchmaking(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { preferredDifficulty, preferredTopics, mode, maxWaitTime } = req.body;
-    const user = req.user!;
+    const rawMode = (req.params as any).mode || req.body?.mode || 'quick';
+    const parsed = matchRequestSchema.safeParse(req.body || {});
+    const body = parsed.success ? parsed.data : {
+      preferredDifficulty: 'all' as const,
+      preferredTopics: [] as string[],
+      mode: rawMode,
+      maxWaitTime: 60,
+    };
 
-    if (isInQueue(user._id.toString())) {
-      throw new AppError(400, 'Already in matchmaking queue');
+    const preferredDifficulty = body.preferredDifficulty === 'any' ? 'all' : body.preferredDifficulty;
+    const preferredTopics = body.preferredTopics;
+    const mode = rawMode;
+    const maxWaitTime = body.maxWaitTime;
+
+    const user = req.user!;
+    const userId = user._id ? user._id.toString() : 'guest-' + Date.now();
+    const username = user.username || user.handle || 'Coder';
+    const rating = user.rating || 1200;
+
+    // Prevent duplicate active ranked participation
+    const activeCheck = isUserInActiveBattle(userId);
+    if (activeCheck.inBattle) {
+      return res.status(400).json({
+        success: false,
+        error: `Already participating in active battle [${activeCheck.battleCode}]. Complete or leave your current match first.`,
+        data: { activeBattleCode: activeCheck.battleCode },
+      });
     }
 
-    const range = getMatchmakingRange(user.rating);
-    const entry = joinQueue(user._id.toString(), {
-      rating: user.rating,
+    // Remove stale queue entry if re-joining
+    if (isInQueue(userId)) {
+      leaveQueue(userId);
+    }
+
+    const range = getMatchmakingRange(rating);
+    const entry = joinQueue(userId, {
+      username,
+      rating,
       preferredTopics,
       preferredDifficulty,
       mode,
     });
 
-    const opponent = findMatch(entry);
+    // Atomic match check to prevent concurrent race condition pairing
+    const opponent = findAndRemoveMatch(entry);
 
     if (opponent) {
-      const room = await createMatchedRoom(entry, opponent);
-      const usersMap = await populateUsersMap(room);
-      const payload = serialize(room, usersMap);
-      const io = req.app.get('io');
+      const codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let codeSuffix = '';
+      for (let i = 0; i < 6; i++) {
+        codeSuffix += codeChars.charAt(Math.floor(Math.random() * codeChars.length));
+      }
+      const battleCode = `DUEL-${codeSuffix}`;
 
-      io?.to(`user:${entry.userId}`).emit('match:found', { battleCode: room.code, room: payload });
-      io?.to(`user:${opponent.userId}`).emit('match:found', { battleCode: room.code, room: payload });
+      const matchedDifficulty =
+        entry.preferredDifficulty !== 'all'
+          ? entry.preferredDifficulty
+          : opponent.preferredDifficulty !== 'all'
+            ? opponent.preferredDifficulty
+            : 'medium';
+
+      const matchedTopics = entry.preferredTopics.length ? entry.preferredTopics : opponent.preferredTopics;
+      const questionSlug = pickBattleProblem(matchedDifficulty, matchedTopics);
+
+      // Pre-initialize authoritative battle state
+      createOrGetLiveBattle(battleCode, {
+        title: `${entry.username || 'Player 1'} vs ${opponent.username || 'Player 2'}`,
+        questionSlug,
+        difficulty: matchedDifficulty.charAt(0).toUpperCase() + matchedDifficulty.slice(1),
+        mode,
+        durationMinutes: 20,
+        status: 'waiting',
+      });
+
+      // Optionally persist room to Mongo if online
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await Room.create({
+            code: battleCode,
+            name: `${entry.username || 'Player 1'} vs ${opponent.username || 'Player 2'}`,
+            mode,
+            maxPlayers: 2,
+            difficulty: matchedDifficulty,
+            timeControl: 20 * 60,
+            isPublic: false,
+          });
+        } catch {
+          // Durable local persistence is active
+        }
+      }
+
+      const io = req.app.get('io');
+      const payloadA = {
+        battleCode,
+        questionSlug,
+        difficulty: matchedDifficulty,
+        mode,
+        opponent: {
+          userId: opponent.userId,
+          username: opponent.username || 'Challenger',
+          rating: opponent.rating,
+        },
+      };
+
+      const payloadB = {
+        battleCode,
+        questionSlug,
+        difficulty: matchedDifficulty,
+        mode,
+        opponent: {
+          userId: entry.userId,
+          username: entry.username || 'Challenger',
+          rating: entry.rating,
+        },
+      };
+
+      io?.to(`user:${entry.userId}`).emit('match:found', payloadA);
+      io?.to(`user:${opponent.userId}`).emit('match:found', payloadB);
 
       return res.json({
         success: true,
-        data: { status: 'matched', battleCode: room.code, room: payload, ratingRange: range },
+        data: {
+          status: 'matched',
+          battleCode,
+          questionSlug,
+          ratingRange: range,
+          opponent: payloadA.opponent,
+        },
       });
     }
 
+    // Schedule timeout
     setTimeout(() => {
-      if (leaveQueue(user._id.toString())) {
-        req.app.get('io')?.to(`user:${user._id}`).emit('match:timeout', {
-          message: 'No match found within time limit',
+      if (leaveQueue(userId)) {
+        req.app.get('io')?.to(`user:${userId}`).emit('match:timeout', {
+          message: 'No opponent found within matchmaking time window. Try expanding criteria or inviting a friend!',
         });
       }
     }, maxWaitTime * 1000);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         status: 'searching',
-        message: 'Searching for opponent with similar rating...',
+        message: 'Searching for an opponent with similar skill rating...',
         ratingRange: range,
         maxWaitTime,
         queueSize: getQueueStats().totalSize,
@@ -121,22 +187,31 @@ router.post('/quick', authenticate, validate(quickMatchSchema), async (req: Auth
   } catch (error) {
     next(error);
   }
-});
+}
 
 router.post('/cancel', authenticate, (req: AuthRequest, res) => {
-  leaveQueue(req.user!._id.toString());
+  const userId = req.user?._id?.toString() || 'guest';
+  leaveQueue(userId);
   res.json({ success: true, message: 'Left matchmaking queue' });
 });
 
 router.get('/status', authenticate, (req: AuthRequest, res) => {
-  const entry = isInQueue(req.user!._id.toString());
+  const userId = req.user?._id?.toString() || 'guest';
+  const inQueue = isInQueue(userId);
   const stats = getQueueStats();
   res.json({
     success: true,
-    data: entry
-      ? { inQueue: true, queueSize: stats.totalSize }
-      : { inQueue: false, queueSize: stats.totalSize },
+    data: {
+      inQueue,
+      queueSize: stats.totalSize,
+    },
   });
 });
+
+// Handlers for matchmaking modes
+router.post('/quick', authenticate, handleMatchmaking);
+router.post('/ranked', authenticate, handleMatchmaking);
+router.post('/casual', authenticate, handleMatchmaking);
+router.post('/:mode', authenticate, handleMatchmaking);
 
 export const matchmakingRouter = router;

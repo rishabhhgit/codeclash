@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { BarChart2 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -175,13 +176,13 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Rating History (Placeholder) */}
-        <div className="p-6 border rounded-2xl bg-card">
-          <h2 className="text-lg font-semibold mb-4">Rating History</h2>
-          <div className="h-48 flex items-center justify-center border rounded-lg bg-muted/20">
-            <div className="text-center text-muted-foreground">
-              <div className="text-4xl mb-2">📊</div>
-              <div>Rating chart coming soon</div>
+        {/* Rating History */}
+        <div className="p-6 border border-border rounded-xl bg-card">
+          <h2 className="text-base font-semibold mb-4">Rating History</h2>
+          <div className="h-44 flex items-center justify-center border border-border rounded-lg bg-muted/20">
+            <div className="text-center text-muted-foreground space-y-2">
+              <BarChart2 className="w-8 h-8 mx-auto text-muted-foreground/60" />
+              <div className="text-xs">Rating chart records will appear here as matches finish</div>
             </div>
           </div>
         </div>

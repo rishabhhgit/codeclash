@@ -22,11 +22,11 @@ router.get('/stats', authenticate, requireAdmin, async (_req: AuthRequest, res, 
         Room.find()
           .sort({ createdAt: -1 })
           .limit(5)
-          .populate('host', 'codeforcesHandle'),
+          .populate('host', 'handle username'),
         User.find()
           .sort({ createdAt: -1 })
           .limit(5)
-          .select('codeforcesHandle createdAt rating'),
+          .select('handle username createdAt rating'),
       ]);
 
     res.json({
@@ -43,14 +43,15 @@ router.get('/stats', authenticate, requireAdmin, async (_req: AuthRequest, res, 
           difficulty: room.difficulty,
           createdAt: room.createdAt,
           creator: {
-            codeforcesHandle: (room.host as { codeforcesHandle?: string })?.codeforcesHandle,
+            handle: (room.host as { handle?: string; username?: string })?.handle || (room.host as { handle?: string; username?: string })?.username,
           },
         })),
         recentUsers: recentUsers.map((user) => ({
           id: user._id.toString(),
-          codeforcesHandle: user.codeforcesHandle,
+          handle: user.handle || user.username,
+          username: user.username || user.handle,
           createdAt: user.createdAt,
-          codeforcesRating: user.rating,
+          rating: user.rating,
         })),
       },
     });

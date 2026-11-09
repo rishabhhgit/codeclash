@@ -13,6 +13,18 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/problems/:slug/question',
+        destination: '/problems/:slug',
+      },
+      {
+        source: '/leaderboard',
+        destination: '/rankings',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

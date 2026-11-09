@@ -7,7 +7,7 @@ export interface ISubmission extends Document {
   problemContestId: number;
   problemIndex: string;
   language: string;
-  codeforcesRunId?: number;
+  runId?: number;
   verdict: string;
   runtime?: number;
   memory?: number;
@@ -27,7 +27,7 @@ const submissionSchema = new Schema<ISubmission>(
     problemContestId: { type: Number, required: true },
     problemIndex: { type: String, required: true },
     language: { type: String, required: true },
-    codeforcesRunId: { type: Number },
+    runId: { type: Number },
     verdict: {
       type: String,
       enum: ['accepted', 'wrong_answer', 'runtime_error', 'compile_error', 'time_limit_exceeded', 'memory_limit_exceeded', 'pending', 'judging'],

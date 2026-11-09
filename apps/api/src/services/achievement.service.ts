@@ -7,7 +7,7 @@ const ACHIEVEMENTS: Record<string, { name: string; description: string; icon: st
   win_streak_5: { name: '5 Win Streak', description: 'Win 5 battles in a row', icon: '⚡' },
   win_streak_10: { name: '10 Win Streak', description: 'Win 10 battles in a row', icon: '👑' },
   topic_master: { name: 'Topic Master', description: 'Win a topic battle', icon: '🎯' },
-  battle_royale_winner: { name: 'Battle Royale Winner', description: 'Win a battle royale', icon: '🎖️' },
+  battle_royale_winner: { name: 'Tournament Winner', description: 'Win a multi-player knockout tournament', icon: '🏆' },
   arena_champion: { name: 'Arena Champion', description: 'Win an arena mode battle', icon: '🏅' },
 };
 

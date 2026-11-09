@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import { config } from '../config';
 
-const CODEFORCES_API_BASE = 'https://codeforces.com/api';
-const API_KEY = config.codeforcesApiKey;
-const API_SECRET = config.codeforcesApiSecret;
+const COMPETITIVE_API_BASE = process.env.COMPETITIVE_API_BASE || 'https://api.codeclash.dev/competitive';
+const API_KEY = process.env.COMPETITIVE_API_KEY || '';
+const API_SECRET = process.env.COMPETITIVE_API_SECRET || '';
 
 interface CfResponse<T> {
   status: string;
@@ -156,9 +156,9 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   } catch (error) {
     clearTimeout(timeoutId);
     if ((error as any)?.name === 'AbortError') {
-      throw new Error('Codeforces API timed out');
+      throw new Error('API request timed out');
     }
-    throw new Error(`Cannot reach Codeforces API: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Cannot reach API: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -171,7 +171,7 @@ async function callApi<T>(
   const cached = getFromCache<T>(cacheKey);
   if (cached !== null) return cached;
 
-  const url = new URL(`${CODEFORCES_API_BASE}/${methodName}`);
+  const url = new URL(`${COMPETITIVE_API_BASE}/${methodName}`);
 
   if (requireAuth && API_KEY && API_SECRET) {
     const time = Math.floor(Date.now() / 1000);
@@ -187,7 +187,7 @@ async function callApi<T>(
   try {
     response = await rateLimitedFetch(url.toString());
   } catch {
-    throw new Error('Codeforces API is unreachable');
+    throw new Error('API service is unreachable');
   }
 
   if (response.status === 429) {
@@ -199,11 +199,11 @@ async function callApi<T>(
   try {
     data = await response.json() as CfResponse<T>;
   } catch {
-    throw new Error('Codeforces API returned invalid JSON');
+    throw new Error('API returned invalid JSON');
   }
 
   if (data.status !== 'OK') {
-    throw new Error(data.comment || 'Codeforces API request failed');
+    throw new Error(data.comment || 'API request failed');
   }
 
   setCache(cacheKey, data.result!);
@@ -213,7 +213,7 @@ async function callApi<T>(
 export async function fetchUserInfo(handle: string): Promise<CfUser> {
   const result = await callApi<CfUser[]>('user.info', { handles: handle });
   if (!result || result.length === 0) {
-    throw new Error(`User ${handle} not found on Codeforces`);
+    throw new Error(`User ${handle} not found`);
   }
   return result[0];
 }
@@ -227,7 +227,7 @@ export async function getUserRating(handle: string): Promise<CfRatingChange[]> {
 }
 
 export function getUserProfileUrl(handle: string): string {
-  return `https://codeforces.com/profile/${encodeURIComponent(handle)}`;
+  return `/profile/${encodeURIComponent(handle)}`;
 }
 
 export async function fetchProblems(
@@ -370,11 +370,11 @@ export async function fetchProblemDetail(
 }
 
 export function getProblemUrl(contestId: number, index: string): string {
-  return `https://codeforces.com/problemset/problem/${contestId}/${encodeURIComponent(index)}`;
+  return `/problems/${contestId}-${encodeURIComponent(index)}`;
 }
 
 export function getContestUrl(contestId: number): string {
-  return `https://codeforces.com/contest/${contestId}`;
+  return `/battles/${contestId}`;
 }
 
 export function getDifficultyFromRating(rating?: number): 'easy' | 'medium' | 'hard' {

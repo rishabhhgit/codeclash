@@ -23,10 +23,13 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || 'Sign in failed');
       }
 
       localStorage.setItem('token', data.data.token);
+      if (data.data.user?.username) {
+        localStorage.setItem('battle_username', data.data.user.username);
+      }
       window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message);
@@ -35,24 +38,57 @@ export default function LoginPage() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: 'Guest' }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.token) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('battle_username', 'Guest');
+        window.location.href = '/dashboard';
+        return;
+      }
+    } catch {}
+    localStorage.setItem('token', 'guest-token-' + Date.now());
+    localStorage.setItem('battle_username', 'Guest');
+    window.location.href = '/dashboard';
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-      <div className="w-full max-w-md p-8 space-y-6 border rounded-lg bg-card text-card-foreground shadow-lg backdrop-blur-md">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
-          <p className="text-muted-foreground mt-2">Log in with your Codeforces account</p>
+    <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)] px-4">
+      <div className="w-full max-w-sm p-6 space-y-5 rounded-xl border border-border bg-card shadow-sm">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Sign in</h1>
+          <p className="text-xs text-muted-foreground mt-1">Connect your account or continue as guest.</p>
+        </div>
+
+        <button
+          onClick={handleGuestLogin}
+          type="button"
+          className="w-full py-2 px-4 bg-foreground hover:opacity-90 text-background text-xs sm:text-sm font-medium rounded-lg transition-opacity"
+        >
+          Continue as Guest
+        </button>
+
+        <div className="relative flex items-center justify-center">
+          <div className="w-full border-t border-border" />
+          <span className="absolute px-2 bg-card text-[11px] text-muted-foreground font-mono">or</span>
         </div>
 
         {error && (
-          <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+          <div className="p-2.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="handle" className="block text-sm font-medium mb-1">
-              Codeforces Handle
+            <label htmlFor="handle" className="block text-xs font-medium text-foreground mb-1">
+              Username or handle
             </label>
             <input
               id="handle"
@@ -63,36 +99,28 @@ export default function LoginPage() {
               minLength={3}
               maxLength={24}
               pattern="^[a-zA-Z0-9_\-\.]+$"
-              className="w-full px-3 py-2 border rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-              placeholder="tourist"
+              className="w-full px-3 py-1.5 border border-border rounded-md bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors font-mono"
+              placeholder="alex_dev"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Enter your Codeforces username. Don&apos;t have one?{' '}
-              <a href="https://codeforces.com/register" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                Create one
-              </a>
-            </p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-sm"
+            className="w-full py-2 px-4 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs sm:text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Logging in...' : 'Log In with Codeforces'}
+            {loading ? 'Signing in...' : 'Sign in to CodeClash'}
           </button>
         </form>
 
-        <div className="text-center text-xs text-muted-foreground border border-dashed border-muted p-3 rounded">
-          <p className="font-medium mb-1">How it works:</p>
-          <p>Enter your Codeforces handle to login. We&apos;ll verify your account exists on Codeforces and sync your rating automatically.</p>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          New to Codeforces?{' '}
-          <a href="https://codeforces.com/register" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-            Create a Codeforces account
-          </a>
+        <p className="text-center text-[11px] text-muted-foreground pt-1">
+          Don't have an account?{' '}
+          <Link
+            href="/auth/register"
+            className="text-foreground hover:underline"
+          >
+            Register on CodeClash
+          </Link>
         </p>
       </div>
     </div>

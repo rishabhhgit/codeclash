@@ -12,7 +12,7 @@ export default function OAuthCallbackPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-      <p className="text-muted-foreground">Redirecting to Codeforces login...</p>
+      <p className="text-muted-foreground">Redirecting to login...</p>
     </div>
   );
 }

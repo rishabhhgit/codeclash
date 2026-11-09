@@ -4,24 +4,24 @@ import { Room, IRoom } from '../models/Room';
 import { User, IUser } from '../models/User';
 import { MatchHistory } from '../models/MatchHistory';
 import { getFairProblemForRoom } from './problem.service';
-import { getProblemUrl, getContestUrl, getDifficultyFromRating, getProblemset } from './codeforces';
+import { getProblemUrl, getContestUrl, getDifficultyFromRating, getProblemset } from './competitive';
 import { grantAchievements } from './achievement.service';
 import { getRankFromRating } from '@codeclash/shared';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-export function generateRoomCode(): string {
+export function generateRoomCode(prefix?: string): string {
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += CODE_CHARS.charAt(Math.floor(Math.random() * CODE_CHARS.length));
   }
-  return code;
+  return prefix ? `${prefix}-${code}` : code;
 }
 
-export async function uniqueRoomCode(): Promise<string> {
-  let code = generateRoomCode();
+export async function uniqueRoomCode(prefix?: string): Promise<string> {
+  let code = generateRoomCode(prefix);
   while (await Room.findOne({ code })) {
-    code = generateRoomCode();
+    code = generateRoomCode(prefix);
   }
   return code;
 }
@@ -54,7 +54,7 @@ export async function toProblemPayload(contestId?: number | null, index?: string
     slug: `${problem.contestId}-${problem.index}`,
     difficulty: getDifficultyFromRating(problem.rating),
     description:
-      'This battle uses Codeforces as the source of truth. Open the problem on Codeforces, write your solution there, and submit from your own Codeforces account. CodeClash tracks your verdict automatically.',
+      'Write and test your solution in the code editor, then submit to evaluate against all battle test cases.',
     inputFormat: null,
     outputFormat: null,
     examples: [],

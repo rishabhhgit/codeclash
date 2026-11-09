@@ -5,7 +5,7 @@ import { Submission } from '../models/Submission';
 import {
   fetchUserSubmissions,
   checkUserSolvedProblem,
-} from './codeforces';
+} from './competitive';
 import { populateUsersMap, finalizeBattle } from './battle.service';
 import { serializeRoom, serializePlayer } from '../utils/serializers';
 
@@ -48,7 +48,8 @@ export function startSubmissionTracker(io: SocketIOServer, roomId: string) {
         const user = await User.findById(player.user);
         if (!user) continue;
 
-        const submissions = await fetchUserSubmissions(user.codeforcesHandle, 1, 30);
+        const userHandle = user.handle || user.username;
+        const submissions = await fetchUserSubmissions(userHandle, 1, 30);
         const problemSubs = submissions.filter(
           (s) =>
             s.problem.contestId === currentProblem.contestId &&
@@ -73,7 +74,7 @@ export function startSubmissionTracker(io: SocketIOServer, roomId: string) {
             problemContestId: currentProblem.contestId,
             problemIndex: currentProblem.index,
             language: accepted.programmingLanguage,
-            codeforcesRunId: accepted.id,
+            runId: accepted.id,
             verdict: 'accepted',
             runtime: accepted.timeConsumedMillis,
             memory: accepted.memoryConsumedBytes,
@@ -83,9 +84,9 @@ export function startSubmissionTracker(io: SocketIOServer, roomId: string) {
 
           io.to(`room:${room.code}`).emit('feed:event', {
             type: 'solve',
-            message: `${user.codeforcesHandle} solved the problem!`,
+            message: `${user.username || user.handle} solved the problem!`,
             userId: user._id.toString(),
-            username: user.codeforcesHandle,
+            username: user.username || user.handle,
             solveTime: player.solveTime,
             attempts: player.submissionsCount,
           });
@@ -94,9 +95,9 @@ export function startSubmissionTracker(io: SocketIOServer, roomId: string) {
           if (latest && latest.verdict && latest.verdict !== 'OK') {
             io.to(`room:${room.code}`).emit('feed:event', {
               type: 'attempt',
-              message: `${user.codeforcesHandle} got ${verdictToStatus(latest.verdict)}`,
+              message: `${user.username || user.handle} got ${verdictToStatus(latest.verdict)}`,
               userId: user._id.toString(),
-              username: user.codeforcesHandle,
+              username: user.username || user.handle,
               verdict: verdictToStatus(latest.verdict),
             });
           }
@@ -180,14 +181,15 @@ export async function checkPlayerStatus(
     ? Math.floor(room.startedAt.getTime() / 1000)
     : undefined;
 
+  const userHandle = user.handle || user.username;
   const accepted = await checkUserSolvedProblem(
-    user.codeforcesHandle,
+    userHandle,
     currentProblem.contestId,
     currentProblem.index,
     sinceSeconds
   );
 
-  const submissions = await fetchUserSubmissions(user.codeforcesHandle, 1, 20);
+  const submissions = await fetchUserSubmissions(userHandle, 1, 20);
   const problemSubs = submissions.filter(
     (s) =>
       s.problem.contestId === currentProblem.contestId &&
@@ -204,6 +206,5 @@ export async function checkPlayerStatus(
       memoryConsumedBytes: s.memoryConsumedBytes,
       creationTimeSeconds: s.creationTimeSeconds,
     })),
-    codeforcesUrl: `https://codeforces.com/problemset/problem/${currentProblem.contestId}/${currentProblem.index}`,
   };
 }

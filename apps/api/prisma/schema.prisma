@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id                       String               @id @default(uuid())
-  codeforcesHandle         String               @unique
+  handle                   String               @unique
   avatar                   String?
   bio                      String?
   rating                   Int                  @default(1000)
@@ -18,12 +18,12 @@ model User {
   wins                     Int                  @default(0)
   losses                   Int                  @default(0)
   draws                    Int                  @default(0)
-  codeforcesRating         Int?
-  codeforcesMaxRating      Int?
-  codeforcesRank           String?
-  codeforcesTitlePhoto     String?
-  codeforcesVerified       Boolean              @default(false)
-  codeforcesLastSync       DateTime?
+  externalRating           Int?
+  externalMaxRating        Int?
+  externalRank             String?
+  externalTitlePhoto       String?
+  verified                 Boolean              @default(false)
+  lastSync                 DateTime?
   emailNotifications       Boolean              @default(true)
   battleInvites            Boolean              @default(true)
   createdAt                DateTime             @default(now())
@@ -34,7 +34,7 @@ model User {
   submissions              Submission[]
 
   @@index([rating(sort: Desc)])
-  @@index([codeforcesHandle])
+  @@index([handle])
 }
 
 

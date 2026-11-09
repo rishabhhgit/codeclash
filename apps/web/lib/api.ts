@@ -33,3 +33,35 @@ export function getWsUrl(): string {
 export function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 }
+
+/**
+ * Get or generate a persistent unique authentication token for guest or logged-in users.
+ * Ensures two independent guests NEVER collide on the same socket userId or player slot.
+ */
+export function getClientAuthToken(): string {
+  if (typeof window === 'undefined') return 'guest-' + Math.random().toString(36).substring(2, 10);
+  let token = localStorage.getItem('token');
+  if (!token) {
+    let guestId = localStorage.getItem('codeclash_guest_id');
+    if (!guestId || guestId === 'guest-token') {
+      guestId = 'guest-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
+      localStorage.setItem('codeclash_guest_id', guestId);
+    }
+    token = guestId;
+  }
+  return token;
+}
+
+/**
+ * Get or generate a persistent username/handle for battles.
+ */
+export function getClientUsername(): string {
+  if (typeof window === 'undefined') return 'Coder_' + Math.floor(1000 + Math.random() * 9000);
+  let name = localStorage.getItem('battle_username') || localStorage.getItem('codeclash_username');
+  if (!name || name === 'Player') {
+    name = 'Coder_' + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem('battle_username', name);
+  }
+  return name;
+}
+
