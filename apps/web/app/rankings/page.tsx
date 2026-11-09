@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
 import {
   Trophy,
@@ -279,61 +280,34 @@ export default function LiveLeaderboardPage() {
 
       {/* Tabs and Search Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-1 p-1 bg-muted/80 rounded-lg border border-border w-full sm:w-auto overflow-x-auto text-xs">
-          <button
-            onClick={() => setActiveTab('global')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
-              activeTab === 'global'
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Global rating
-          </button>
-
-          <button
-            onClick={() => setActiveTab('live')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
-              activeTab === 'live'
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            In active match
-          </button>
-
-          <button
-            onClick={() => setActiveTab('streaks')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
-              activeTab === 'streaks'
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Win streaks
-          </button>
-
-          <button
-            onClick={() => setActiveTab('core150')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
-              activeTab === 'core150'
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Core 150
-          </button>
-
-          <button
-            onClick={() => setActiveTab('weekly')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors duration-150 active:scale-[0.98] whitespace-nowrap ${
-              activeTab === 'weekly'
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Weekly sprint
-          </button>
+        <div className="flex items-center gap-1 p-1 bg-muted/80 rounded-xl border border-border w-full sm:w-auto overflow-x-auto text-xs">
+          {[
+            { id: 'global' as TabType, label: 'Global rating' },
+            { id: 'live' as TabType, label: 'In active match' },
+            { id: 'streaks' as TabType, label: 'Win streaks' },
+            { id: 'core150' as TabType, label: 'Core 150' },
+            { id: 'weekly' as TabType, label: 'Weekly sprint' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative px-3.5 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap active:scale-[0.97]"
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="rankingsTabPill"
+                    className="absolute inset-0 bg-card rounded-lg border border-border/80 shadow-sm"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                )}
+                <span className={`relative z-10 ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="relative w-full sm:w-64">
