@@ -22,9 +22,9 @@ import {
 } from 'lucide-react';
 import { getApiUrl } from '../lib/api';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -35,14 +35,14 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 14, filter: 'blur(4px)' },
   visible: {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 380,
       damping: 26,
     },

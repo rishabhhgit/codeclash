@@ -390,6 +390,7 @@ function analyzeHeuristicFrame(
     const data = frameData.data;
 
     let totalSkinPixels = 0;
+    let totalLuminance = 0;
     let minX = width;
     let maxX = 0;
     let minY = height;
@@ -403,6 +404,7 @@ function analyzeHeuristicFrame(
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
+        totalLuminance += (r + g + b) / 3;
 
         // Normalized Chromaticity r' = R/(R+G+B), g' = G/(R+G+B)
         const sum = r + g + b || 1;
@@ -424,6 +426,16 @@ function analyzeHeuristicFrame(
     }
 
     const totalPixels = width * height;
+    const avgLuminance = totalLuminance / totalPixels;
+
+    // Guard against camera hardware startup dark frames and sensor auto-exposure delays
+    if (avgLuminance < 12) {
+      result.faceDetected = true;
+      result.faceConfidence = 0.5;
+      result.candidateCentering = 'centered';
+      return;
+    }
+
     const skinRatio = totalSkinPixels / totalPixels;
 
     if (skinRatio < 0.03) {

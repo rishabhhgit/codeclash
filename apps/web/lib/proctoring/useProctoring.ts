@@ -63,11 +63,26 @@ export function useProctoring({
   const visionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const faceAbsentCountRef = useRef<number>(0);
 
+  // Startup calibration grace period:
+  // When proctoring opens, cameras take 2-4 seconds to initialize exposure,
+  // browsers show permission prompts, and fullscreen transitions occur.
+  // Do not deduct points or trigger violations for startup noise during this 12-second window.
+  const startupGraceUntilRef = useRef<number>(Date.now() + 12000);
+  const hasEnteredFullscreenRef = useRef<boolean>(false);
+
   // Rate limiting refs to prevent runaway violation cascades
   const lastViolationMapRef = useRef<Record<string, number>>({});
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastFullscreenTransitionRef = useRef<number>(0);
   const highAudioStreakRef = useRef<number>(0);
+
+  // Reset startup grace window whenever proctoring is enabled
+  useEffect(() => {
+    if (enabled) {
+      startupGraceUntilRef.current = Date.now() + 12000;
+      faceAbsentCountRef.current = 0;
+    }
+  }, [enabled]);
 
   const addViolation = useCallback(
     (
@@ -78,6 +93,13 @@ export function useProctoring({
       if (!enabled) return;
 
       const now = Date.now();
+
+      // Guard: during startup grace window, do not penalize startup noise
+      const isStartupNoise = type === 'FACE_ABSENT' || type === 'FULLSCREEN_EXIT' || type === 'WINDOW_BLUR';
+      if (now < startupGraceUntilRef.current && isStartupNoise) {
+        return;
+      }
+
       const lastTime = lastViolationMapRef.current[type] || 0;
       // Enforce 6-second cooldown per violation category
       if (now - lastTime < 6000) {
@@ -138,6 +160,7 @@ export function useProctoring({
         if (requestMethod) {
           lastFullscreenTransitionRef.current = Date.now();
           await requestMethod.call(docEl);
+          hasEnteredFullscreenRef.current = true;
           setIsFullscreen(true);
           return true;
         }
@@ -171,6 +194,10 @@ export function useProctoring({
 
   // Initialize camera and microphone monitoring with illicit object detection
   const startCameraAndMic = useCallback(async () => {
+    // Reset face count and grant a fresh 12-second calibration grace buffer
+    faceAbsentCountRef.current = 0;
+    startupGraceUntilRef.current = Date.now() + 12000;
+
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       setIsCameraActive(false);
       setIsMicActive(false);
@@ -237,11 +264,15 @@ export function useProctoring({
           setDetectedObjects(analysis.illicitObjects);
           setAiModelStatus(analysis.aiModelStatus);
 
-          // 1. Face Absence Detection (Requires 4 consecutive absent checks ~ 1.4s)
+          // 1. Face Absence Detection (Requires sustained absence >= 18 frames ~ 6.3s, with startup grace buffer)
           if (!analysis.faceDetected) {
             faceAbsentCountRef.current += 1;
-            if (faceAbsentCountRef.current >= 4 && strictMode) {
-              addViolation('FACE_ABSENT', 15, '🚨 Candidate face absent from proctor camera frame!');
+            // Soft non-penalizing warning at 10 frames (~3.5s) if still absent
+            if (faceAbsentCountRef.current === 10 && strictMode && Date.now() > startupGraceUntilRef.current) {
+              setActiveWarning('Camera: Face not clearly centered. Please face the webcam.');
+            }
+            if (faceAbsentCountRef.current >= 18 && strictMode && Date.now() > startupGraceUntilRef.current) {
+              addViolation('FACE_ABSENT', 15, '🚨 Candidate face absent from proctor camera frame for over 6 seconds!');
               faceAbsentCountRef.current = 0;
             }
           } else {
@@ -365,7 +396,9 @@ export function useProctoring({
       setIsFullscreen(isNowFullscreen);
       lastFullscreenTransitionRef.current = Date.now();
 
-      if (!isNowFullscreen && strictMode) {
+      if (isNowFullscreen) {
+        hasEnteredFullscreenRef.current = true;
+      } else if (strictMode && hasEnteredFullscreenRef.current && Date.now() > startupGraceUntilRef.current) {
         addViolation(
           'FULLSCREEN_EXIT',
           15,
@@ -376,7 +409,7 @@ export function useProctoring({
 
     // Tab visibility change handler (Immediate violation on tab switch)
     const handleVisibilityChange = () => {
-      if (document.hidden && strictMode) {
+      if (document.hidden && strictMode && Date.now() > startupGraceUntilRef.current) {
         addViolation(
           'TAB_SWITCH',
           15,
@@ -387,15 +420,15 @@ export function useProctoring({
 
     // Window blur handler with 2.5s debounce to avoid false positives
     const handleWindowBlur = () => {
-      // Ignore blur right after entering/exiting fullscreen
-      if (Date.now() - lastFullscreenTransitionRef.current < 4000) {
+      // Ignore blur right after entering/exiting fullscreen or during initial startup grace
+      if (Date.now() - lastFullscreenTransitionRef.current < 4000 || Date.now() < startupGraceUntilRef.current) {
         return;
       }
 
       if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
 
       blurTimeoutRef.current = setTimeout(() => {
-        if (typeof document !== 'undefined' && (!document.hasFocus() || document.hidden) && strictMode) {
+        if (typeof document !== 'undefined' && (!document.hasFocus() || document.hidden) && strictMode && Date.now() > startupGraceUntilRef.current) {
           addViolation(
             'WINDOW_BLUR',
             10,
@@ -513,7 +546,9 @@ export function useProctoring({
     setTrustScore(100);
     setActiveWarning(null);
     setWarningCount(0);
+    faceAbsentCountRef.current = 0;
     lastViolationMapRef.current = {};
+    startupGraceUntilRef.current = Date.now() + 12000;
   }, []);
 
   const toggleFaceDetection = useCallback(() => {

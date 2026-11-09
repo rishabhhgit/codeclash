@@ -944,6 +944,7 @@ export default function SynchronizedExamPage() {
 
               <button
                 onClick={async () => {
+                  resetViolations();
                   await enterFullscreen();
                   await startCameraAndMic();
                   setHasStarted(true);

@@ -67,6 +67,8 @@ import { runCode, ExecutionSummary } from '../../../lib/execution/runner';
 import { useProctoring } from '../../../lib/proctoring/useProctoring';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
+import ProctorWidget from '../../../components/proctoring/ProctorWidget';
+import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -176,10 +178,28 @@ export default function ProblemWorkspacePage() {
   const {
     trustScore,
     violations,
+    isFullscreen,
+    isCameraActive,
+    isMicActive,
+    faceDetected,
+    faceBbox,
+    candidateCentering,
+    detectedObjects,
+    aiModelStatus,
+    audioLevel,
+    videoRef,
+    activeWarning,
     startCameraAndMic,
     stopCameraAndMic,
+    reconnectCamera,
     enterFullscreen,
+    exitFullscreen,
     resetViolations,
+    dismissWarning,
+    toggleFaceDetection,
+    triggerSimulatedIllicit,
+    clearSimulatedIllicit,
+    setAiSensitivity,
   } = useProctoring({
     enabled: isExamMode,
     strictMode: isExamMode,
@@ -674,19 +694,20 @@ export default function ProblemWorkspacePage() {
 
           {/* Proctoring Exam Toggle */}
           <button
-            onClick={() => {
+            onClick={async () => {
               const nextState = !isExamMode;
               setIsExamMode(nextState);
               if (nextState) {
-                enterFullscreen();
-                startCameraAndMic();
+                resetViolations();
+                await enterFullscreen();
+                await startCameraAndMic();
               } else {
                 stopCameraAndMic();
               }
             }}
             className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors border ${
               isExamMode
-                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground border-border'
             }`}
             title="Toggle Anti-Cheat Proctored Mode"
@@ -2052,6 +2073,43 @@ export default function ProblemWorkspacePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating Candidate Proctoring Monitor */}
+      {isExamMode && (
+        <ProctorWidget
+          trustScore={trustScore}
+          violations={violations}
+          isFullscreen={isFullscreen}
+          isCameraActive={isCameraActive}
+          isMicActive={isMicActive}
+          faceDetected={faceDetected}
+          faceBbox={faceBbox}
+          candidateCentering={candidateCentering}
+          detectedObjects={detectedObjects}
+          aiModelStatus={aiModelStatus}
+          audioLevel={audioLevel}
+          videoRef={videoRef}
+          onEnterFullscreen={enterFullscreen}
+          onExitFullscreen={exitFullscreen}
+          onStartCamera={startCameraAndMic}
+          onStopCamera={stopCameraAndMic}
+          onReconnectCamera={reconnectCamera}
+          onToggleFace={toggleFaceDetection}
+          onTriggerIllicit={triggerSimulatedIllicit}
+          onClearIllicit={clearSimulatedIllicit}
+          onSetSensitivity={setAiSensitivity}
+        />
+      )}
+
+      {/* Proctoring Violation Modal */}
+      {isExamMode && activeWarning && (
+        <ProctorViolationModal
+          message={activeWarning}
+          trustScore={trustScore}
+          onDismiss={dismissWarning}
+          onReEnterFullscreen={enterFullscreen}
+        />
       )}
     </div>
   );

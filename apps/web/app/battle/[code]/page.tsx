@@ -80,6 +80,7 @@ export default function BattleRoomPage() {
 
   // Direct drop-in into arena (no blocking proctored modal)
   const [isVerified, setIsVerified] = useState<boolean>(true);
+  const [isProctorActive, setIsProctorActive] = useState<boolean>(false);
   const [cameraChecked, setCameraChecked] = useState(false);
   const [micChecked, setMicChecked] = useState(false);
   const [fullscreenChecked, setFullscreenChecked] = useState(false);
@@ -190,8 +191,8 @@ export default function BattleRoomPage() {
     dismissWarning,
     resetViolations,
   } = useProctoring({
-    enabled: false,
-    strictMode: false,
+    enabled: isProctorActive,
+    strictMode: isProctorActive,
     onViolation: (v) => {
       if (socketRef.current?.connected) {
         socketRef.current.emit('battle:violation', {
@@ -611,6 +612,30 @@ export default function BattleRoomPage() {
             <Share2 className="size-3.5" />
             <span>{copiedLink ? 'Link Copied! ✓' : '👥 Challenge Friends'}</span>
           </button>
+
+          {role === 'fighter' && (
+            <button
+              onClick={async () => {
+                const next = !isProctorActive;
+                setIsProctorActive(next);
+                if (next) {
+                  resetViolations();
+                  await startCameraAndMic();
+                } else {
+                  stopCameraAndMic();
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                isProctorActive
+                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-300 shadow-sm'
+                  : 'bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              }`}
+              title="Toggle Anti-Cheat AI Proctoring"
+            >
+              <Shield className="size-3.5" />
+              <span>{isProctorActive ? `${trustScore}% Trust` : 'AI Proctor'}</span>
+            </button>
+          )}
         </div>
 
         {/* Right: Locked Role Badge (Role flipping disabled during active match) */}
@@ -1783,7 +1808,7 @@ export default function BattleRoomPage() {
       </AnimatePresence>
 
       {/* Floating Candidate Proctoring HUD */}
-      {false && role === 'fighter' && isVerified && (
+      {isProctorActive && (
         <ProctorWidget
           trustScore={trustScore}
           violations={violations}
@@ -1809,7 +1834,7 @@ export default function BattleRoomPage() {
       )}
 
       {/* Strict Anti-Cheat Alert Modal */}
-      {false && role === 'fighter' && isVerified && (
+      {isProctorActive && activeWarning && (
         <ProctorViolationModal
           message={activeWarning}
           trustScore={trustScore}
