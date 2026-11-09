@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Zap, Trophy, Gamepad2, Swords, Shield, Radar, CheckCircle2, X, Flame } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getWsUrl } from '../../lib/api';
 import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
@@ -168,48 +169,71 @@ export default function MatchmakingPage() {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Match Found Overlay */}
-      {matchedData && (
-        <div className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50 p-4 motion-enter">
-          <div className="bg-card border border-emerald-500/40 p-8 rounded-2xl text-center space-y-6 shadow-2xl max-w-md w-full relative overflow-hidden card-elevated">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
-            <div className="size-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="size-8" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-1">
-                Opponent Verified
+      <AnimatePresence>
+        {matchedData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 16 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="bg-card border border-emerald-500/40 p-8 rounded-2xl text-center space-y-6 shadow-2xl max-w-md w-full relative overflow-hidden card-elevated"
+            >
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
+              <motion.div
+                initial={{ scale: 0.5, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 15, stiffness: 300, delay: 0.1 }}
+                className="size-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400"
+              >
+                <CheckCircle2 className="size-8" />
+              </motion.div>
+              <div>
+                <div className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-1">
+                  Opponent Verified
+                </div>
+                <h2 className="text-2xl font-black text-foreground">MATCH FOUND</h2>
+                <p className="text-xs text-muted-foreground mt-1 text-pretty">
+                  Entering 1v1 Battle Arena <span className="font-mono text-foreground font-semibold">[{matchedData.battleCode}]</span>
+                </p>
               </div>
-              <h2 className="text-2xl font-black text-foreground">MATCH FOUND</h2>
-              <p className="text-xs text-muted-foreground mt-1 text-pretty">
-                Entering 1v1 Battle Arena <span className="font-mono text-foreground font-semibold">[{matchedData.battleCode}]</span>
-              </p>
-            </div>
 
-            {matchedData.opponent && (
-              <div className="bg-secondary/40 border border-border/60 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-sm text-primary">
-                    {matchedData.opponent.username?.substring(0, 2).toUpperCase() || 'VS'}
+              {matchedData.opponent && (
+                <div className="bg-secondary/40 border border-border/60 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-sm text-primary">
+                      {matchedData.opponent.username?.substring(0, 2).toUpperCase() || 'VS'}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-bold text-foreground">{matchedData.opponent.username || 'Challenger'}</div>
+                      <div className="text-xs text-muted-foreground tabular-nums">Rating: {matchedData.opponent.rating || 1200}</div>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <div className="text-sm font-bold text-foreground">{matchedData.opponent.username || 'Challenger'}</div>
-                    <div className="text-xs text-muted-foreground tabular-nums">Rating: {matchedData.opponent.rating || 1200}</div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold uppercase">
+                      Ready
+                    </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold uppercase">
-                    Ready
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
 
-            <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-500 h-full w-full" />
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.5, ease: 'easeInOut' }}
+                  className="bg-emerald-500 h-full"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="max-w-2xl w-full space-y-6 relative z-10">
         {/* Top Header */}
@@ -227,16 +251,31 @@ export default function MatchmakingPage() {
         {/* Searching Radar State vs Setup State */}
         {isSearching ? (
           <div className="bg-card border border-primary/30 rounded-2xl p-8 text-center space-y-6 shadow-xl relative overflow-hidden card-elevated motion-enter">
-            <div className="relative size-36 mx-auto flex items-center justify-center">
+            <div className="relative size-40 mx-auto flex items-center justify-center">
+              {/* Expanding sonar ripple rings */}
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute inset-0 rounded-full border border-primary/40 pointer-events-none"
+                  initial={{ scale: 0.35, opacity: 0.8 }}
+                  animate={{ scale: [0.35, 1.25], opacity: [0.8, 0] }}
+                  transition={{
+                    duration: 2.2,
+                    repeat: Infinity,
+                    delay: i * 0.7,
+                    ease: 'easeOut',
+                  }}
+                />
+              ))}
               {/* Outer ring */}
-              <div className="absolute inset-0 rounded-full border border-primary/20" />
+              <div className="absolute inset-0 rounded-full border border-primary/25" />
               {/* Mid ring */}
-              <div className="absolute inset-4 rounded-full border border-primary/30" />
+              <div className="absolute inset-4 rounded-full border border-primary/35" />
               {/* Inner ring */}
-              <div className="absolute inset-8 rounded-full border border-primary/40" />
+              <div className="absolute inset-8 rounded-full border border-primary/45" />
               {/* Radar sweep */}
               <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-              <div className="relative text-2xl font-black font-mono text-primary tabular-nums">
+              <div className="relative z-10 text-2xl font-black font-mono text-primary tabular-nums">
                 {formatTime(elapsed)}
               </div>
             </div>
@@ -273,10 +312,13 @@ export default function MatchmakingPage() {
             <div className="space-y-2.5">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Select Game Mode</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('quick')}
-                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
+                  className={`p-4 rounded-xl border text-left transition-colors ${
                     mode === 'quick'
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
@@ -287,12 +329,15 @@ export default function MatchmakingPage() {
                   </div>
                   <div className="text-sm font-bold text-foreground">Quick Match</div>
                   <div className="text-xs text-muted-foreground mt-0.5">Fastest matching across active fighters</div>
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('ranked')}
-                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
+                  className={`p-4 rounded-xl border text-left transition-colors ${
                     mode === 'ranked'
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
@@ -303,12 +348,15 @@ export default function MatchmakingPage() {
                   </div>
                   <div className="text-sm font-bold text-foreground">Ranked Duel</div>
                   <div className="text-xs text-muted-foreground mt-0.5">Strict Elo rating skill-bracket combat</div>
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('casual')}
-                  className={`p-4 rounded-xl border text-left transition-all duration-150 active:scale-[0.96] ${
+                  className={`p-4 rounded-xl border text-left transition-colors ${
                     mode === 'casual'
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/50'
@@ -319,7 +367,7 @@ export default function MatchmakingPage() {
                   </div>
                   <div className="text-sm font-bold text-foreground">Casual Practice</div>
                   <div className="text-xs text-muted-foreground mt-0.5">No rating impact, unranked sparring</div>
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -328,11 +376,14 @@ export default function MatchmakingPage() {
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Target Difficulty</label>
               <div className="grid grid-cols-4 gap-2">
                 {(['any', 'easy', 'medium', 'hard'] as const).map((d) => (
-                  <button
+                  <motion.button
                     key={d}
                     type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                     onClick={() => setDifficulty(d)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all duration-150 active:scale-[0.96] ${
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-colors ${
                       difficulty === d
                         ? d === 'easy'
                           ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400'
@@ -345,7 +396,7 @@ export default function MatchmakingPage() {
                     }`}
                   >
                     {d}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -366,18 +417,21 @@ export default function MatchmakingPage() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {TOPICS.map((t) => (
-                  <button
+                  <motion.button
                     key={t}
                     type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     onClick={() => toggleTopic(t)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 active:scale-[0.96] ${
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                       selectedTopics.includes(t)
                         ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                         : 'bg-secondary/50 hover:bg-secondary text-muted-foreground border border-border/40'
                     }`}
                   >
                     {t.replace('_', ' ')}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -389,14 +443,17 @@ export default function MatchmakingPage() {
             )}
 
             {/* Start Button */}
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={handleStartMatchmaking}
-              className="btn-radiant-primary w-full py-4 rounded-xl text-primary-foreground font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2"
+              className="btn-radiant-primary w-full py-4 rounded-xl text-primary-foreground font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <Swords className="size-4" />
               <span>Find Opponent</span>
-            </button>
+            </motion.button>
           </SpotlightCard>
         )}
 
