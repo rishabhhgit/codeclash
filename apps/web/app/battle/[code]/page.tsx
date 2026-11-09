@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { io, Socket } from 'socket.io-client';
@@ -650,32 +651,53 @@ export default function BattleRoomPage() {
               {' | '}
               Opponent: <strong className={opponentPlayer?.isReady ? 'text-emerald-400' : 'text-muted-foreground'}>{opponentPlayer?.isReady ? 'READY ✓' : 'WAITING...'}</strong>
             </span>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={handleToggleReady}
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 shadow-sm active:scale-95 ${
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-colors shadow-sm cursor-pointer ${
                 currentPlayer?.isReady
                   ? 'bg-secondary border border-border text-foreground hover:bg-muted'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
               }`}
             >
               {currentPlayer?.isReady ? 'Cancel Ready' : 'CONFIRM READY ✓'}
-            </button>
+            </motion.button>
           </div>
         </div>
       )}
 
-      {(battle?.status === 'countdown' || (countdownVal !== null && countdownVal > 0)) && (
-        <div className="bg-primary/20 border-b border-primary/40 px-4 py-3 flex items-center justify-center text-center text-xs shrink-0 z-20 motion-enter">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-2xl font-black text-primary tabular-nums">
-              {countdownVal !== null && countdownVal > 0 ? countdownVal : battle?.countdownSeconds || 3}
-            </span>
-            <span className="font-bold text-foreground text-sm uppercase tracking-widest text-balance">
-              BATTLE COMMENCING — PREPARE TO CODE!
-            </span>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {(battle?.status === 'countdown' || (countdownVal !== null && countdownVal > 0)) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md pointer-events-none"
+          >
+            <div className="text-center space-y-3">
+              <div className="text-xs uppercase tracking-widest text-primary font-mono font-bold">
+                Synchronized Battle Countdown
+              </div>
+              <motion.div
+                key={countdownVal ?? 3}
+                initial={{ scale: 1.8, opacity: 0, filter: 'blur(6px)' }}
+                animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+                exit={{ scale: 0.6, opacity: 0, filter: 'blur(4px)' }}
+                transition={{ type: 'spring', stiffness: 450, damping: 22 }}
+                className="font-mono text-8xl font-black text-primary tabular-nums drop-shadow-[0_0_35px_rgba(59,130,246,0.6)]"
+              >
+                {countdownVal !== null && countdownVal > 0 ? countdownVal : battle?.countdownSeconds || 3}
+              </motion.div>
+              <div className="text-sm font-bold text-foreground uppercase tracking-widest">
+                Prepare to code
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ================= FIGHTER HUD: LIVE OPPONENT METER OR KNOCKOUT ARENA HUD ================= */}
       {role === 'fighter' && (
@@ -1611,135 +1633,154 @@ export default function BattleRoomPage() {
       )}
 
       {/* ================= BATTLE ROYALE / DUEL CONCLUSION MODAL ================= */}
-      {(matchWinner || (isBattleRoyale && currentPlayer?.status === 'eliminated')) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 motion-enter">
-          <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4 card-elevated">
-            {matchWinner === username || currentPlayer?.status === 'champion' ? (
-              /* #1 1ST PLACE CHAMPION */
-              <div className="space-y-4">
-                <div className="size-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 shadow-md shadow-amber-500/20">
-                  <Trophy className="size-8" />
-                </div>
+      <AnimatePresence>
+        {(matchWinner || (isBattleRoyale && currentPlayer?.status === 'eliminated')) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 16, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 16, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4 card-elevated"
+            >
+              {matchWinner === username || currentPlayer?.status === 'champion' ? (
+                /* #1 1ST PLACE CHAMPION */
+                <div className="space-y-4">
+                  <motion.div
+                    initial={{ scale: 0.5, rotate: -15 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
+                    className="size-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 shadow-md shadow-amber-500/20"
+                  >
+                    <Trophy className="size-8" />
+                  </motion.div>
 
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-xs uppercase tracking-widest border border-amber-500/30 mb-2">
-                    🏆 MATCH WINNER &amp; TOURNAMENT CHAMPION!
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-                    🏆 1ST PLACE CHAMPION
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    You cleared all benchmark stages and out-coded all contenders in the arena!
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
                   <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Placement</div>
-                    <div className="text-base font-bold text-amber-400">#1 / {totalCombatants}</div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-xs uppercase tracking-widest border border-amber-500/30 mb-2">
+                      🏆 MATCH WINNER &amp; TOURNAMENT CHAMPION!
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                      🏆 1ST PLACE CHAMPION
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      You cleared all benchmark stages and out-coded all contenders in the arena!
+                    </p>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Placement</div>
+                      <div className="text-base font-bold text-amber-400">#1 / {totalCombatants}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Benchmarks Solved</div>
+                      <div className="text-base font-bold text-foreground">{currentPlayer?.kills || 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Rating Gain</div>
+                      <div className="text-base font-bold text-emerald-400">+45 ELO</div>
+                    </div>
+                  </div>
+                </div>
+              ) : currentPlayer?.status === 'eliminated' && !matchWinner ? (
+                /* PLAYER ELIMINATED WHILE MATCH CONTINUES */
+                <div className="space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
+                    <Skull className="w-8 h-8" />
+                  </div>
+
                   <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Benchmarks Solved</div>
-                    <div className="text-base font-bold text-foreground">{currentPlayer?.kills || 0}</div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold text-xs uppercase tracking-widest border border-rose-500/30 mb-2">
+                      ⚠️ STAGE CUTOFF ELIMINATION
+                    </div>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">
+                      STAGE CUTOFF REACHED
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cause: {currentPlayer?.eliminatedBy || 'Phase Cutoff Time Limit'}
+                    </p>
                   </div>
+
+                  <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
+                    <span className="text-muted-foreground">Final Placement: </span>
+                    <strong className="text-foreground text-sm font-bold">#{currentPlayer?.placement || 2} / {totalCombatants}</strong>
+                  </div>
+                </div>
+              ) : (
+                /* MATCH CONCLUDED BY RIVAL */
+                <div className="space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto text-amber-500">
+                    <Trophy className="w-8 h-8" />
+                  </div>
+
                   <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Rating Gain</div>
-                    <div className="text-base font-bold text-emerald-400">+45 ELO</div>
+                    <h2 className="text-xl font-bold text-foreground tracking-tight">
+                      {isBattleRoyale ? 'Knockout Arena Concluded' : 'Match Concluded'}
+                    </h2>
+                    <p className="text-base text-foreground font-bold mt-1">
+                      🏆 {matchWinner} took 1st Place!
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      All benchmark test cases were passed first with authoritative server verification.
+                    </p>
                   </div>
                 </div>
-              </div>
-            ) : currentPlayer?.status === 'eliminated' && !matchWinner ? (
-              /* PLAYER ELIMINATED WHILE MATCH CONTINUES */
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
-                  <Skull className="w-8 h-8" />
-                </div>
-
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold text-xs uppercase tracking-widest border border-rose-500/30 mb-2">
-                    ⚠️ STAGE CUTOFF ELIMINATION
-                  </div>
-                  <h2 className="text-2xl font-black text-foreground tracking-tight">
-                    STAGE CUTOFF REACHED
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Cause: {currentPlayer?.eliminatedBy || 'Phase Cutoff Time Limit'}
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs font-mono">
-                  <span className="text-muted-foreground">Final Placement: </span>
-                  <strong className="text-foreground text-sm font-bold">#{currentPlayer?.placement || 2} / {totalCombatants}</strong>
-                </div>
-              </div>
-            ) : (
-              /* MATCH CONCLUDED BY RIVAL */
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto text-amber-500">
-                  <Trophy className="w-8 h-8" />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">
-                    {isBattleRoyale ? 'Knockout Arena Concluded' : 'Match Concluded'}
-                  </h2>
-                  <p className="text-base text-foreground font-bold mt-1">
-                    🏆 {matchWinner} took 1st Place!
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    All benchmark test cases were passed first with authoritative server verification.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {inspectingOpponent && (
-              <div className="text-left mt-3 p-3 rounded-xl bg-background border border-border space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-foreground">
-                    Final Submitted Code ({opponentPlayer?.username || 'Opponent'}):
-                  </span>
-                  <span className="text-muted-foreground font-mono text-[11px]">
-                    {revealedSolutions[opponentPlayer?.userId]?.language || 'cpp'}
-                  </span>
-                </div>
-                <pre className="p-3 bg-muted/60 rounded-lg text-xs font-mono max-h-52 overflow-y-auto whitespace-pre-wrap text-foreground border border-border/50">
-                  {revealedSolutions[opponentPlayer?.userId]?.code ||
-                    opponentStreams[opponentPlayer?.userId]?.code ||
-                    '// Code was evaluated directly on the backend runner'}
-                </pre>
-              </div>
-            )}
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Link
-                href="/lobby"
-                className="px-5 py-2.5 rounded-xl bg-foreground text-background font-semibold text-xs hover:opacity-90 transition-opacity"
-              >
-                Back to Lobby
-              </Link>
-              {currentPlayer?.status === 'eliminated' && role === 'fighter' && (
-                <button
-                  onClick={() => {
-                    setRole('spectator');
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-colors"
-                >
-                  Spectate Competitors
-                </button>
               )}
-              {matchWinner && (
-                <button
-                  onClick={() => setInspectingOpponent((prev) => !prev)}
-                  className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-muted text-foreground font-medium text-xs border border-border transition-colors"
-                >
-                  {inspectingOpponent ? 'Hide Code' : 'Inspect Winning Code'}
-                </button>
+
+              {inspectingOpponent && (
+                <div className="text-left mt-3 p-3 rounded-xl bg-background border border-border space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-foreground">
+                      Final Submitted Code ({opponentPlayer?.username || 'Opponent'}):
+                    </span>
+                    <span className="text-muted-foreground font-mono text-[11px]">
+                      {revealedSolutions[opponentPlayer?.userId]?.language || 'cpp'}
+                    </span>
+                  </div>
+                  <pre className="p-3 bg-muted/60 rounded-lg text-xs font-mono max-h-52 overflow-y-auto whitespace-pre-wrap text-foreground border border-border/50">
+                    {revealedSolutions[opponentPlayer?.userId]?.code ||
+                      opponentStreams[opponentPlayer?.userId]?.code ||
+                      '// Code was evaluated directly on the backend runner'}
+                  </pre>
+                </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
+
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/lobby"
+                  className="px-5 py-2.5 rounded-xl bg-foreground text-background font-semibold text-xs hover:opacity-90 transition-opacity"
+                >
+                  Back to Lobby
+                </Link>
+                {currentPlayer?.status === 'eliminated' && role === 'fighter' && (
+                  <button
+                    onClick={() => {
+                      setRole('spectator');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-colors"
+                  >
+                    Spectate Competitors
+                  </button>
+                )}
+                {matchWinner && (
+                  <button
+                    onClick={() => setInspectingOpponent((prev) => !prev)}
+                    className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-muted text-foreground font-medium text-xs border border-border transition-colors"
+                  >
+                    {inspectingOpponent ? 'Hide Code' : 'Inspect Winning Code'}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Candidate Proctoring HUD */}
       {false && role === 'fighter' && isVerified && (
