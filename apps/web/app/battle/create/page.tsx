@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Swords, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getClientAuthToken, getApiUrl } from '../../../lib/api';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
 
@@ -189,14 +190,17 @@ export default function CreateBattlePage() {
               const isSelected = form.mode === mode.value || (mode.value === 'battle_royale' && form.mode === 'royal');
               const isBR = mode.value === 'battle_royale' || mode.value === 'royal';
               return (
-                <button
+                <motion.button
                   key={mode.value}
                   type="button"
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => {
                     const newMax = isBR ? (form.maxPlayers === 2 ? 10 : form.maxPlayers) : form.maxPlayers;
                     setForm({ ...form, mode: mode.value, maxPlayers: newMax });
                   }}
-                  className={`p-3.5 border rounded-xl text-left transition-all duration-150 active:scale-[0.96] ${
+                  className={`p-3.5 border rounded-xl text-left transition-colors ${
                     isSelected
                       ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary'
                       : 'border-border/60 hover:border-foreground/30 bg-background/60'
@@ -211,24 +215,34 @@ export default function CreateBattlePage() {
                     )}
                   </div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">{mode.desc}</div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
-          {isKnockout && (
-            <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 text-foreground space-y-1.5 text-xs motion-enter">
-              <div className="font-bold text-primary flex items-center gap-1.5">
-                <span>🏆 Knockout Arena Rules &amp; Phase Checkpoints</span>
-              </div>
-              <ul className="list-disc list-inside text-[11px] text-muted-foreground space-y-0.5">
-                <li><strong className="text-foreground">Phase Checkpoints:</strong> Progresses through 4 timed stages. Coders must pass minimum testcases before each phase cutoff.</li>
-                <li><strong className="text-foreground">100 Accuracy Stamina:</strong> Passing test cases strengthens your buffer. Non-accepted submissions (WA, TLE, syntax errors) deduct 25 stamina.</li>
-                <li><strong className="text-foreground">Algorithmic Blueprints:</strong> Mid-match intel unlocks optimal complexity hints and provides +50 stamina recovery.</li>
-                <li><strong className="text-foreground">1st Place Victory:</strong> Solve all test benchmarks first or have the highest benchmark score at the final stage cutoff!</li>
-              </ul>
-            </div>
-          )}
+          <AnimatePresence>
+            {isKnockout && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 text-foreground space-y-1.5 text-xs">
+                  <div className="font-bold text-primary flex items-center gap-1.5">
+                    <span>🏆 Knockout Arena Rules &amp; Phase Checkpoints</span>
+                  </div>
+                  <ul className="list-disc list-inside text-[11px] text-muted-foreground space-y-0.5">
+                    <li><strong className="text-foreground">Phase Checkpoints:</strong> Progresses through 4 timed stages. Coders must pass minimum testcases before each phase cutoff.</li>
+                    <li><strong className="text-foreground">100 Accuracy Stamina:</strong> Passing test cases strengthens your buffer. Non-accepted submissions (WA, TLE, syntax errors) deduct 25 stamina.</li>
+                    <li><strong className="text-foreground">Algorithmic Blueprints:</strong> Mid-match intel unlocks optimal complexity hints and provides +50 stamina recovery.</li>
+                    <li><strong className="text-foreground">1st Place Victory:</strong> Solve all test benchmarks first or have the highest benchmark score at the final stage cutoff!</li>
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </SpotlightCard>
 
         {/* Player Count & Difficulty */}
@@ -253,9 +267,12 @@ export default function CreateBattlePage() {
             <label className="block text-xs font-medium text-foreground">Difficulty</label>
             <div className="flex gap-2">
               {['easy', 'medium', 'hard'].map((diff) => (
-                <button
+                <motion.button
                   key={diff}
                   type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                   onClick={() => setForm({ ...form, difficulty: diff })}
                   className={`flex-1 py-2 text-xs border rounded-lg transition-colors capitalize ${
                     form.difficulty === diff
@@ -264,7 +281,7 @@ export default function CreateBattlePage() {
                   }`}
                 >
                   {diff}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -278,9 +295,12 @@ export default function CreateBattlePage() {
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
             {TOPICS.map((topic) => (
-              <button
+              <motion.button
                 key={topic}
                 type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 onClick={() => toggleTopic(topic)}
                 className={`px-2.5 py-1 text-xs border rounded-full transition-colors ${
                   form.topics.includes(topic)
@@ -289,7 +309,7 @@ export default function CreateBattlePage() {
                 }`}
               >
                 {topic.replace(/_/g, ' ')}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -321,8 +341,11 @@ export default function CreateBattlePage() {
         <div className="p-4 rounded-xl border border-border bg-card space-y-2">
           <label className="block text-xs font-medium text-foreground">Visibility</label>
           <div className="flex gap-2.5">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
               onClick={() => setForm({ ...form, isPublic: true })}
               className={`flex-1 py-2 text-xs border rounded-lg transition-colors ${
                 form.isPublic
@@ -331,9 +354,12 @@ export default function CreateBattlePage() {
               }`}
             >
               Public Battle
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
               onClick={() => setForm({ ...form, isPublic: false })}
               className={`flex-1 py-2 text-xs border rounded-lg transition-colors ${
                 !form.isPublic
@@ -342,18 +368,21 @@ export default function CreateBattlePage() {
               }`}
             >
               Private Battle
-            </button>
+            </motion.button>
           </div>
         </div>
 
-        <button
+        <motion.button
           type="submit"
           disabled={loading || form.topics.length === 0}
-          className="btn-radiant-primary w-full py-4 text-primary-foreground rounded-xl text-xs sm:text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+          whileHover={{ scale: 1.015 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          className="btn-radiant-primary w-full py-4 text-primary-foreground rounded-xl text-xs sm:text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer"
         >
           <Swords className="size-4" />
           {loading ? 'Deploying Arena...' : 'Launch Battle Arena'}
-        </button>
+        </motion.button>
       </form>
     </div>
   );
