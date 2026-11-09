@@ -17,7 +17,7 @@ import {
   Share2,
   Flame,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getWsUrl, getClientAuthToken } from '@/lib/api';
 import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
@@ -253,79 +253,94 @@ export default function LobbyPage() {
             </Link>
           </SpotlightCard>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredBattles.map((b) => (
-              <SpotlightCard
-                key={b.code}
-                className="p-5 space-y-4 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-foreground px-2 py-0.5 rounded bg-muted border border-border">
-                      {b.code}
-                    </span>
-                    {b.mode === 'battle_royale' || b.mode === 'royal' ? (
-                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                        🏆 Knockout Arena
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        ⚔️ 1v1 Duel
-                      </span>
-                    )}
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getDifficultyBadge(b.difficulty)}`}>
-                      {b.difficulty}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded bg-muted/60 border border-border text-muted-foreground">
-                    <span
-                      className={`size-1.5 rounded-full ${
-                        b.status === 'active'
-                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
-                          : 'bg-amber-500'
-                      }`}
-                    />
-                    <span className="capitalize">{b.status || 'waiting'}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-bold text-foreground tracking-tight text-balance">
-                    {b.title || `Duel ${b.code}`}
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-mono tabular-nums">
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3.5 text-primary" />
-                      {b.playerCount} / {b.maxPlayers} Fighters
-                    </span>
-                    {b.spectatorCount != null && b.spectatorCount > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Eye className="size-3.5 text-blue-400" />
-                        {b.spectatorCount} Spectating
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
-                  <Link
-                    href={`/battle/${b.code}?role=spectator`}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 flex items-center gap-1.5 active:scale-[0.96]"
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredBattles.map((b, idx) => (
+                <motion.div
+                  key={b.code}
+                  layout
+                  initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
+                  transition={{ delay: idx * 0.04, duration: 0.25 }}
+                  whileHover={{ y: -3 }}
+                >
+                  <SpotlightCard
+                    className="p-5 space-y-4 group h-full"
+                    spotlightColor={b.mode === 'battle_royale' || b.mode === 'royal' ? 'rgba(249, 115, 22, 0.12)' : 'rgba(59, 130, 246, 0.12)'}
                   >
-                    <Eye className="size-3.5" />
-                    Spectate
-                  </Link>
-                  <Link
-                    href={`/battle/${b.code}?role=fighter`}
-                    className="btn-radiant-primary px-4 py-1.5 rounded-lg text-xs font-semibold text-primary-foreground shadow-sm flex items-center gap-1.5"
-                  >
-                    <Swords className="size-3.5" />
-                    Enter Duel
-                  </Link>
-                </div>
-              </SpotlightCard>
-            ))}
-          </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-foreground px-2 py-0.5 rounded bg-muted border border-border">
+                          {b.code}
+                        </span>
+                        {b.mode === 'battle_royale' || b.mode === 'royal' ? (
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                            🏆 Knockout Arena
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            ⚔️ 1v1 Duel
+                          </span>
+                        )}
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getDifficultyBadge(b.difficulty)}`}>
+                          {b.difficulty}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded bg-muted/60 border border-border text-muted-foreground">
+                        <span
+                          className={`size-1.5 rounded-full ${
+                            b.status === 'active'
+                              ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                              : 'bg-amber-500'
+                          }`}
+                        />
+                        <span className="capitalize">{b.status || 'waiting'}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground tracking-tight text-balance">
+                        {b.title || `Duel ${b.code}`}
+                      </h3>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 font-mono tabular-nums">
+                        <span className="flex items-center gap-1">
+                          <Users className="size-3.5 text-primary" />
+                          {b.playerCount} / {b.maxPlayers} Fighters
+                        </span>
+                        {b.spectatorCount != null && b.spectatorCount > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Eye className="size-3.5 text-blue-400" />
+                            {b.spectatorCount} Spectating
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
+                      <Link
+                        href={`/battle/${b.code}?role=spectator`}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 flex items-center gap-1.5 active:scale-[0.96]"
+                      >
+                        <Eye className="size-3.5" />
+                        Spectate
+                      </Link>
+                      <Link
+                        href={`/battle/${b.code}?role=fighter`}
+                        className="btn-radiant-primary px-4 py-1.5 rounded-lg text-xs font-semibold text-primary-foreground shadow-sm flex items-center gap-1.5"
+                      >
+                        <Swords className="size-3.5" />
+                        Enter Duel
+                      </Link>
+                    </div>
+                  </SpotlightCard>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </div>
