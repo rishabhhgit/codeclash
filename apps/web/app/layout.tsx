@@ -55,7 +55,10 @@ export default function RootLayout({
                       href="/battle/join"
                       className="px-3 py-1.5 rounded-lg text-primary font-semibold hover:bg-primary/10 transition-colors duration-150 active:scale-[0.96] flex items-center gap-1.5"
                     >
-                      <span className="size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                      <span className="relative flex size-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full size-2 bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                      </span>
                       <span>Join Battle</span>
                     </Link>
                     <Link
@@ -93,7 +96,10 @@ export default function RootLayout({
                     href="/dashboard"
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted border border-border/80 text-xs font-medium text-foreground transition-all duration-150 active:scale-[0.96] shadow-sm"
                   >
-                    <span className="size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                    <span className="relative flex size-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full size-2 bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                    </span>
                     <span className="font-mono">Dashboard</span>
                   </Link>
                 </div>
