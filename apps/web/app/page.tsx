@@ -6,19 +6,13 @@ import { useRouter } from 'next/navigation';
 import {
   Swords,
   ArrowRight,
-  Code2,
-  Users,
   Play,
-  Zap,
   Check,
   Copy,
-  Clock,
-  ShieldCheck,
   Layers,
   ChevronRight,
 } from 'lucide-react';
 import { getApiUrl } from '../lib/api';
-import { LiveDuelVisualizer } from '../components/home/LiveDuelVisualizer';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -122,110 +116,103 @@ export default function Home() {
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground flex flex-col">
       {/* Hero Section */}
-      <section className="py-14 sm:py-20 border-b border-border/70">
-        <div className="container mx-auto px-4 max-w-6xl">
+      <section className="py-16 sm:py-24 border-b border-border/70">
+        <div className="container mx-auto px-4 max-w-4xl">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
+            className="text-center space-y-6 max-w-2xl mx-auto"
           >
-            {/* Left Content Column */}
-            <motion.div variants={itemVariants} className="lg:col-span-6 space-y-6">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary border border-border/80 text-xs font-mono text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-emerald-500" />
-                  <span>Competitive algorithm arena</span>
-                </div>
-
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-foreground leading-[1.12]">
-                  Real-time 1v1 coding duels on LeetCode problems
-                </h1>
-
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl">
-                  Two programmers receive the same algorithmic problem. Synchronized clocks start together. First to clear all hidden benchmarks claims Elo rating.
-                </p>
+            {/* Headline Block */}
+            <motion.div variants={itemVariants} className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary border border-border/80 text-xs font-mono text-muted-foreground">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>Competitive algorithm arena</span>
               </div>
 
-              {/* Primary & Secondary Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-                <Link
-                  href="/matchmaking?mode=ranked&difficulty=medium"
-                  className="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm transition-colors text-center inline-flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <Play className="size-4 fill-current" />
-                  <span>Enter ranked queue</span>
-                </Link>
+              <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground leading-[1.12]">
+                Real-time 1v1 coding duels on LeetCode problems
+              </h1>
 
-                <Link
-                  href="/roadmap"
-                  className="px-5 py-2.5 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border font-medium text-sm transition-colors text-center inline-flex items-center justify-center gap-2"
-                >
-                  <Layers className="size-4 text-muted-foreground" />
-                  <span>Explore practice roadmap</span>
-                </Link>
-              </div>
-
-              {/* Room Code Entry & Instant Invite */}
-              <div className="pt-3 border-t border-border/60 space-y-2.5">
-                <form onSubmit={handleJoinByCode} className="flex items-center gap-2 max-w-md">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={roomCode}
-                      onChange={(e) => setRoomCode(e.target.value)}
-                      placeholder="Room code or invite link"
-                      className="w-full pl-3 pr-8 py-2 rounded-lg bg-card border border-border text-xs font-mono uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
-                    />
-                    <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono text-muted-foreground">
-                      ↵
-                    </kbd>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="px-3.5 py-2 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border font-medium text-xs transition-colors shrink-0"
-                  >
-                    Join
-                  </button>
-
-                  <Link
-                    href="/battle/create"
-                    className="px-3.5 py-2 rounded-lg bg-card hover:bg-muted text-foreground border border-border font-medium text-xs transition-colors shrink-0"
-                  >
-                    Host match
-                  </Link>
-                </form>
-
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={handleCreateDemo}
-                    className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-                  >
-                    {copiedDemo ? (
-                      <>
-                        <Check className="size-3 text-emerald-500" />
-                        <span className="text-emerald-500 font-medium">Link copied to clipboard</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="size-3 text-muted-foreground" />
-                        <span>Copy private duel link for a friend</span>
-                      </>
-                    )}
-                  </button>
-                  <span>&middot;</span>
-                  <Link href="/auth/register" className="hover:text-foreground transition-colors font-medium text-amber-500">
-                    Connect LeetCode handle
-                  </Link>
-                </div>
-              </div>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto">
+                Two programmers receive the same algorithmic problem. Synchronized clocks start together. First to clear all hidden benchmarks claims Elo rating.
+              </p>
             </motion.div>
 
-            {/* Right Product Hero: Authentic Interactive Duel Simulator */}
-            <motion.div variants={itemVariants} className="lg:col-span-6">
-              <LiveDuelVisualizer />
+            {/* Primary & Secondary Actions */}
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-1">
+              <Link
+                href="/matchmaking?mode=ranked&difficulty=medium"
+                className="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm transition-colors text-center inline-flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Play className="size-4 fill-current" />
+                <span>Enter ranked queue</span>
+              </Link>
+
+              <Link
+                href="/roadmap"
+                className="px-5 py-2.5 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border font-medium text-sm transition-colors text-center inline-flex items-center justify-center gap-2"
+              >
+                <Layers className="size-4 text-muted-foreground" />
+                <span>Explore practice roadmap</span>
+              </Link>
+            </motion.div>
+
+            {/* Room Code Entry & Instant Invite */}
+            <motion.div variants={itemVariants} className="pt-4 border-t border-border/60 space-y-2.5 max-w-md mx-auto">
+              <form onSubmit={handleJoinByCode} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value)}
+                    placeholder="Room code or invite link"
+                    className="w-full pl-3 pr-8 py-2 rounded-lg bg-card border border-border text-xs font-mono uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+                  />
+                  <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono text-muted-foreground">
+                    ↵
+                  </kbd>
+                </div>
+
+                <button
+                  type="submit"
+                  className="px-3.5 py-2 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border font-medium text-xs transition-colors shrink-0"
+                >
+                  Join
+                </button>
+
+                <Link
+                  href="/battle/create"
+                  className="px-3.5 py-2 rounded-lg bg-card hover:bg-muted text-foreground border border-border font-medium text-xs transition-colors shrink-0"
+                >
+                  Host match
+                </Link>
+              </form>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={handleCreateDemo}
+                  className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                >
+                  {copiedDemo ? (
+                    <>
+                      <Check className="size-3 text-emerald-500" />
+                      <span className="text-emerald-500 font-medium">Link copied to clipboard</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3 text-muted-foreground" />
+                      <span>Copy private duel link for a friend</span>
+                    </>
+                  )}
+                </button>
+                <span>&middot;</span>
+                <Link href="/auth/register" className="hover:text-foreground transition-colors font-medium text-amber-500">
+                  Connect LeetCode handle
+                </Link>
+              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -234,7 +221,7 @@ export default function Home() {
       {/* Architectural Telemetry Bar */}
       <section className="py-8 border-b border-border/70 bg-muted/15">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center sm:text-left">
             <div className="space-y-1">
               <div className="text-xs font-mono text-muted-foreground">Problems</div>
               <div className="text-xl sm:text-2xl font-semibold text-foreground tabular-nums">3,129</div>
