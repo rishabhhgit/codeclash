@@ -126,11 +126,6 @@ export default function Home() {
           >
             {/* Headline Block */}
             <motion.div variants={itemVariants} className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary border border-border/80 text-xs font-mono text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                <span>Competitive algorithm arena</span>
-              </div>
-
               <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-foreground leading-[1.12]">
                 Real-time 1v1 coding duels on LeetCode problems
               </h1>
