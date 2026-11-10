@@ -187,20 +187,19 @@ export async function fetchLeetCodeProfile(handle: string): Promise<LeetCodeProf
   }
 }
 
-// Default community showcase profiles
-export const SHOWCASE_HANDLES = new Set<string>([
-  'neal_wu',
-  'druv_kotwani',
-  'lee215',
-  'tourist',
-  'StefanPochmann',
-]);
+// Default community showcase profiles (empty by default; populated by registered fighters & pinned handles)
+export const SHOWCASE_HANDLES = new Set<string>();
 
 export function addToShowcase(handle: string): boolean {
   const clean = handle.trim().toLowerCase();
   if (clean.length < 2) return false;
   SHOWCASE_HANDLES.add(clean);
   return true;
+}
+
+export function removeFromShowcase(handle: string): boolean {
+  const clean = handle.trim().toLowerCase();
+  return SHOWCASE_HANDLES.delete(clean);
 }
 
 export function getShowcaseHandles(): string[] {

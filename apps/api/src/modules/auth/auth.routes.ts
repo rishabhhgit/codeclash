@@ -5,7 +5,7 @@ import { User } from '../../models/User';
 import { authenticate, generateToken, AuthRequest, DEFAULT_GUEST_USER, inMemoryUsers } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { getUserInfo, getUserRating } from '../../services/competitive';
-import { fetchLeetCodeProfile } from '../../services/leetcode.service';
+import { fetchLeetCodeProfile, addToShowcase } from '../../services/leetcode.service';
 import { serializeUser } from '../../utils/serializers';
 import { getRankFromRating } from '@codeclash/shared';
 
@@ -153,7 +153,10 @@ router.post('/leetcode', async (req, res) => {
     if (user) {
       if (user._id) inMemoryUsers.set(user._id.toString(), user);
       if (user.handle) inMemoryUsers.set(user.handle.toLowerCase(), user);
-      if (user.leetcodeUsername) inMemoryUsers.set(user.leetcodeUsername.toLowerCase(), user);
+      if (user.leetcodeUsername) {
+        inMemoryUsers.set(user.leetcodeUsername.toLowerCase(), user);
+        addToShowcase(user.leetcodeUsername);
+      }
     }
 
     const token = generateToken(user);
@@ -233,7 +236,10 @@ router.post('/login', validate(loginSchema), async (req, res, _next) => {
     if (user) {
       if (user._id) inMemoryUsers.set(user._id.toString(), user);
       if (user.handle) inMemoryUsers.set(user.handle.toLowerCase(), user);
-      if (user.leetcodeUsername) inMemoryUsers.set(user.leetcodeUsername.toLowerCase(), user);
+      if (user.leetcodeUsername) {
+        inMemoryUsers.set(user.leetcodeUsername.toLowerCase(), user);
+        addToShowcase(user.leetcodeUsername);
+      }
     }
 
     const token = generateToken(user);

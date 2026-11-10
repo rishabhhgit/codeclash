@@ -3,6 +3,7 @@ import {
   fetchLeetCodeProfile,
   getShowcaseHandles,
   addToShowcase,
+  removeFromShowcase,
   LeetCodeProfileData,
 } from '../../services/leetcode.service';
 
@@ -111,6 +112,26 @@ router.post('/showcase/add', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error?.message || 'Failed to add profile to showcase',
+    });
+  }
+});
+
+// Remove a profile from the community showcase
+router.delete('/showcase/:handle', async (req, res) => {
+  try {
+    const handle = String(req.params.handle || '').trim();
+    if (!handle) {
+      return res.status(400).json({ success: false, error: 'Handle required' });
+    }
+    const removed = removeFromShowcase(handle);
+    return res.json({
+      success: true,
+      message: removed ? `Removed ${handle} from showcase` : 'Profile was not in showcase',
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to remove profile',
     });
   }
 });
