@@ -10,21 +10,14 @@ import {
   Gamepad2,
   Swords,
   Shield,
-  Radar,
-  CheckCircle2,
-  X,
-  Flame,
   Check,
-  User,
-  Sparkles,
-  ArrowRight,
-  Clock,
-  Layers,
   AlertCircle,
+  X,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getWsUrl } from '../../lib/api';
-import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
 function getClientAuthToken(): string {
   if (typeof window === 'undefined') return 'guest-token';
@@ -57,15 +50,15 @@ const TOPICS = [
 
 const PRESETS = [
   {
-    name: 'All Topics',
+    name: 'All topics',
     topics: [],
   },
   {
-    name: 'Blind 75 Core',
+    name: 'Blind 75',
     topics: ['arrays', 'two_pointers', 'sliding_window', 'binary_search', 'trees', 'graphs', 'dynamic_programming'],
   },
   {
-    name: 'Data Structures',
+    name: 'Data structures',
     topics: ['arrays', 'strings', 'linked_lists', 'stacks', 'hash_map', 'trees'],
   },
   {
@@ -139,12 +132,12 @@ function MatchmakingContent() {
 
       setTimeout(() => {
         router.push(`/battle/${code}${slug ? `?slug=${slug}` : ''}`);
-      }, 2000);
+      }, 1600);
     });
 
     socket.on('match:timeout', (data: any) => {
       setIsSearching(false);
-      setError(data.message || 'Matchmaking timed out. No opponent found.');
+      setError(data.message || 'Matchmaking timed out. No opponent found in queue.');
     });
 
     return () => {
@@ -209,12 +202,12 @@ function MatchmakingContent() {
         setIsSearching(false);
         setTimeout(() => {
           router.push(`/battle/${code}${slug ? `?slug=${slug}` : ''}`);
-        }, 2000);
+        }, 1600);
       } else if (data.data?.queueSize) {
         setQueueCount(data.data.queueSize);
       }
     } catch {
-      setError('Unable to reach matchmaking server. Please check your network.');
+      setError('Unable to reach matchmaking server. Please check connection.');
       setIsSearching(false);
     }
   };
@@ -231,9 +224,7 @@ function MatchmakingContent() {
           },
         }
       );
-    } catch {
-      // Ignored
-    }
+    } catch {}
     setIsSearching(false);
     setElapsed(0);
   };
@@ -259,415 +250,303 @@ function MatchmakingContent() {
   const isGuest = currentUser?.handle?.toLowerCase().startsWith('guest');
 
   return (
-    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground py-10 sm:py-14 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center relative overflow-hidden">
-      {/* Background ambient radial glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[650px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 size-[500px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Dramatic Match Found Faceoff Overlay */}
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground py-8 sm:py-12 px-4 sm:px-6 flex flex-col justify-center items-center">
+      {/* Match Found Overlay */}
       <AnimatePresence>
         {matchedData && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/95 backdrop-blur-xl flex items-center justify-center z-50 p-4"
-          >
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 18 }}
+              initial={{ opacity: 0, scale: 0.98, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 18 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="bg-card border-2 border-emerald-500/50 p-8 sm:p-10 rounded-3xl text-center space-y-7 shadow-2xl max-w-xl w-full relative overflow-hidden"
+              exit={{ opacity: 0, scale: 0.98, y: 6 }}
+              transition={{ duration: 0.18 }}
+              className="bg-card border border-border p-6 sm:p-8 rounded-xl max-w-md w-full text-center space-y-5 shadow-2xl"
             >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 animate-pulse" />
+              <div className="size-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mx-auto flex items-center justify-center">
+                <CheckCircle2 className="size-5" />
+              </div>
 
-              {/* Title & Badge */}
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-emerald-400 font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                  <CheckCircle2 className="size-3.5" />
-                  <span>Opponent Synchronized</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
-                  MATCH FOUND
-                </h2>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-foreground">Match found</h3>
                 <p className="text-xs text-muted-foreground font-mono">
-                  Room [{matchedData.battleCode}] • Entering Synchronized Arena
+                  Room [{matchedData.battleCode}] &middot; Entering synchronized duel
                 </p>
               </div>
 
-              {/* Faceoff Cards: You vs Challenger */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 items-center">
-                {/* You */}
-                <div className="p-4 rounded-2xl bg-secondary/60 border border-border/80 text-left space-y-2">
-                  <div className="text-[10px] uppercase font-mono text-primary font-bold">You</div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="size-10 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-sm text-primary overflow-hidden">
-                      {currentUser?.avatar ? (
-                        <img src={currentUser.avatar} alt="You" className="size-full object-cover" />
-                      ) : (
-                        username.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-bold text-foreground truncate">{username}</div>
-                      <div className="text-[11px] font-mono text-muted-foreground">{userRating} Elo</div>
-                    </div>
-                  </div>
+              {/* Roster cards */}
+              <div className="grid grid-cols-2 gap-3 text-left">
+                <div className="p-3 rounded-lg bg-background border border-border space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase text-muted-foreground block">You</span>
+                  <div className="text-xs font-semibold text-foreground truncate">{username}</div>
+                  <div className="text-[11px] font-mono text-muted-foreground tabular-nums">{userRating} Elo</div>
                 </div>
 
-                {/* Opponent */}
-                <div className="p-4 rounded-2xl bg-secondary/60 border border-border/80 text-left space-y-2">
-                  <div className="text-[10px] uppercase font-mono text-emerald-400 font-bold">Opponent</div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="size-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-sm text-emerald-400 overflow-hidden">
-                      {matchedData.opponent?.avatar ? (
-                        <img src={matchedData.opponent.avatar} alt="Opponent" className="size-full object-cover" />
-                      ) : (
-                        matchedData.opponent?.username?.substring(0, 2).toUpperCase() || 'VS'
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-bold text-foreground truncate">
-                        {matchedData.opponent?.username || 'Challenger'}
-                      </div>
-                      <div className="text-[11px] font-mono text-muted-foreground">
-                        {matchedData.opponent?.rating || 1200} Elo
-                      </div>
-                    </div>
+                <div className="p-3 rounded-lg bg-background border border-border space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase text-muted-foreground block">Opponent</span>
+                  <div className="text-xs font-semibold text-foreground truncate">
+                    {matchedData.opponent?.username || 'Challenger'}
+                  </div>
+                  <div className="text-[11px] font-mono text-muted-foreground tabular-nums">
+                    {matchedData.opponent?.rating || 1200} Elo
                   </div>
                 </div>
               </div>
 
-              {/* Animated Progress Bar */}
-              <div className="space-y-1.5">
+              {/* Connecting progress indicator */}
+              <div className="space-y-1.5 pt-1">
                 <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-                  <span>Launching IDE Sandbox</span>
-                  <span className="text-emerald-400 font-bold">Ready</span>
+                  <span>Connecting to sandbox</span>
+                  <span className="text-emerald-500 font-medium">Ready</span>
                 </div>
-                <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: '0%' }}
                     animate={{ width: '100%' }}
-                    transition={{ duration: 1.8, ease: 'easeInOut' }}
+                    transition={{ duration: 1.4, ease: 'easeInOut' }}
                     className="bg-emerald-500 h-full rounded-full"
                   />
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
-      <div className="max-w-3xl w-full space-y-7 relative z-10">
-        {/* Top Header & Combat Dossier */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/70 text-xs font-semibold text-muted-foreground shadow-sm">
-            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono">Competitive Matchmaking Engine</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground text-balance">
-            Find an Opponent
+      <div className="max-w-2xl w-full space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+            Find an opponent
           </h1>
-
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto text-pretty leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
             Synchronized 1v1 battle matching. Both combatants face the same problem, timer, and hidden test benchmarks.
           </p>
 
-          {/* User Combat Status Banner */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-card border border-border/80 shadow-sm text-xs font-mono">
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-primary" />
-              <span className="text-muted-foreground">Fighter:</span>
-              <strong className="text-foreground">{username}</strong>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1.5">
-              <Trophy className="size-3 text-amber-400" />
-              <strong className="text-amber-400">{userRating}</strong>
-              <span className="text-muted-foreground">Elo</span>
-            </div>
+          {/* User Dossier Meta */}
+          <div className="inline-flex items-center gap-2 pt-1 text-xs font-mono text-muted-foreground">
+            <span>Fighter:</span>
+            <span className="font-semibold text-foreground">@{username}</span>
+            <span>&middot;</span>
+            <span className="text-foreground font-semibold tabular-nums">{userRating}</span>
+            <span>Elo</span>
             {isGuest && (
               <>
-                <span>•</span>
-                <Link href="/auth/register" className="text-primary hover:underline font-semibold">
-                  Save Stats →
+                <span>&middot;</span>
+                <Link href="/auth/register" className="text-primary hover:underline">
+                  Save stats &rarr;
                 </Link>
               </>
             )}
           </div>
         </div>
 
-        {/* Searching Radar State vs Setup State */}
+        {/* Searching Queue Screen vs Setup Card */}
         {isSearching ? (
-          <SpotlightCard className="p-8 sm:p-12 text-center space-y-8 rounded-3xl border-primary/40 shadow-2xl bg-card/90">
-            {/* Concentric Radar Scanner */}
-            <div className="relative size-48 mx-auto flex items-center justify-center">
-              {/* Sonar Ripple Rings */}
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="absolute inset-0 rounded-full border border-primary/40 pointer-events-none"
-                  initial={{ scale: 0.3, opacity: 0.85 }}
-                  animate={{ scale: [0.3, 1.35], opacity: [0.85, 0] }}
-                  transition={{
-                    duration: 2.4,
-                    repeat: Infinity,
-                    delay: i * 0.8,
-                    ease: 'easeOut',
-                  }}
-                />
-              ))}
+          <div className="p-8 sm:p-10 text-center space-y-6 rounded-xl border border-border bg-card shadow-sm">
+            {/* Minimalist Stopwatch & Scanner Ring */}
+            <div className="relative size-36 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-border" />
+              <div className="absolute inset-2 rounded-full border border-border/60" />
+              <div className="absolute inset-0 rounded-full border-t border-primary animate-spin" />
 
-              {/* Static Range Rings */}
-              <div className="absolute inset-0 rounded-full border border-primary/20" />
-              <div className="absolute inset-6 rounded-full border border-primary/30" />
-              <div className="absolute inset-12 rounded-full border border-primary/40" />
-
-              {/* Radar Sweep Needle */}
-              <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-
-              {/* Digital Stopwatch in Center */}
               <div className="relative z-10 flex flex-col items-center">
-                <span className="text-3xl font-black font-mono text-primary tabular-nums tracking-tight">
+                <span className="text-2xl sm:text-3xl font-semibold font-mono tabular-nums text-foreground">
                   {formatTime(elapsed)}
                 </span>
-                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mt-0.5">
-                  Elapsed
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mt-0.5">
+                  Queue time
                 </span>
               </div>
             </div>
 
-            {/* Status Information */}
-            <div className="space-y-2 max-w-sm mx-auto">
-              <div className="text-lg font-bold text-foreground">
-                Scanning Competitive Queue...
+            <div className="space-y-1 max-w-sm mx-auto">
+              <div className="text-sm font-semibold text-foreground">
+                Scanning competitive queue
               </div>
-              <p className="text-xs text-muted-foreground font-mono leading-relaxed">
-                Searching skill band <span className="text-foreground font-bold">±{currentRange} ELO</span> ({Math.max(0, userRating - currentRange)} - {userRating + currentRange})
+              <p className="text-xs text-muted-foreground font-mono">
+                Matching skill bracket &plusmn;{currentRange} Elo ({Math.max(0, userRating - currentRange)} &ndash; {userRating + currentRange})
               </p>
             </div>
 
-            {/* Match Parameters Card */}
-            <div className="grid grid-cols-3 gap-2.5 max-w-md mx-auto text-xs">
-              <div className="p-3 rounded-2xl bg-secondary/60 border border-border/60 text-left">
-                <span className="text-[10px] text-muted-foreground uppercase block font-mono font-semibold">Mode</span>
-                <span className="font-bold text-foreground capitalize">{mode} Duel</span>
+            {/* Current Search Specs */}
+            <div className="grid grid-cols-3 gap-2 max-w-md mx-auto text-xs font-mono text-left">
+              <div className="p-2.5 rounded-lg bg-background border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase block">Mode</span>
+                <span className="font-semibold text-foreground capitalize">{mode}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-secondary/60 border border-border/60 text-left">
-                <span className="text-[10px] text-muted-foreground uppercase block font-mono font-semibold">Difficulty</span>
-                <span className="font-bold text-foreground capitalize">{difficulty}</span>
+              <div className="p-2.5 rounded-lg bg-background border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase block">Difficulty</span>
+                <span className="font-semibold text-foreground capitalize">{difficulty}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-secondary/60 border border-border/60 text-left">
-                <span className="text-[10px] text-muted-foreground uppercase block font-mono font-semibold">Topics</span>
-                <span className="font-bold text-foreground">
-                  {selectedTopics.length > 0 ? `${selectedTopics.length} Selected` : 'Any'}
+              <div className="p-2.5 rounded-lg bg-background border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase block">Topics</span>
+                <span className="font-semibold text-foreground">
+                  {selectedTopics.length > 0 ? `${selectedTopics.length} selected` : 'All'}
                 </span>
               </div>
             </div>
 
-            {/* Cancel Button */}
             <div>
               <button
                 type="button"
                 onClick={handleCancelMatchmaking}
-                className="px-6 py-2.5 rounded-2xl border border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-bold uppercase tracking-wider transition-all inline-flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm"
+                className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-mono text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
               >
-                <X className="size-4" />
-                <span>Cancel Queue (Esc)</span>
+                <X className="size-3.5" />
+                <span>Cancel queue (Esc)</span>
               </button>
             </div>
-          </SpotlightCard>
+          </div>
         ) : (
-          <SpotlightCard className="p-6 sm:p-9 space-y-7 sm:space-y-8 rounded-3xl border-border/80 shadow-xl bg-card/85">
+          <div className="p-5 sm:p-7 space-y-6 rounded-xl border border-border bg-card shadow-sm">
             {/* Mode Selection */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                  Select Game Mode
-                </label>
-                <span className="text-[11px] font-mono text-primary font-semibold">
-                  {mode === 'ranked' ? 'Strict Elo Ranked' : mode === 'quick' ? 'Fast Matching' : 'Unranked Sparring'}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-muted-foreground">Game mode</span>
+                <span className="text-muted-foreground">
+                  {mode === 'ranked' ? 'Strict Elo stakes' : mode === 'quick' ? 'Fast matching' : 'Unranked sparring'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                {/* Ranked Duel (First / Highlighted) */}
-                <motion.button
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {/* Ranked Duel */}
+                <button
                   type="button"
-                  whileHover={{ y: -2, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('ranked')}
-                  className={`p-4 sm:p-5 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                  className={`p-3.5 rounded-lg border text-left transition-colors relative space-y-1 ${
                     mode === 'ranked'
-                      ? 'border-emerald-500 bg-emerald-500/10 shadow-md ring-1 ring-emerald-500'
-                      : 'border-border/60 hover:border-foreground/30 bg-background/50'
+                      ? 'border-foreground/50 bg-secondary/80 text-foreground'
+                      : 'border-border bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="size-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                      <Trophy className="size-4" />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Trophy className="size-3.5 text-amber-500" />
+                      <span>Ranked Duel</span>
+                    </span>
                     {mode === 'ranked' && (
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500 text-stone-950">
-                        Active
-                      </span>
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-foreground">Ranked Duel</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 leading-snug">
+                  <p className="text-[11px] text-muted-foreground leading-normal">
                     Strict Elo skill-bracket combat with rating stakes
-                  </div>
-                </motion.button>
+                  </p>
+                </button>
 
                 {/* Quick Match */}
-                <motion.button
+                <button
                   type="button"
-                  whileHover={{ y: -2, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('quick')}
-                  className={`p-4 sm:p-5 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                  className={`p-3.5 rounded-lg border text-left transition-colors relative space-y-1 ${
                     mode === 'quick'
-                      ? 'border-amber-500 bg-amber-500/10 shadow-md ring-1 ring-amber-500'
-                      : 'border-border/60 hover:border-foreground/30 bg-background/50'
+                      ? 'border-foreground/50 bg-secondary/80 text-foreground'
+                      : 'border-border bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="size-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                      <Zap className="size-4" />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Zap className="size-3.5 text-amber-500" />
+                      <span>Quick Match</span>
+                    </span>
                     {mode === 'quick' && (
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500 text-stone-950">
-                        Active
-                      </span>
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-foreground">Quick Match</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 leading-snug">
-                    Fastest matching across active fighters
-                  </div>
-                </motion.button>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Fastest matching across open active fighters
+                  </p>
+                </button>
 
                 {/* Casual Practice */}
-                <motion.button
+                <button
                   type="button"
-                  whileHover={{ y: -2, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => setMode('casual')}
-                  className={`p-4 sm:p-5 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                  className={`p-3.5 rounded-lg border text-left transition-colors relative space-y-1 ${
                     mode === 'casual'
-                      ? 'border-blue-500 bg-blue-500/10 shadow-md ring-1 ring-blue-500'
-                      : 'border-border/60 hover:border-foreground/30 bg-background/50'
+                      ? 'border-foreground/50 bg-secondary/80 text-foreground'
+                      : 'border-border bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="size-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                      <Gamepad2 className="size-4" />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Gamepad2 className="size-3.5 text-muted-foreground" />
+                      <span>Casual Practice</span>
+                    </span>
                     {mode === 'casual' && (
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-blue-500 text-stone-950">
-                        Active
-                      </span>
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-foreground">Casual Practice</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 leading-snug">
-                    No rating impact, unranked sparring
-                  </div>
-                </motion.button>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Zero rating impact, safe unranked sparring
+                  </p>
+                </button>
               </div>
             </div>
 
             {/* Target Difficulty Selection */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                  Target Difficulty
-                </label>
-                <span className="text-[11px] font-mono text-muted-foreground capitalize">
-                  {difficulty === 'any' ? 'Any Tier (Fastest Match)' : `${difficulty} Only`}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-muted-foreground">Target difficulty</span>
+                <span className="text-muted-foreground capitalize">
+                  {difficulty === 'any' ? 'Any tier (fastest match)' : `${difficulty} tier only`}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {(['any', 'easy', 'medium', 'hard'] as const).map((d) => {
                   const isSelected = difficulty === d;
                   return (
-                    <motion.button
+                    <button
                       key={d}
                       type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                       onClick={() => setDifficulty(d)}
-                      className={`py-3 px-3.5 rounded-2xl border text-xs font-bold capitalize transition-all flex flex-col items-center justify-center gap-1 ${
+                      className={`p-2.5 rounded-lg border text-left transition-colors font-mono text-xs space-y-0.5 ${
                         isSelected
-                          ? d === 'easy'
-                            ? 'border-emerald-500/80 bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/50 shadow-sm'
-                            : d === 'medium'
-                            ? 'border-amber-500/80 bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/50 shadow-sm'
-                            : d === 'hard'
-                            ? 'border-rose-500/80 bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/50 shadow-sm'
-                            : 'border-primary bg-primary/15 text-primary ring-1 ring-primary shadow-sm'
-                          : 'border-border/60 hover:border-foreground/30 bg-background/50 text-muted-foreground hover:text-foreground'
+                          ? 'border-foreground/50 bg-secondary/80 text-foreground'
+                          : 'border-border bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold capitalize text-foreground">{d}</span>
                         <span
-                          className={`size-2 rounded-full ${
+                          className={`size-1.5 rounded-full ${
                             d === 'easy'
-                              ? 'bg-emerald-400'
+                              ? 'bg-emerald-500'
                               : d === 'medium'
-                              ? 'bg-amber-400'
+                              ? 'bg-amber-500'
                               : d === 'hard'
-                              ? 'bg-rose-400'
-                              : 'bg-primary'
+                              ? 'bg-rose-500'
+                              : 'bg-muted-foreground'
                           }`}
                         />
-                        <span className="font-bold">{d}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground block">
                         {d === 'easy' ? '10 min' : d === 'medium' ? '15 min' : d === 'hard' ? '25 min' : 'Auto balance'}
                       </span>
-                    </motion.button>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
             {/* Topic Filter Chips & Presets */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                    Topic Filters
-                  </label>
-                  <span className="text-[11px] text-muted-foreground">(Optional)</span>
-                </div>
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-muted-foreground">Topic filters (optional)</span>
                 {selectedTopics.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSelectedTopics([])}
-                    className="text-[11px] text-primary hover:underline font-medium transition-colors"
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Clear selection ({selectedTopics.length})
+                    Clear filters ({selectedTopics.length})
                   </button>
                 )}
               </div>
 
-              {/* Quick Preset Selector */}
-              <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                <span className="text-[11px] font-mono text-muted-foreground mr-1">Presets:</span>
+              {/* Quick Presets */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-mono text-muted-foreground mr-0.5">Presets:</span>
                 {PRESETS.map((preset) => {
                   const isCurrent =
                     preset.topics.length === 0
@@ -679,10 +558,10 @@ function MatchmakingContent() {
                       key={preset.name}
                       type="button"
                       onClick={() => applyPreset(preset.topics)}
-                      className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border transition-all ${
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-colors ${
                         isCurrent
-                          ? 'bg-primary/15 border-primary/40 text-primary font-bold'
-                          : 'bg-secondary/50 border-border/60 text-muted-foreground hover:text-foreground'
+                          ? 'bg-secondary border-foreground/40 text-foreground font-semibold'
+                          : 'bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       {preset.name}
@@ -691,100 +570,83 @@ function MatchmakingContent() {
                 })}
               </div>
 
-              {/* Individual Topic Pills */}
-              <div className="flex flex-wrap gap-2">
+              {/* Topic Chips */}
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
                 {TOPICS.map((t) => {
                   const isSelected = selectedTopics.includes(t);
                   return (
-                    <motion.button
+                    <button
                       key={t}
                       type="button"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.96 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                       onClick={() => toggleTopic(t)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors flex items-center gap-1.5 border ${
                         isSelected
-                          ? 'bg-primary text-primary-foreground font-bold shadow-sm border border-primary ring-1 ring-primary/40'
-                          : 'bg-background/80 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80'
+                          ? 'bg-secondary border-foreground/40 text-foreground font-medium'
+                          : 'bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {isSelected && <Check className="size-3 stroke-[3]" />}
+                      {isSelected && <Check className="size-3 text-foreground" />}
                       <span>{t.replace(/_/g, ' ')}</span>
-                    </motion.button>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
             {error && (
-              <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-center gap-2">
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
                 <AlertCircle className="size-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Start Button & Queue Indicator */}
-            <div className="pt-2 space-y-2.5">
-              <motion.button
+            {/* Queue Button & Info */}
+            <div className="pt-2 space-y-2">
+              <button
                 type="button"
-                whileHover={{ scale: 1.015 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleStartMatchmaking}
-                className="btn-radiant-primary w-full py-4 rounded-2xl text-primary-foreground font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2.5 cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <Swords className="size-4" />
-                <span>Enter Competitive Queue</span>
-              </motion.button>
+                <span>Enter competitive queue</span>
+              </button>
+
               <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground font-mono">
-                <span>Avg queue: ~5-15s</span>
-                <span>•</span>
+                <span>Avg queue: ~5&ndash;15s</span>
+                <span>&middot;</span>
                 <span>Strict MMR matching</span>
-                <span>•</span>
-                <span className="text-emerald-400 font-semibold">{queueCount} fighters in queue</span>
+                <span>&middot;</span>
+                <span className="tabular-nums">{queueCount} fighters in queue</span>
               </div>
             </div>
-          </SpotlightCard>
+          </div>
         )}
 
-        {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1 text-xs text-muted-foreground">
-          <SpotlightCard className="p-4 sm:p-5 flex items-start gap-3 rounded-2xl border-border/80 bg-card/80">
-            <div className="size-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center shrink-0 mt-0.5">
-              <Flame className="size-4" />
-            </div>
-            <div className="space-y-1">
-              <div className="font-bold text-foreground text-xs">Submission Accuracy Penalties</div>
-              <div className="text-[11px] leading-relaxed text-muted-foreground">
-                Non-accepted submissions deduct 25 accuracy stamina points
-              </div>
-            </div>
-          </SpotlightCard>
+        {/* Quiet Architecture / Rules Spec Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-muted-foreground font-mono">
+          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
+            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Stamina deduction</span>
+            <div className="text-foreground font-medium font-sans">Accuracy penalties</div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+              Non-accepted submissions deduct 25 accuracy stamina points.
+            </p>
+          </div>
 
-          <SpotlightCard className="p-4 sm:p-5 flex items-start gap-3 rounded-2xl border-border/80 bg-card/80">
-            <div className="size-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-              <Trophy className="size-4" />
-            </div>
-            <div className="space-y-1">
-              <div className="font-bold text-foreground text-xs">True Skill Elo</div>
-              <div className="text-[11px] leading-relaxed text-muted-foreground">
-                Authoritative server rating updates upon accepted solutions
-              </div>
-            </div>
-          </SpotlightCard>
+          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
+            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Instant updates</span>
+            <div className="text-foreground font-medium font-sans">True Skill Elo</div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+              Authoritative server rating adjustments upon accepted solution.
+            </p>
+          </div>
 
-          <SpotlightCard className="p-4 sm:p-5 flex items-start gap-3 rounded-2xl border-border/80 bg-card/80">
-            <div className="size-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
-              <Shield className="size-4" />
-            </div>
-            <div className="space-y-1">
-              <div className="font-bold text-foreground text-xs">Code Privacy Shield</div>
-              <div className="text-[11px] leading-relaxed text-muted-foreground">
-                Opponent source code is hidden until match concludes
-              </div>
-            </div>
-          </SpotlightCard>
+          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
+            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Blind duel</span>
+            <div className="text-foreground font-medium font-sans">Code privacy shield</div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+              Opponent source code remains hidden until the match concludes.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -796,7 +658,7 @@ export default function MatchmakingPage() {
     <Suspense
       fallback={
         <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center">
-          <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="size-6 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >
