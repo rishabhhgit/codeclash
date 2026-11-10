@@ -250,7 +250,7 @@ export default function LeetCodeProfilesPage() {
         </div>
 
         {/* Telemetry Ribbon */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3.5 rounded-xl border border-border/80 bg-card space-y-0.5">
             <div className="text-[11px] font-mono text-muted-foreground">Tracked profiles</div>
             <div className="text-xl font-semibold text-foreground font-mono tabular-nums">
@@ -269,13 +269,6 @@ export default function LeetCodeProfilesPage() {
             <div className="text-[11px] font-mono text-muted-foreground">Catalog depth</div>
             <div className="text-xl font-semibold text-foreground font-mono tabular-nums">
               3,129
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl border border-border/80 bg-card space-y-0.5">
-            <div className="text-[11px] font-mono text-muted-foreground">Combat engine</div>
-            <div className="text-xl font-semibold text-foreground font-mono tabular-nums">
-              1v1 Elo Sync
             </div>
           </div>
         </div>
