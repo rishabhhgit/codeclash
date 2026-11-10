@@ -205,7 +205,7 @@ export default function Home() {
               </div>
 
               {/* Primary Launch CTA */}
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <Link
                   href={
                     activeMode === 'ranked'
@@ -226,6 +226,17 @@ export default function Home() {
                   </span>
                   <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-0.5">
+                  <span className="text-amber-500 font-semibold flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-amber-400" />
+                    LeetCode Sync
+                  </span>
+                  <span>&bull;</span>
+                  <Link href="/auth/register" className="text-foreground hover:underline font-medium">
+                    Sign up with your LeetCode handle →
+                  </Link>
+                </div>
               </div>
             </motion.div>
 

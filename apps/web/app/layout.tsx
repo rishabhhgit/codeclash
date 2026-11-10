@@ -78,6 +78,14 @@ export default function RootLayout({
                     <span># Enter Code</span>
                   </Link>
 
+                  <Link
+                    href="/auth/register"
+                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-medium text-amber-400 transition-all duration-150 active:scale-[0.96]"
+                  >
+                    <span className="size-1.5 rounded-full bg-amber-400" />
+                    <span>LeetCode Sync</span>
+                  </Link>
+
                   <ThemeToggle />
 
                   <Link

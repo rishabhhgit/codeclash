@@ -15,6 +15,8 @@ interface TokenPayload {
   username?: string;
 }
 
+export const inMemoryUsers = new Map<string, any>();
+
 export function createDeterministicGuest(seed?: string, fallbackHandle?: string): IUser {
   let idHex = '65f000000000000000000001';
   let suffix = '0001';
@@ -89,7 +91,16 @@ export const authenticate = async (
             req.user = user;
             return next();
           }
-        } else if (decoded.userId) {
+        }
+        if (decoded.userId && inMemoryUsers.has(decoded.userId)) {
+          req.user = inMemoryUsers.get(decoded.userId);
+          return next();
+        }
+        if (decoded.handle && inMemoryUsers.has(decoded.handle.toLowerCase())) {
+          req.user = inMemoryUsers.get(decoded.handle.toLowerCase());
+          return next();
+        }
+        if (decoded.userId) {
           req.user = createDeterministicGuest(decoded.userId, decoded.handle || decoded.username);
           return next();
         }
@@ -125,7 +136,16 @@ export const optionalAuth = async (
             req.user = user;
             return next();
           }
-        } else if (decoded.userId) {
+        }
+        if (decoded.userId && inMemoryUsers.has(decoded.userId)) {
+          req.user = inMemoryUsers.get(decoded.userId);
+          return next();
+        }
+        if (decoded.handle && inMemoryUsers.has(decoded.handle.toLowerCase())) {
+          req.user = inMemoryUsers.get(decoded.handle.toLowerCase());
+          return next();
+        }
+        if (decoded.userId) {
           req.user = createDeterministicGuest(decoded.userId, decoded.handle || decoded.username);
           return next();
         }

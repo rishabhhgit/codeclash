@@ -20,6 +20,16 @@ export interface IUser extends Document {
   friends: Types.ObjectId[];
   isOnline: boolean;
   lastSeen?: Date;
+  leetcodeUsername?: string;
+  leetcodeAvatar?: string;
+  leetcodeTotalSolved?: number;
+  leetcodeEasySolved?: number;
+  leetcodeMediumSolved?: number;
+  leetcodeHardSolved?: number;
+  leetcodeContestRating?: number;
+  leetcodeGlobalRanking?: number;
+  leetcodeAcceptanceRate?: number;
+  leetcodeSyncedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +54,16 @@ const userSchema = new Schema<IUser>(
     friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date },
+    leetcodeUsername: { type: String, trim: true },
+    leetcodeAvatar: { type: String },
+    leetcodeTotalSolved: { type: Number, default: 0 },
+    leetcodeEasySolved: { type: Number, default: 0 },
+    leetcodeMediumSolved: { type: Number, default: 0 },
+    leetcodeHardSolved: { type: Number, default: 0 },
+    leetcodeContestRating: { type: Number, default: 0 },
+    leetcodeGlobalRanking: { type: Number, default: 0 },
+    leetcodeAcceptanceRate: { type: Number, default: 0 },
+    leetcodeSyncedAt: { type: Date },
   },
   { timestamps: true }
 );

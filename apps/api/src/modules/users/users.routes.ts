@@ -5,7 +5,7 @@ import { MatchHistory } from '../../models/MatchHistory';
 import { Submission } from '../../models/Submission';
 import { Friendship } from '../../models/Friendship';
 import { Room } from '../../models/Room';
-import { authenticate, AuthRequest, DEFAULT_GUEST_USER } from '../../middleware/auth';
+import { authenticate, AuthRequest, DEFAULT_GUEST_USER, inMemoryUsers } from '../../middleware/auth';
 import { AppError } from '../../middleware/error';
 import { serializeUser } from '../../utils/serializers';
 import { getUserAchievements } from '../../services/achievement.service';
@@ -183,6 +183,13 @@ router.get('/:idOrHandle', async (req, res) => {
   }
 
   if (!user) {
+    user =
+      inMemoryUsers.get(idOrHandle.toLowerCase()) ||
+      inMemoryUsers.get(idOrHandle) ||
+      null;
+  }
+
+  if (!user) {
     user = {
       ...DEFAULT_GUEST_USER,
       handle: idOrHandle,
@@ -213,6 +220,13 @@ router.get('/:idOrHandle/stats', async (req, res) => {
       user = await User.findOne({ handle: idOrHandle.toLowerCase() });
     }
   } catch {}
+
+  if (!user) {
+    user =
+      inMemoryUsers.get(idOrHandle.toLowerCase()) ||
+      inMemoryUsers.get(idOrHandle) ||
+      null;
+  }
 
   const totalBattles = user?.totalBattles || 0;
   const wins = user?.battleWins || 0;

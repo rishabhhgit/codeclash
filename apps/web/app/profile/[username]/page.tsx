@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BarChart2 } from 'lucide-react';
+import { BarChart2, RefreshCw } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -36,6 +36,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -57,12 +58,15 @@ export default function ProfilePage() {
       
       if (data.success) {
         setProfile(data.data);
-        // Check if this is the current user's profile
         const currentUser = localStorage.getItem('user');
-        if (currentUser) {
-          const user = JSON.parse(currentUser);
-          setIsOwnProfile(user.username === username || user.id === data.data.id);
-        }
+        const battleUsername = localStorage.getItem('battle_username');
+        const codeclashHandle = localStorage.getItem('codeclash_handle');
+        const isSelf =
+          (currentUser && JSON.parse(currentUser).username === username) ||
+          battleUsername?.toLowerCase() === username?.toLowerCase() ||
+          codeclashHandle?.toLowerCase() === username?.toLowerCase() ||
+          data.data?.handle?.toLowerCase() === battleUsername?.toLowerCase();
+        setIsOwnProfile(!!isSelf);
       } else {
         setError(data.error || 'Failed to load profile');
       }
@@ -70,6 +74,28 @@ export default function ProfilePage() {
       setError('Network error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncLeetCode = async () => {
+    const handleToSync = profile?.leetcodeUsername || username;
+    if (!handleToSync) return;
+    setSyncing(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/api/auth/leetcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: handleToSync }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchProfile();
+      }
+    } catch {
+      // Ignored
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -191,15 +217,32 @@ export default function ProfilePage() {
         {profile.leetcodeUsername && (
           <div className="p-6 border rounded-2xl bg-card card-elevated motion-enter space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">LeetCode Stats</h2>
-              <a
-                href={`https://leetcode.com/${profile.leetcodeUsername}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline transition-colors duration-150"
-              >
-                View on LeetCode →
-              </a>
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <span>LeetCode Stats</span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                  Verified
+                </span>
+              </h2>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleSyncLeetCode}
+                  disabled={syncing}
+                  className="text-xs px-2.5 py-1 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border/80 transition-all font-mono inline-flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                  title="Refresh stats from LeetCode"
+                >
+                  <RefreshCw className={`size-3 text-amber-400 ${syncing ? 'animate-spin' : ''}`} />
+                  <span>{syncing ? 'Syncing...' : 'Sync Latest'}</span>
+                </button>
+                <a
+                  href={`https://leetcode.com/${profile.leetcodeUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline transition-colors duration-150 font-medium"
+                >
+                  View on LeetCode →
+                </a>
+              </div>
             </div>
             
             <div className="flex items-center gap-4 text-sm text-muted-foreground">

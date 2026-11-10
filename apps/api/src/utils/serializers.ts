@@ -22,6 +22,16 @@ export function serializeUser(user: IUser | null | undefined) {
     favoriteTopics: user.favoriteTopics,
     isOnline: user.isOnline,
     createdAt: user.createdAt,
+    leetcodeUsername: user.leetcodeUsername || undefined,
+    leetcodeAvatar: user.leetcodeAvatar || undefined,
+    leetcodeTotalSolved: user.leetcodeTotalSolved || 0,
+    leetcodeEasySolved: user.leetcodeEasySolved || 0,
+    leetcodeMediumSolved: user.leetcodeMediumSolved || 0,
+    leetcodeHardSolved: user.leetcodeHardSolved || 0,
+    leetcodeContestRating: user.leetcodeContestRating || 0,
+    leetcodeGlobalRanking: user.leetcodeGlobalRanking || 0,
+    leetcodeAcceptanceRate: user.leetcodeAcceptanceRate || 0,
+    leetcodeSyncedAt: user.leetcodeSyncedAt || undefined,
   };
 }
 
