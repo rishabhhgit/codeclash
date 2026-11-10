@@ -2,6 +2,7 @@ import { pickQuestionForBattle } from '../../../web/lib/questions/data';
 
 export interface QueueEntry {
   userId: string;
+  tabId?: string;
   username?: string;
   rating: number;
   preferredTopics: string[];
@@ -10,7 +11,21 @@ export interface QueueEntry {
   joinedAt: Date;
 }
 
+export interface MatchedResult {
+  battleCode: string;
+  questionSlug: string;
+  difficulty: string;
+  mode: string;
+  matchedAt: number;
+  opponent: {
+    userId: string;
+    username: string;
+    rating: number;
+  };
+}
+
 const queue: Map<string, QueueEntry> = new Map();
+const matchedResults: Map<string, MatchedResult> = new Map();
 
 // Curated battle problem slugs with 100% verified benchmark test suites
 const BATTLE_PROBLEMS: Record<string, string[]> = {
@@ -57,10 +72,27 @@ export function pickBattleProblem(preferredDifficulty?: string, preferredTopics?
   return pool[idx] || 'two-sum';
 }
 
+export function setMatchedResult(userId: string, result: MatchedResult): void {
+  matchedResults.set(userId, result);
+  // Auto-expire after 25 seconds
+  setTimeout(() => {
+    matchedResults.delete(userId);
+  }, 25000);
+}
+
+export function getMatchedResult(userId: string): MatchedResult | undefined {
+  return matchedResults.get(userId);
+}
+
+export function clearMatchedResult(userId: string): void {
+  matchedResults.delete(userId);
+}
+
 export function joinQueue(
   userId: string,
   preferences: {
     username?: string;
+    tabId?: string;
     rating: number;
     preferredTopics?: string[];
     preferredDifficulty?: string;
@@ -69,6 +101,7 @@ export function joinQueue(
 ): QueueEntry {
   const entry: QueueEntry = {
     userId,
+    tabId: preferences.tabId,
     username: preferences.username,
     rating: preferences.rating || 1000,
     preferredTopics: preferences.preferredTopics || [],
@@ -103,41 +136,69 @@ export function purgeExpiredQueueEntries(maxAgeSeconds = 120): number {
 
 export function findMatch(entry: QueueEntry): QueueEntry | null {
   const now = Date.now();
-  const waitSeconds = (now - entry.joinedAt.getTime()) / 1000;
-  // Dynamic window: begins at 150, widens by 50 every 5 seconds up to 500
-  const dynamicRatingRange = Math.min(500, 150 + Math.floor(waitSeconds / 5) * 50);
+  const entryWaitSeconds = (now - entry.joinedAt.getTime()) / 1000;
 
   for (const [userId, candidate] of queue) {
     if (userId === entry.userId) continue;
 
-    // Mode compatibility: ranked matches only with ranked, casual with casual, quick matches with anything
-    if (
-      entry.mode !== 'quick' &&
-      candidate.mode !== 'quick' &&
-      entry.mode !== candidate.mode
-    ) {
-      continue;
+    const candidateWaitSeconds = (now - candidate.joinedAt.getTime()) / 1000;
+    // Effective wait time is the maximum wait time of the pair
+    const maxWaitSeconds = Math.max(entryWaitSeconds, candidateWaitSeconds);
+
+    // Dynamic rating range expansion:
+    // 0-3s: ±200 Elo
+    // 3-8s: ±400 Elo
+    // 8-15s: ±800 Elo
+    // >15s: unlimited (matches any waiting combatant)
+    let dynamicRatingRange = 200;
+    if (maxWaitSeconds > 15) {
+      dynamicRatingRange = 5000;
+    } else if (maxWaitSeconds > 8) {
+      dynamicRatingRange = 800;
+    } else if (maxWaitSeconds > 3) {
+      dynamicRatingRange = 400;
     }
 
     const ratingDiff = Math.abs(entry.rating - candidate.rating);
     if (ratingDiff > dynamicRatingRange) continue;
 
-    if (
-      entry.preferredTopics.length > 0 &&
-      candidate.preferredTopics.length > 0
-    ) {
-      const hasOverlap = entry.preferredTopics.some((t) =>
-        candidate.preferredTopics.includes(t)
-      );
-      if (!hasOverlap) continue;
+    // Mode compatibility:
+    // Ranked strictly matches ranked, casual strictly matches casual, quick matches anything.
+    // If either candidate has been waiting > 10s, relax to cross-match so players aren't stranded.
+    if (maxWaitSeconds <= 10) {
+      if (
+        entry.mode !== 'quick' &&
+        candidate.mode !== 'quick' &&
+        entry.mode !== candidate.mode
+      ) {
+        continue;
+      }
     }
 
-    if (
-      entry.preferredDifficulty !== 'all' &&
-      candidate.preferredDifficulty !== 'all' &&
-      entry.preferredDifficulty !== candidate.preferredDifficulty
-    ) {
-      continue;
+    // Topic compatibility:
+    // If either candidate has been waiting > 8s, relax topic filters.
+    if (maxWaitSeconds <= 8) {
+      if (
+        entry.preferredTopics.length > 0 &&
+        candidate.preferredTopics.length > 0
+      ) {
+        const hasOverlap = entry.preferredTopics.some((t) =>
+          candidate.preferredTopics.includes(t)
+        );
+        if (!hasOverlap) continue;
+      }
+    }
+
+    // Difficulty compatibility:
+    // If either candidate has been waiting > 6s, relax difficulty restrictions.
+    if (maxWaitSeconds <= 6) {
+      if (
+        entry.preferredDifficulty !== 'all' &&
+        candidate.preferredDifficulty !== 'all' &&
+        entry.preferredDifficulty !== candidate.preferredDifficulty
+      ) {
+        continue;
+      }
     }
 
     return candidate;
@@ -157,6 +218,10 @@ export function findAndRemoveMatch(entry: QueueEntry): QueueEntry | null {
     return candidate;
   }
   return null;
+}
+
+export function getAllQueueEntries(): QueueEntry[] {
+  return Array.from(queue.values());
 }
 
 export function getQueueStats(): {

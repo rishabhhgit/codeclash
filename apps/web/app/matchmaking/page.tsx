@@ -17,21 +17,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getWsUrl } from '../../lib/api';
-
-function getClientAuthToken(): string {
-  if (typeof window === 'undefined') return 'guest-token';
-  let token = localStorage.getItem('token');
-  if (!token) {
-    let guestId = localStorage.getItem('codeclash_guest_id');
-    if (!guestId) {
-      guestId = 'guest-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-      localStorage.setItem('codeclash_guest_id', guestId);
-    }
-    token = guestId;
-  }
-  return token;
-}
+import { getWsUrl, getApiUrl, getClientAuthToken, getTabSessionId } from '../../lib/api';
 
 const TOPICS = [
   'arrays',
@@ -117,8 +103,10 @@ function MatchmakingContent() {
   useEffect(() => {
     const token = getClientAuthToken();
 
+    const tabId = getTabSessionId();
+
     const socket = io(getWsUrl(), {
-      auth: { token },
+      auth: { token, tabId },
       transports: ['websocket', 'polling'],
       timeout: 8000,
     });
@@ -144,6 +132,40 @@ function MatchmakingContent() {
       socket.disconnect();
     };
   }, [router]);
+
+  // Active matchmaking polling fallback while searching
+  useEffect(() => {
+    if (!isSearching || matchedData) return;
+    const tabId = getTabSessionId();
+    const token = getClientAuthToken();
+    const apiUrl = getApiUrl();
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/matchmaking/status?tabId=${encodeURIComponent(tabId)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'x-tab-id': tabId,
+          },
+        });
+        const d = await res.json();
+        if (d.success && d.data?.status === 'matched') {
+          const match = d.data;
+          setMatchedData(match);
+          setIsSearching(false);
+          const code = match.battleCode || match.code;
+          const slug = match.questionSlug || match.slug || '';
+          setTimeout(() => {
+            router.push(`/battle/${code}${slug ? `?slug=${slug}` : ''}`);
+          }, 1600);
+        } else if (d.success && typeof d.data?.queueSize === 'number') {
+          setQueueCount(d.data.queueSize);
+        }
+      } catch {}
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [isSearching, matchedData, router]);
 
   // Stopwatch timer when searching
   useEffect(() => {
@@ -172,20 +194,25 @@ function MatchmakingContent() {
     setIsSearching(true);
     setElapsed(0);
     const token = getClientAuthToken();
+    const tabId = getTabSessionId();
+    const apiUrl = getApiUrl();
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/matchmaking/${mode}`,
+        `${apiUrl}/api/matchmaking/${mode}`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            'x-tab-id': tabId,
           },
           body: JSON.stringify({
             preferredDifficulty: difficulty,
             preferredTopics: selectedTopics,
             mode,
+            tabId,
+            force: true,
             maxWaitTime: 90,
           }),
         }
@@ -214,14 +241,19 @@ function MatchmakingContent() {
 
   const handleCancelMatchmaking = async () => {
     const token = getClientAuthToken();
+    const tabId = getTabSessionId();
+    const apiUrl = getApiUrl();
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/matchmaking/cancel`,
+        `${apiUrl}/api/matchmaking/cancel`,
         {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            'x-tab-id': tabId,
           },
+          body: JSON.stringify({ tabId }),
         }
       );
     } catch {}

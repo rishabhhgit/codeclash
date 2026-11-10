@@ -35,33 +35,70 @@ export function getApiUrl(): string {
 }
 
 /**
- * Get or generate a persistent unique authentication token for guest or logged-in users.
- * Ensures two independent guests NEVER collide on the same socket userId or player slot.
+ * Get or generate a per-tab unique session ID.
+ * Kept in sessionStorage so each tab has an isolated identifier.
+ */
+export function getTabSessionId(): string {
+  if (typeof window === 'undefined') return 'server_tab';
+  try {
+    let tabId = sessionStorage.getItem('codeclash_tab_id');
+    if (!tabId) {
+      tabId = 'tab_' + Math.random().toString(36).substring(2, 8);
+      sessionStorage.setItem('codeclash_tab_id', tabId);
+    }
+    return tabId;
+  } catch {
+    return 'tab_' + Math.random().toString(36).substring(2, 8);
+  }
+}
+
+/**
+ * Get or generate a unique authentication token for guest or logged-in users.
+ * Uses sessionStorage for guest tokens so each tab can act as a distinct guest combatant
+ * during multi-tab testing, preventing cross-tab collisions.
  */
 export function getClientAuthToken(): string {
   if (typeof window === 'undefined') return 'guest-' + Math.random().toString(36).substring(2, 10);
-  let token = localStorage.getItem('token');
-  if (!token) {
-    let guestId = localStorage.getItem('codeclash_guest_id');
+  try {
+    const token = localStorage.getItem('token');
+    if (token) return token;
+
+    // Use sessionStorage for guest identity so two open tabs get distinct guest fighters
+    let guestId = sessionStorage.getItem('codeclash_guest_id');
     if (!guestId || guestId === 'guest-token') {
-      guestId = 'guest-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
-      localStorage.setItem('codeclash_guest_id', guestId);
+      const tabSeed = getTabSessionId();
+      guestId = `guest-${tabSeed}-${Date.now().toString(36).slice(-4)}`;
+      sessionStorage.setItem('codeclash_guest_id', guestId);
     }
-    token = guestId;
+    return guestId;
+  } catch {
+    return 'guest-' + Math.random().toString(36).substring(2, 10);
   }
-  return token;
 }
 
 /**
  * Get or generate a persistent username/handle for battles.
+ * Tab-aware so multi-tab testing produces distinct names.
  */
 export function getClientUsername(): string {
   if (typeof window === 'undefined') return 'Coder_' + Math.floor(1000 + Math.random() * 9000);
-  let name = localStorage.getItem('battle_username') || localStorage.getItem('codeclash_username');
-  if (!name || name === 'Player') {
-    name = 'Coder_' + Math.floor(1000 + Math.random() * 9000);
-    localStorage.setItem('battle_username', name);
-  }
-  return name;
-}
+  try {
+    const accountUser = localStorage.getItem('codeclash_username');
+    const tabId = getTabSessionId();
 
+    let name = sessionStorage.getItem('battle_username');
+    if (!name) {
+      if (accountUser) {
+        // If account username exists, use it
+        name = accountUser;
+      } else {
+        const hex = tabId.replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase();
+        name = 'Coder_' + (hex || Math.floor(1000 + Math.random() * 9000));
+      }
+      sessionStorage.setItem('battle_username', name);
+    }
+    return name;
+  } catch {
+    return 'Coder_' + Math.floor(1000 + Math.random() * 9000);
+  }
+}

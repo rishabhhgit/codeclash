@@ -52,7 +52,7 @@ import { useProctoring } from '../../../lib/proctoring/useProctoring';
 import ProctorWidget from '../../../components/proctoring/ProctorWidget';
 import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
 import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
-import { getWsUrl, getApiUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
+import { getWsUrl, getApiUrl, getClientAuthToken, getClientUsername, getTabSessionId } from '../../../lib/api';
 import RoundClock from '../../../components/battle/RoundClock';
 import BattleBeginsModal from '../../../components/battle/BattleBeginsModal';
 import BattleLobbyQueue from '../../../components/battle/BattleLobbyQueue';
@@ -251,10 +251,11 @@ export default function BattleRoomPage() {
   useEffect(() => {
     const wsUrl = getWsUrl();
     const token = getClientAuthToken();
+    const tabId = getTabSessionId();
     const socket = io(wsUrl, {
       transports: ['websocket', 'polling'],
       timeout: 5000,
-      auth: { token, candidateId: username },
+      auth: { token, candidateId: username, tabId },
     });
 
     socketRef.current = socket;
@@ -264,6 +265,7 @@ export default function BattleRoomPage() {
         battleCode: codeParam,
         role,
         username,
+        tabId,
         questionSlug: searchParams.get('slug') || undefined,
         mode: searchParams.get('mode') || (codeParam.toUpperCase().startsWith('ROYAL') || codeParam.toUpperCase().startsWith('BR-') ? 'battle_royale' : undefined),
       });
@@ -561,17 +563,19 @@ export default function BattleRoomPage() {
     return playersList[0];
   }, [playersList, spectatorSelectedPlayer]);
 
-  const opponentPlayer = useMemo(() => {
-    return playersList.find((p) => p.username !== username) || null;
-  }, [playersList, username]);
+  const tabId = useMemo(() => getTabSessionId(), []);
 
   const currentPlayer = useMemo(() => {
-    return playersList.find((p) => p.username === username) || null;
-  }, [playersList, username]);
+    return playersList.find((p) => (p.tabId && p.tabId === tabId) || (p.userId && p.userId.endsWith(tabId)) || p.username === username) || playersList[0] || null;
+  }, [playersList, username, tabId]);
+
+  const opponentPlayer = useMemo(() => {
+    return playersList.find((p) => p !== currentPlayer && p.userId !== currentPlayer?.userId) || null;
+  }, [playersList, currentPlayer]);
 
   const isHost = useMemo(() => {
     if (battle?.hostId) {
-      return currentPlayer?.userId === battle.hostId || username === battle.creatorUsername;
+      return currentPlayer?.userId === battle.hostId || (currentPlayer?.userId && battle.hostId.startsWith(currentPlayer.userId)) || username === battle.creatorUsername;
     }
     return playersList[0]?.username === username;
   }, [battle?.hostId, battle?.creatorUsername, currentPlayer?.userId, username, playersList]);

@@ -21,6 +21,7 @@ import { evaluateBattleSubmission } from '../services/battle-judge.service';
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   handle?: string;
+  tabId?: string;
 }
 
 // In-memory synchronized exam sessions store
@@ -42,6 +43,7 @@ interface ExamSessionState {
 // In-memory live battle match state for real-time timed DSA fights & live spectating
 export interface BattlePlayerState {
   userId: string;
+  tabId?: string;
   username: string;
   isReady: boolean;
   score: number;
@@ -348,17 +350,28 @@ export function setupSocketHandlers(io: SocketIOServer) {
           socket.handle = 'Coder_' + socket.id.substring(0, 4);
         }
       }
+      const tabId = (socket.handshake.auth?.tabId || socket.handshake.query?.tabId) as string | undefined;
+      socket.tabId = tabId;
       next();
     } catch {
       next();
     }
   });
 
+  const getSocketPlayerId = (socket: AuthenticatedSocket): string => {
+    if (socket.data?.playerId) return socket.data.playerId;
+    if (socket.tabId) return `${socket.userId || 'user'}_${socket.tabId}`;
+    return socket.userId || socket.id;
+  };
+
   io.on('connection', (socket: AuthenticatedSocket) => {
     const userLabel = socket.handle || socket.userId;
     console.log(`Socket connected: ${userLabel} (${socket.id})`);
 
     socket.join(`user:${socket.userId}`);
+    if (socket.tabId) {
+      socket.join(`user:${socket.userId}:${socket.tabId}`);
+    }
 
     // ========================================================
     // LIVE BATTLE & PROCTORED ARENA SPECTATOR / COMBAT EVENTS
@@ -380,7 +393,10 @@ export function setupSocketHandlers(io: SocketIOServer) {
           persistBattle(battle);
         }
 
-        const playerId = socket.userId || socket.id;
+        const tabId = socket.tabId || (data as any)?.tabId;
+        if (tabId) socket.tabId = tabId;
+        const playerId = getSocketPlayerId(socket);
+        socket.data.playerId = playerId;
 
         // Auto-assign host if none exists
         if (!battle.hostId) {
@@ -486,7 +502,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, isReady } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (battle && battle.players[playerId]) {
         battle.players[playerId].isReady = isReady !== undefined ? isReady : !battle.players[playerId].isReady;
@@ -509,7 +525,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (!battle) return;
 
@@ -576,7 +592,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, targetUserId } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (!battle) return;
 
@@ -630,7 +646,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, code, language } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (battle && playerId && battle.players[playerId]) {
         battle.players[playerId].code = code;
@@ -665,7 +681,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, passed, total } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (battle && playerId && battle.players[playerId]) {
         battle.players[playerId].passedCases = passed;
@@ -699,7 +715,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, code = '', language = 'cpp' } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
       const username = socket.data.username || battle.players[playerId]?.username || 'Coder';
 
       try {
@@ -825,7 +841,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (battle && battle.airdrop && battle.airdrop.active && !battle.airdrop.claimedBy) {
         battle.airdrop.claimedBy = socket.data.username || battle.players[playerId]?.username || 'Fighter';
@@ -850,7 +866,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       const { battleCode, violation } = data;
       const codeUpper = battleCode.toUpperCase();
       const battle = createOrGetLiveBattle(codeUpper);
-      const playerId = socket.userId || socket.id;
+      const playerId = getSocketPlayerId(socket);
 
       if (battle && playerId && battle.players[playerId]) {
         battle.players[playerId].violations.unshift(violation);
@@ -1041,11 +1057,14 @@ export function setupSocketHandlers(io: SocketIOServer) {
       console.log(`Socket disconnected: ${userLabel}`);
       if (socket.userId) {
         onUserDisconnect(socket.userId);
+        if (socket.tabId) {
+          onUserDisconnect(`${socket.userId}:${socket.tabId}`);
+        }
       }
       const codeUpper = socket.data.battleCode as string | undefined;
       if (codeUpper) {
         const battle = createOrGetLiveBattle(codeUpper);
-        const playerId = socket.userId || socket.id;
+        const playerId = getSocketPlayerId(socket);
         if (battle) {
           if (battle.spectators[socket.id]) {
             delete battle.spectators[socket.id];

@@ -13,7 +13,7 @@ import { usersRouter } from './modules/users/users.routes';
 import { battlesRouter } from './modules/battles/battles.routes';
 import { problemsRouter } from './modules/problems/problems.routes';
 import { rankingRouter } from './modules/ranking/ranking.routes';
-import { matchmakingRouter } from './modules/matchmaking/matchmaking.routes';
+import { matchmakingRouter, startMatchmakingEngine } from './modules/matchmaking/matchmaking.routes';
 import { adminRouter } from './modules/admin/admin.routes';
 import { leetcodeRouter } from './modules/leetcode/leetcode.routes';
 import { setupSocketHandlers } from './socket';
@@ -106,6 +106,7 @@ app.use('/api/leetcode', leetcodeRouter);
 
 // Socket.IO handlers
 setupSocketHandlers(io);
+startMatchmakingEngine(io);
 
 // Error handling
 app.use(notFound);
