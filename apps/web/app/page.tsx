@@ -478,6 +478,9 @@ export default function Home() {
       <footer className="py-8 border-t border-border/80 mt-auto text-xs text-muted-foreground">
         <div className="container mx-auto px-4 max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
+            <span className="size-6 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+              <Swords className="size-3.5" />
+            </span>
             <span className="font-bold text-foreground">CodeClash</span>
             <span>&middot;</span>
             <span>Real-time multiplayer coding arena</span>

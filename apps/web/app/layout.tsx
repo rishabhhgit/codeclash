@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { Swords } from 'lucide-react';
 import './globals.css';
 import { ThemeProvider } from '../lib/theme/ThemeContext';
 import ThemeToggle from '../components/theme/ThemeToggle';
@@ -27,14 +28,11 @@ export default function RootLayout({
               <div className="container mx-auto px-4 h-14 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                   <Link href="/" className="flex items-center gap-2.5 group active:scale-[0.96] transition-transform">
-                    <span className="size-7 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-mono font-bold text-xs group-hover:border-primary/50 group-hover:bg-primary/20 transition-all shadow-sm">
-                      cc
+                    <span className="size-8 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary border border-primary/30 flex items-center justify-center group-hover:border-primary/60 group-hover:bg-primary/25 transition-all shadow-sm">
+                      <Swords className="size-4 text-primary group-hover:scale-110 transition-transform duration-200" />
                     </span>
-                    <span className="font-bold text-sm tracking-tight text-foreground flex items-center gap-1.5">
+                    <span className="font-bold text-base tracking-tight text-foreground">
                       CodeClash
-                      <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-medium bg-muted text-muted-foreground border border-border">
-                        PRO
-                      </span>
                     </span>
                   </Link>
 
