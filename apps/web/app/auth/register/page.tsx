@@ -235,14 +235,9 @@ export default function RegisterPage() {
           {authMethod === 'leetcode' ? (
             <form onSubmit={handleLeetCodeSubmit} className="space-y-5">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="lc-handle" className="text-xs font-bold font-mono uppercase text-muted-foreground">
-                    LeetCode Username
-                  </label>
-                  <span className="text-[11px] font-mono text-amber-400/90 font-medium">
-                    Verified live with LeetCode API
-                  </span>
-                </div>
+                <label htmlFor="lc-handle" className="block text-xs font-bold font-mono uppercase text-muted-foreground">
+                  LeetCode Username
+                </label>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
