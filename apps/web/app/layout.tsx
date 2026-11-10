@@ -30,7 +30,7 @@ export default function RootLayout({
                 <div className="flex items-center gap-8">
                   <Link href="/" className="flex items-center gap-2.5 group">
                     <span className="size-8 rounded-lg bg-secondary/80 border border-border text-foreground flex items-center justify-center transition-colors group-hover:border-foreground/30 shadow-xs">
-                      <CodeClashLogo size={20} />
+                      <CodeClashLogo size={22} />
                     </span>
                     <span className="font-bold text-base tracking-tight text-foreground">
                       CodeClash
