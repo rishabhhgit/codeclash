@@ -137,14 +137,7 @@ export default function Home() {
             animate="visible"
             className="text-center space-y-6 max-w-3xl mx-auto"
           >
-            <motion.div variants={itemVariants} className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/80 bg-card/60 text-xs font-mono text-muted-foreground shadow-sm">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-semibold text-foreground">Live Season 1</span>
-                <span className="text-muted-foreground/60">&bull;</span>
-                <span>Instant Matchmaking</span>
-              </div>
-
+            <motion.div variants={itemVariants} className="space-y-4">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
                 Multiplayer coding duels.
               </h1>
