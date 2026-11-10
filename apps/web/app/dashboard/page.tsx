@@ -472,14 +472,7 @@ export default function DashboardPage() {
               <div style={{ width: `${hardPct}%` }} className="bg-rose-500 h-full" />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-mono pt-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-emerald-500 font-semibold tabular-nums">{easySolved}E</span>
-                <span>&middot;</span>
-                <span className="text-amber-500 font-semibold tabular-nums">{medSolved}M</span>
-                <span>&middot;</span>
-                <span className="text-rose-500 font-semibold tabular-nums">{hardSolved}H</span>
-              </div>
+            <div className="flex items-center justify-end text-[11px] font-mono pt-0.5">
               <span className="text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-0.5">
                 Inspect &rarr;
               </span>
