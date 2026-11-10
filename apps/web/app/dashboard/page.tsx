@@ -16,23 +16,17 @@ import {
   ArrowRight,
   Hash,
   Share2,
-  BookOpen,
-  GitFork,
   RefreshCw,
   ExternalLink,
   CheckCircle2,
   Copy,
   Check,
-  Play,
-  Sparkles,
-  TrendingUp,
-  Target,
-  Award,
   Compass,
+  X,
+  AlertCircle,
 } from 'lucide-react';
-import { SpotlightCard } from '../../components/ui/SpotlightCard';
 
-function LeetCodeBrandIcon({ className = 'size-5' }: { className?: string }) {
+function LeetCodeBrandIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       <path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 6.226l-3.854 4.126a5.266 5.266 0 0 0-1.209 2.104 5.35 5.35 0 0 0-.125.513 5.527 5.527 0 0 0 .062 2.362 5.83 5.83 0 0 0 .349 1.017 5.938 5.938 0 0 0 1.271 1.818l4.277 4.193.039.038c2.248 2.165 5.852 2.133 8.063-.074l2.396-2.392c.54-.54.54-1.414.003-1.955a1.378 1.378 0 0 0-1.951-.003l-2.396 2.392a3.021 3.021 0 0 1-4.205.038l-.02-.019-4.276-4.193c-.652-.64-.972-1.469-.948-2.263a2.68 2.68 0 0 1 .066-.523 2.545 2.545 0 0 1 .619-1.164L9.13 8.114c1.058-1.134 3.204-1.27 4.43-.278l3.501 2.831c.593.48 1.461.387 1.94-.207a1.384 1.384 0 0 0-.207-1.943l-3.5-2.831c-.8-.647-1.766-1.045-2.774-1.202l2.015-2.158A1.384 1.384 0 0 0 13.483 0zm-2.866 12.815a1.38 1.38 0 0 0-1.38 1.382 1.38 1.38 0 0 0 1.38 1.382H20.79a1.38 1.38 0 0 0 1.38-1.382 1.38 1.38 0 0 0-1.38-1.382z" />
@@ -41,32 +35,32 @@ function LeetCodeBrandIcon({ className = 'size-5' }: { className?: string }) {
 }
 
 function getRankMeta(rating: number) {
-  if (rating >= 2900) return { name: 'Legendary Grandmaster', color: 'text-rose-500', bg: 'bg-rose-500/15 border-rose-500/30 text-rose-400', next: null, target: 2900, floor: 2600 };
-  if (rating >= 2600) return { name: 'International Grandmaster', color: 'text-red-500', bg: 'bg-red-500/15 border-red-500/30 text-red-400', next: 'Legendary Grandmaster', target: 2900, floor: 2600 };
-  if (rating >= 2400) return { name: 'Grandmaster', color: 'text-red-400', bg: 'bg-red-500/15 border-red-500/30 text-red-400', next: 'International Grandmaster', target: 2600, floor: 2400 };
-  if (rating >= 2300) return { name: 'International Master', color: 'text-amber-500', bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400', next: 'Grandmaster', target: 2400, floor: 2300 };
-  if (rating >= 2100) return { name: 'Master', color: 'text-amber-400', bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400', next: 'International Master', target: 2300, floor: 2100 };
-  if (rating >= 1900) return { name: 'Candidate Master', color: 'text-purple-400', bg: 'bg-purple-500/15 border-purple-500/30 text-purple-400', next: 'Master', target: 2100, floor: 1900 };
-  if (rating >= 1600) return { name: 'Expert', color: 'text-blue-400', bg: 'bg-blue-500/15 border-blue-500/30 text-blue-400', next: 'Candidate Master', target: 1900, floor: 1600 };
-  if (rating >= 1400) return { name: 'Specialist', color: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400', next: 'Expert', target: 1600, floor: 1400 };
-  if (rating >= 1200) return { name: 'Pupil', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400', next: 'Specialist', target: 1400, floor: 1200 };
-  return { name: 'Newbie', color: 'text-stone-400', bg: 'bg-stone-500/15 border-stone-500/30 text-stone-300', next: 'Pupil', target: 1200, floor: 800 };
+  if (rating >= 2900) return { name: 'Legendary Grandmaster', bg: 'bg-rose-500/15 border-rose-500/30 text-rose-400', next: null, target: 2900, floor: 2600 };
+  if (rating >= 2600) return { name: 'International Grandmaster', bg: 'bg-red-500/15 border-red-500/30 text-red-400', next: 'Legendary Grandmaster', target: 2900, floor: 2600 };
+  if (rating >= 2400) return { name: 'Grandmaster', bg: 'bg-red-500/15 border-red-500/30 text-red-400', next: 'International Grandmaster', target: 2600, floor: 2400 };
+  if (rating >= 2300) return { name: 'International Master', bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400', next: 'Grandmaster', target: 2400, floor: 2300 };
+  if (rating >= 2100) return { name: 'Master', bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400', next: 'International Master', target: 2300, floor: 2100 };
+  if (rating >= 1900) return { name: 'Candidate Master', bg: 'bg-purple-500/15 border-purple-500/30 text-purple-400', next: 'Master', target: 2100, floor: 1900 };
+  if (rating >= 1600) return { name: 'Expert', bg: 'bg-blue-500/15 border-blue-500/30 text-blue-400', next: 'Candidate Master', target: 1900, floor: 1600 };
+  if (rating >= 1400) return { name: 'Specialist', bg: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400', next: 'Expert', target: 1600, floor: 1400 };
+  if (rating >= 1200) return { name: 'Pupil', bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400', next: 'Specialist', target: 1400, floor: 1200 };
+  return { name: 'Newbie', bg: 'bg-secondary border-border text-muted-foreground', next: 'Pupil', target: 1200, floor: 800 };
 }
 
 const containerVariants: any = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.02 },
   },
 };
 
 const itemVariants: any = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 380, damping: 28 },
+    transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -78,9 +72,13 @@ export default function DashboardPage() {
   const [quickCode, setQuickCode] = useState('');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [syncingLeetCode, setSyncingLeetCode] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [practicedCount, setPracticedCount] = useState(0);
+
+  // Sync / Connect Modal
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [isChangingHandle, setIsChangingHandle] = useState(false);
   const [connectLcInput, setConnectLcInput] = useState('');
-  const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectingLc, setConnectingLc] = useState(false);
   const [connectError, setConnectError] = useState('');
 
@@ -88,7 +86,6 @@ export default function DashboardPage() {
     const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || 'guest-token';
     fetchUserData(token);
 
-    // Read practiced roadmap items from localStorage
     try {
       const stored = localStorage.getItem('codeclash_practiced_slugs');
       if (stored) {
@@ -141,9 +138,14 @@ export default function DashboardPage() {
 
   const handleSyncLeetCode = async () => {
     const handle = user?.leetcodeUsername;
-    if (!handle) return;
+    if (!handle) {
+      setShowSyncModal(true);
+      return;
+    }
 
     setSyncingLeetCode(true);
+    setSyncFeedback(null);
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/auth/leetcode`, {
@@ -154,6 +156,8 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.success && data.data?.user) {
         setUser(data.data.user);
+        setSyncFeedback('Metrics synced from LeetCode');
+        setTimeout(() => setSyncFeedback(null), 3000);
       }
     } catch {
       // Ignored
@@ -164,8 +168,14 @@ export default function DashboardPage() {
 
   const handleConnectLeetCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    const handle = connectLcInput.trim();
+    let handle = connectLcInput.trim();
     if (!handle) return;
+
+    if (handle.includes('/u/')) {
+      const match = handle.match(/\/u\/([^/?#]+)/);
+      if (match) handle = match[1];
+    }
+    handle = handle.replace(/^@/, '');
 
     setConnectingLc(true);
     setConnectError('');
@@ -192,8 +202,11 @@ export default function DashboardPage() {
         localStorage.setItem('codeclash_handle', data.data.user.handle || data.data.user.username);
       }
       localStorage.setItem('codeclash_leetcode_handle', handle);
-      setShowConnectModal(false);
+      setIsChangingHandle(false);
+      setShowSyncModal(false);
       setConnectLcInput('');
+      setSyncFeedback('LeetCode handle connected');
+      setTimeout(() => setSyncFeedback(null), 3000);
     } catch (err: any) {
       setConnectError(err?.message || 'Failed to connect handle');
     } finally {
@@ -235,7 +248,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100dvh-4rem)]">
-        <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="size-6 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -244,7 +257,7 @@ export default function DashboardPage() {
   const rankMeta = getRankMeta(rating);
   const totalBattles = user?.totalBattles || stats?.totalBattles || 0;
   const wins = user?.battleWins ?? stats?.wins ?? 0;
-  const winRate = totalBattles > 0 ? ((wins / totalBattles) * 100).toFixed(1) : '0.0';
+  const losses = user?.battleLosses ?? stats?.losses ?? 0;
   const winStreak = user?.winStreak ?? stats?.winStreak ?? 0;
 
   // Rating progress calculation
@@ -253,91 +266,201 @@ export default function DashboardPage() {
     ? Math.min(100, Math.max(8, ((rating - rankMeta.floor) / (rankMeta.target - rankMeta.floor)) * 100))
     : 100;
 
-  return (
-    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground py-8 sm:py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-10 left-1/4 size-[550px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 size-[500px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+  const easySolved = user?.leetcodeEasySolved || 0;
+  const medSolved = user?.leetcodeMediumSolved || 0;
+  const hardSolved = user?.leetcodeHardSolved || 0;
+  const totalSolved = user?.leetcodeTotalSolved || 0;
+  const totalTarget = 4110;
 
-      {/* Connect LeetCode Modal */}
+  const easyPct = Math.min(100, (easySolved / totalTarget) * 100);
+  const medPct = Math.min(100, (medSolved / totalTarget) * 100);
+  const hardPct = Math.min(100, (hardSolved / totalTarget) * 100);
+
+  return (
+    <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      {/* Comprehensive LeetCode Profile Sync Inspector Modal */}
       <AnimatePresence>
-        {showConnectModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-md flex items-center justify-center z-50 p-4"
-          >
+        {showSyncModal && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <motion.div
-              initial={{ scale: 0.94, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.94, opacity: 0 }}
-              className="w-full max-w-md p-6 rounded-3xl bg-card border border-border shadow-2xl space-y-4"
+              initial={{ scale: 0.98, opacity: 0, y: 6 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.98, opacity: 0, y: 6 }}
+              transition={{ duration: 0.18 }}
+              className="w-full max-w-md p-5 sm:p-6 rounded-xl bg-card border border-border shadow-xl space-y-4"
             >
-              <div className="flex items-center gap-2.5">
-                <span className="size-8 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 flex items-center justify-center">
-                  <LeetCodeBrandIcon className="size-4" />
-                </span>
-                <h3 className="text-lg font-bold text-foreground">Connect LeetCode Account</h3>
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="size-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground">
+                    <LeetCodeBrandIcon className="size-4 text-amber-500" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">LeetCode profile sync</h3>
+                    <p className="text-xs text-muted-foreground">Synchronized with LeetCode GraphQL</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowSyncModal(false);
+                    setIsChangingHandle(false);
+                    setConnectError('');
+                  }}
+                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Enter your public LeetCode handle. We will import your solved count, contest rating, and avatar automatically.
-              </p>
 
               {connectError && (
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs">
-                  {connectError}
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{connectError}</span>
                 </div>
               )}
 
-              <form onSubmit={handleConnectLeetCode} className="space-y-4">
-                <div>
-                  <label className="text-xs font-mono font-bold uppercase text-muted-foreground block mb-1.5">
-                    LeetCode Username
-                  </label>
-                  <input
-                    type="text"
-                    value={connectLcInput}
-                    onChange={(e) => setConnectLcInput(e.target.value)}
-                    required
-                    autoFocus
-                    placeholder="e.g. neal_wu"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-sm font-mono text-foreground focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/40"
-                  />
-                </div>
+              {/* Already Connected View */}
+              {user?.leetcodeUsername && !isChangingHandle ? (
+                <div className="space-y-4 pt-1">
+                  {/* Connected Account Card */}
+                  <div className="p-3.5 rounded-lg bg-background border border-border flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="size-10 rounded-lg bg-secondary border border-border overflow-hidden shrink-0 flex items-center justify-center">
+                        {user.leetcodeAvatar || user.avatar ? (
+                          <img
+                            src={user.leetcodeAvatar || user.avatar}
+                            alt={user.leetcodeUsername}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <User className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-foreground truncate">
+                          @{user.leetcodeUsername}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <span className="size-1.5 rounded-full bg-emerald-500" />
+                          <span>Connected &amp; verified</span>
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="flex items-center justify-end gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowConnectModal(false);
-                      setConnectError('');
-                    }}
-                    className="px-4 py-2 rounded-xl border border-border text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={connectingLc || !connectLcInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {connectingLc ? (
-                      <>
-                        <RefreshCw className="size-3.5 animate-spin" />
-                        <span>Connecting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check className="size-3.5" />
-                        <span>Confirm &amp; Sync</span>
-                      </>
-                    )}
-                  </button>
+                    <a
+                      href={`https://leetcode.com/u/${user.leetcodeUsername}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title="Open LeetCode profile"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  </div>
+
+                  {/* Solved Distribution Stats */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-muted-foreground">Questions solved</span>
+                      <span className="text-foreground font-semibold tabular-nums">
+                        {totalSolved} / {totalTarget}
+                      </span>
+                    </div>
+
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
+                      <div style={{ width: `${easyPct}%` }} className="bg-emerald-500 h-full" />
+                      <div style={{ width: `${medPct}%` }} className="bg-amber-500 h-full" />
+                      <div style={{ width: `${hardPct}%` }} className="bg-rose-500 h-full" />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono text-xs">
+                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
+                        <div className="text-[10px] text-emerald-500 font-medium">Easy</div>
+                        <div className="text-foreground font-semibold tabular-nums">{easySolved}</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
+                        <div className="text-[10px] text-amber-500 font-medium">Medium</div>
+                        <div className="text-foreground font-semibold tabular-nums">{medSolved}</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
+                        <div className="text-[10px] text-rose-500 font-medium">Hard</div>
+                        <div className="text-foreground font-semibold tabular-nums">{hardSolved}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sync Actions */}
+                  <div className="pt-2 flex items-center justify-between gap-2 border-t border-border/70">
+                    <button
+                      type="button"
+                      onClick={() => setIsChangingHandle(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
+                    >
+                      Change handle
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleSyncLeetCode();
+                        setShowSyncModal(false);
+                      }}
+                      disabled={syncingLeetCode}
+                      className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-40"
+                    >
+                      <RefreshCw className={`size-3.5 ${syncingLeetCode ? 'animate-spin' : ''}`} />
+                      <span>{syncingLeetCode ? 'Syncing...' : 'Sync now'}</span>
+                    </button>
+                  </div>
                 </div>
-              </form>
+              ) : (
+                /* Connect / Change Handle Form */
+                <form onSubmit={handleConnectLeetCode} className="space-y-4 pt-1">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-mono text-muted-foreground block">
+                      LeetCode username
+                    </label>
+                    <input
+                      type="text"
+                      value={connectLcInput}
+                      onChange={(e) => setConnectLcInput(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="e.g. rishabhh-dev"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/70">
+                    {user?.leetcodeUsername && (
+                      <button
+                        type="button"
+                        onClick={() => setIsChangingHandle(false)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
+                      >
+                        Back
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={connectingLc || !connectLcInput.trim()}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-40"
+                    >
+                      {connectingLc ? (
+                        <>
+                          <RefreshCw className="size-3.5 animate-spin" />
+                          <span>Connecting...</span>
+                        </>
+                      ) : (
+                        <span>Verify &amp; sync</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -345,63 +468,78 @@ export default function DashboardPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-6xl mx-auto space-y-7 relative z-10"
+        className="max-w-6xl mx-auto space-y-6"
       >
         {/* Top Hero Command Center Banner */}
         <motion.div variants={itemVariants}>
-          <SpotlightCard className="p-6 sm:p-7 rounded-3xl border-border/80 bg-card/85 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="p-5 sm:p-6 rounded-xl border border-border/80 bg-card flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
             <div className="flex items-center gap-4 sm:gap-5">
-              {/* Avatar with Glow Ring */}
+              {/* Avatar with Status */}
               <div className="relative shrink-0">
-                <div className="size-16 sm:size-20 rounded-2xl bg-secondary/80 border-2 border-primary/40 overflow-hidden flex items-center justify-center font-bold text-2xl text-primary shadow-md">
+                <div className="size-16 rounded-xl bg-secondary border border-border overflow-hidden flex items-center justify-center font-semibold text-lg text-foreground">
                   {user?.avatar ? (
                     <img src={user.avatar} alt={user.username} className="size-full object-cover" />
                   ) : (
                     user?.username?.substring(0, 2).toUpperCase() || 'CC'
                   )}
                 </div>
-                <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center shadow-sm" title="Online & Combat Ready">
-                  <span className="size-2 rounded-full bg-emerald-100" />
-                </span>
+                <span className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-emerald-500 border-2 border-card" title="Online" />
               </div>
 
               {/* Username & Metadata */}
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                  <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
                     {user?.username || 'Challenger'}
                   </h1>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${rankMeta.bg}`}>
+                  <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-medium border ${rankMeta.bg}`}>
                     {rankMeta.name}
                   </span>
-                  {user?.leetcodeUsername && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">
+
+                  {/* Verified LeetCode Pill */}
+                  {user?.leetcodeUsername ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowSyncModal(true)}
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-mono bg-secondary hover:bg-muted border border-border text-foreground transition-colors"
+                      title="Inspect LeetCode sync details"
+                    >
                       <LeetCodeBrandIcon className="size-3 text-amber-500" />
-                      <span>{user.leetcodeUsername}</span>
-                    </span>
+                      <span>@{user.leetcodeUsername}</span>
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowSyncModal(true)}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                    >
+                      <LeetCodeBrandIcon className="size-3 text-amber-500" />
+                      <span>Connect LeetCode</span>
+                    </button>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="font-mono">Rating: <strong className="text-foreground">{rating}</strong></span>
-                  <span>•</span>
+                  <span className="font-mono">Rating: <strong className="text-foreground tabular-nums">{rating}</strong></span>
+                  <span>&middot;</span>
                   <span>Handle: <code className="text-foreground font-mono">@{user?.handle || user?.username}</code></span>
-                  <span>•</span>
-                  <span>Rank Tier: <span className="font-semibold text-foreground capitalize">{rankMeta.name}</span></span>
+                  <span>&middot;</span>
+                  <span>Tier: <span className="text-foreground font-medium">{rankMeta.name}</span></span>
                 </div>
 
                 {/* Rating Progress to Next Tier */}
                 {rankMeta.next && (
-                  <div className="pt-1.5 max-w-sm space-y-1">
+                  <div className="pt-1 max-w-sm space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-                      <span>Tier Progress</span>
-                      <span className="text-foreground font-semibold">
-                        {pointsToNext > 0 ? `${pointsToNext} pts to ${rankMeta.next}` : 'Max Tier'}
+                      <span>Tier progress</span>
+                      <span className="text-foreground tabular-nums">
+                        {pointsToNext > 0 ? `${pointsToNext} pts to ${rankMeta.next}` : 'Max tier'}
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-primary to-amber-500 rounded-full transition-all duration-500"
+                        className="h-full bg-primary rounded-full transition-all duration-300"
                         style={{ width: `${tierProgress}%` }}
                       />
                     </div>
@@ -411,168 +549,173 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
+            <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
               {user?.leetcodeUsername ? (
                 <button
                   type="button"
                   onClick={handleSyncLeetCode}
                   disabled={syncingLeetCode}
-                  className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-mono font-semibold transition-all inline-flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted border border-border text-xs font-medium text-foreground transition-colors inline-flex items-center gap-1.5 disabled:opacity-40"
                   title="Pull latest solve stats and contest rating from LeetCode"
                 >
-                  <RefreshCw className={`size-3.5 text-amber-400 ${syncingLeetCode ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`size-3.5 ${syncingLeetCode ? 'animate-spin text-amber-500' : 'text-muted-foreground'}`} />
                   <span>{syncingLeetCode ? 'Syncing...' : 'Sync LeetCode'}</span>
                 </button>
               ) : (
                 <button
                   type="button"
-                  onClick={() => setShowConnectModal(true)}
-                  className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-all inline-flex items-center gap-1.5 active:scale-95 shadow-sm"
+                  onClick={() => setShowSyncModal(true)}
+                  className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors inline-flex items-center gap-1.5 shadow-sm"
                 >
-                  <LeetCodeBrandIcon className="size-3.5 text-stone-950" />
+                  <LeetCodeBrandIcon className="size-3.5" />
                   <span>Connect LeetCode</span>
                 </button>
               )}
 
               <Link
                 href={`/profile/${encodeURIComponent(user?.handle || user?.username || 'Candidate')}`}
-                className="px-3 py-2 rounded-xl bg-secondary hover:bg-muted border border-border/80 text-xs font-medium text-foreground transition-all duration-150 active:scale-95 inline-flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted border border-border text-xs font-medium text-foreground transition-colors inline-flex items-center gap-1.5"
               >
-                <User className="size-3.5" />
-                <span>View Profile</span>
+                <User className="size-3.5 text-muted-foreground" />
+                <span>View profile</span>
               </Link>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-xl border border-destructive/30 text-destructive/80 hover:text-destructive hover:bg-destructive/10 text-xs font-medium transition-all active:scale-95 inline-flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors inline-flex items-center gap-1.5"
                 title="Log out of session"
               >
                 <LogOut className="size-3.5" />
-                <span>Log Out</span>
+                <span>Log out</span>
               </button>
             </div>
-          </SpotlightCard>
+          </div>
         </motion.div>
 
+        {/* Sync Toast Feedback Banner */}
+        {syncFeedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-4" />
+              <span>{syncFeedback}</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground">Just now</span>
+          </motion.div>
+        )}
+
         {/* 4 Primary Metric Cards */}
-        <motion.div variants={itemVariants} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <motion.div variants={itemVariants} className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {/* Card 1: Competitive Rating */}
-          <SpotlightCard className="p-5 rounded-2xl border-border/80 bg-card/80 space-y-2 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
-            <div className="text-xs text-muted-foreground font-medium flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold font-mono uppercase text-[11px]">
-                <Trophy className="size-3.5 text-amber-400" />
-                Rating
-              </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-semibold">
+          <div className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card space-y-2">
+            <div className="text-xs text-muted-foreground flex items-center justify-between">
+              <span className="font-mono uppercase text-[11px]">Rating</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                 Peak {user?.maxRating || rating}
               </span>
             </div>
-            <div className="text-3xl font-black text-foreground font-mono tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">
               {rating}
             </div>
             <p className="text-[11px] text-muted-foreground leading-tight">
               Authoritative CodeClash competitive rating
             </p>
-          </SpotlightCard>
+          </div>
 
           {/* Card 2: Arena Battles & Record */}
-          <SpotlightCard className="p-5 rounded-2xl border-border/80 bg-card/80 space-y-2 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500" />
-            <div className="text-xs text-muted-foreground font-medium flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold font-mono uppercase text-[11px]">
-                <Swords className="size-3.5 text-blue-400" />
-                Arena Duels
-              </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold">
-                {wins}W - {(user?.battleLosses ?? stats?.losses ?? 0)}L
+          <div className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card space-y-2">
+            <div className="text-xs text-muted-foreground flex items-center justify-between">
+              <span className="font-mono uppercase text-[11px]">Arena duels</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {wins}W &middot; {losses}L
               </span>
             </div>
-            <div className="text-3xl font-black text-foreground font-mono tabular-nums tracking-tight">
+            <div className="text-2xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">
               {totalBattles}
             </div>
             <p className="text-[11px] text-muted-foreground leading-tight">
               1v1 synchronized speed duels played
             </p>
-          </SpotlightCard>
+          </div>
 
           {/* Card 3: Win Streak */}
-          <SpotlightCard className="p-5 rounded-2xl border-border/80 bg-card/80 space-y-2 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500" />
-            <div className="text-xs text-muted-foreground font-medium flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold font-mono uppercase text-[11px]">
-                <Flame className="size-3.5 text-orange-400" />
-                Win Streak
-              </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 font-semibold">
+          <div className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card space-y-2">
+            <div className="text-xs text-muted-foreground flex items-center justify-between">
+              <span className="font-mono uppercase text-[11px]">Win streak</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                 Best {user?.maxWinStreak || winStreak}
               </span>
             </div>
-            <div className="text-3xl font-black text-foreground font-mono tabular-nums tracking-tight flex items-center gap-2">
+            <div className="text-2xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums flex items-center gap-2">
               <span>{winStreak}</span>
-              {winStreak >= 3 && <Flame className="size-6 text-orange-500 animate-pulse" />}
             </div>
             <p className="text-[11px] text-muted-foreground leading-tight">
               Active consecutive match victories
             </p>
-          </SpotlightCard>
+          </div>
 
-          {/* Card 4: LeetCode Solved or Win Ratio */}
-          <SpotlightCard className="p-5 rounded-2xl border-border/80 bg-card/80 space-y-2 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
-            <div className="text-xs text-muted-foreground font-medium flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold font-mono uppercase text-[11px]">
-                {user?.leetcodeTotalSolved ? (
-                  <>
-                    <LeetCodeBrandIcon className="size-3.5 text-amber-500" />
-                    LeetCode Solved
-                  </>
-                ) : (
-                  <>
-                    <Shield className="size-3.5 text-emerald-400" />
-                    Win Rate
-                  </>
-                )}
+          {/* Card 4: LeetCode Profile Sync (Dedicated Card) */}
+          <div
+            onClick={() => setShowSyncModal(true)}
+            className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card hover:border-border transition-colors space-y-2 cursor-pointer group"
+          >
+            <div className="text-xs text-muted-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-mono uppercase text-[11px] text-foreground">
+                <LeetCodeBrandIcon className="size-3.5 text-amber-500" />
+                <span>LeetCode solved</span>
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold">
-                {user?.leetcodeTotalSolved ? 'Synced' : 'Verified'}
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-foreground flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>{user?.leetcodeUsername ? 'Synced' : 'Connect'}</span>
               </span>
             </div>
-            <div className="text-3xl font-black text-foreground font-mono tabular-nums tracking-tight">
-              {user?.leetcodeTotalSolved ? user.leetcodeTotalSolved : `${winRate}%`}
+
+            <div className="text-2xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">
+              {totalSolved}
             </div>
-            {user?.leetcodeTotalSolved ? (
-              <div className="flex items-center gap-1.5 text-[10px] font-mono">
-                <span className="text-emerald-400 font-bold">{user.leetcodeEasySolved || 0}E</span>
-                <span>•</span>
-                <span className="text-amber-400 font-bold">{user.leetcodeMediumSolved || 0}M</span>
-                <span>•</span>
-                <span className="text-rose-400 font-bold">{user.leetcodeHardSolved || 0}H</span>
+
+            {/* Micro Difficulty Segmented Bar */}
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
+              <div style={{ width: `${easyPct}%` }} className="bg-emerald-500 h-full" />
+              <div style={{ width: `${medPct}%` }} className="bg-amber-500 h-full" />
+              <div style={{ width: `${hardPct}%` }} className="bg-rose-500 h-full" />
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] font-mono pt-0.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-500 font-semibold tabular-nums">{easySolved}E</span>
+                <span>&middot;</span>
+                <span className="text-amber-500 font-semibold tabular-nums">{medSolved}M</span>
+                <span>&middot;</span>
+                <span className="text-rose-500 font-semibold tabular-nums">{hardSolved}H</span>
               </div>
-            ) : (
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Integrity audited by automated judge
-              </p>
-            )}
-          </SpotlightCard>
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-0.5">
+                Inspect &rarr;
+              </span>
+            </div>
+          </div>
         </motion.div>
 
         {/* Practice Roadmap Progress Banner */}
         <motion.div variants={itemVariants}>
-          <SpotlightCard className="p-5 sm:p-6 rounded-3xl border-border/80 bg-card/85 space-y-3.5 shadow-md">
+          <div className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card space-y-3 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="size-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <Compass className="size-5" />
+                <div className="size-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground shrink-0">
+                  <Compass className="size-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm sm:text-base font-bold text-foreground">
-                      DSA Practice Roadmap Tracker
+                    <h3 className="text-sm font-semibold text-foreground">
+                      DSA practice roadmap tracker
                     </h3>
-                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-primary/10 text-primary font-bold">
-                      18 Patterns
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      18 patterns
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -584,17 +727,17 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3 shrink-0">
                 <div className="text-right">
                   <span className="text-[11px] font-mono text-muted-foreground block">
-                    Practiced Slugs
+                    Practiced problems
                   </span>
-                  <span className="text-sm font-mono font-bold text-foreground">
-                    {practicedCount} Problems Done
+                  <span className="text-xs font-mono font-semibold text-foreground tabular-nums">
+                    {practicedCount} done
                   </span>
                 </div>
                 <Link
                   href="/roadmap"
-                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                  className="px-3.5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs flex items-center gap-1.5 shadow-sm transition-colors"
                 >
-                  <span>Open Roadmap</span>
+                  <span>Open roadmap</span>
                   <ArrowRight className="size-3.5" />
                 </Link>
               </div>
@@ -603,105 +746,103 @@ export default function DashboardPage() {
             {/* Visual Mini Progress Bar */}
             <div className="space-y-1 pt-1">
               <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-                <span>Core 150 Target</span>
-                <span className="font-semibold text-foreground">
-                  {Math.min(100, Math.round((practicedCount / 150) * 100))}% Completed
+                <span>Core 150 syllabus target</span>
+                <span className="font-medium text-foreground tabular-nums">
+                  {Math.min(100, Math.round((practicedCount / 150) * 100))}% completed
                 </span>
               </div>
-              <div className="h-2 w-full bg-secondary/80 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, Math.max(practicedCount > 0 ? 5 : 0, (practicedCount / 150) * 100))}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-primary rounded-full"
+              <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.max(practicedCount > 0 ? 5 : 0, (practicedCount / 150) * 100))}%` }}
                 />
               </div>
             </div>
-          </SpotlightCard>
+          </div>
         </motion.div>
 
         {/* Combat & Sparring Launchpad (4 Cards Grid) */}
         <motion.div variants={itemVariants} className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Zap className="size-4 text-amber-500" />
-              Combat &amp; Sparring Modes
+              <span>Combat &amp; sparring modes</span>
             </h2>
-            <span className="text-xs text-muted-foreground font-mono">1v1 Synchronized Engine</span>
+            <span className="text-xs text-muted-foreground font-mono">1v1 synchronized engine</span>
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Action 1: Ranked 1v1 Duel */}
             <Link
               href="/matchmaking?mode=ranked"
-              className="p-5 rounded-2xl border border-border/80 bg-card hover:border-primary/60 hover:bg-card/90 transition-all duration-200 group active:scale-[0.98] shadow-sm flex flex-col justify-between space-y-4"
+              className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card hover:border-border transition-colors group shadow-sm flex flex-col justify-between space-y-3"
             >
-              <div className="space-y-2.5">
-                <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <Swords className="size-5" />
+              <div className="space-y-2">
+                <div className="size-9 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <Swords className="size-4" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-foreground flex items-center justify-between">
-                    <span>Ranked Duel</span>
-                    <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  <div className="text-sm font-semibold text-foreground flex items-center justify-between">
+                    <span>Ranked duel</span>
+                    <ArrowRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Battle against opponents in your strict Elo rating bracket. Winner claims rating points.
+                    Battle against opponents in your strict Elo rating bracket. Winner claims rating.
                   </p>
                 </div>
               </div>
-              <div className="text-[11px] font-mono text-primary font-semibold flex items-center gap-1">
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/60">
                 <span className="size-1.5 rounded-full bg-primary" />
-                <span>Strict Elo Match</span>
+                <span>Strict Elo match</span>
               </div>
             </Link>
 
             {/* Action 2: Casual Practice */}
             <Link
               href="/matchmaking?mode=casual"
-              className="p-5 rounded-2xl border border-border/80 bg-card hover:border-blue-500/60 hover:bg-card/90 transition-all duration-200 group active:scale-[0.98] shadow-sm flex flex-col justify-between space-y-4"
+              className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card hover:border-border transition-colors group shadow-sm flex flex-col justify-between space-y-3"
             >
-              <div className="space-y-2.5">
-                <div className="size-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <Code2 className="size-5" />
+              <div className="space-y-2">
+                <div className="size-9 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <Code2 className="size-4" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-foreground flex items-center justify-between">
-                    <span>Casual Sparring</span>
-                    <ArrowRight className="size-4 text-muted-foreground group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                  <div className="text-sm font-semibold text-foreground flex items-center justify-between">
+                    <span>Casual sparring</span>
+                    <ArrowRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                     Practice with zero rating penalty. Test solutions with live clock pressure.
                   </p>
                 </div>
               </div>
-              <div className="text-[11px] font-mono text-blue-400 font-semibold flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-blue-400" />
-                <span>No Rating Risk</span>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/60">
+                <span className="size-1.5 rounded-full bg-muted-foreground" />
+                <span>No rating risk</span>
               </div>
             </Link>
 
             {/* Action 3: Multiplayer Arena Lobby */}
             <Link
               href="/lobby"
-              className="p-5 rounded-2xl border border-border/80 bg-card hover:border-orange-500/60 hover:bg-card/90 transition-all duration-200 group active:scale-[0.98] shadow-sm flex flex-col justify-between space-y-4"
+              className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card hover:border-border transition-colors group shadow-sm flex flex-col justify-between space-y-3"
             >
-              <div className="space-y-2.5">
-                <div className="size-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <Flame className="size-5" />
+              <div className="space-y-2">
+                <div className="size-9 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <Flame className="size-4" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-foreground flex items-center justify-between">
-                    <span>Arena Lobby</span>
-                    <ArrowRight className="size-4 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                  <div className="text-sm font-semibold text-foreground flex items-center justify-between">
+                    <span>Arena lobby</span>
+                    <ArrowRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                     Browse open public battles or launch custom Battle Royale match rooms.
                   </p>
                 </div>
               </div>
-              <div className="text-[11px] font-mono text-orange-400 font-semibold flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-orange-400" />
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/60">
+                <span className="size-1.5 rounded-full bg-amber-500" />
                 <span>Multiplayer &amp; BR</span>
               </div>
             </Link>
@@ -709,88 +850,88 @@ export default function DashboardPage() {
             {/* Action 4: Timed Proctor Assessment */}
             <Link
               href="/exam/demo-sync-session"
-              className="p-5 rounded-2xl border border-border/80 bg-card hover:border-emerald-500/60 hover:bg-card/90 transition-all duration-200 group active:scale-[0.98] shadow-sm flex flex-col justify-between space-y-4"
+              className="p-4 sm:p-5 rounded-xl border border-border/80 bg-card hover:border-border transition-colors group shadow-sm flex flex-col justify-between space-y-3"
             >
-              <div className="space-y-2.5">
-                <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <Shield className="size-5" />
+              <div className="space-y-2">
+                <div className="size-9 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <Shield className="size-4" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-foreground flex items-center justify-between">
-                    <span>Timed Assessment</span>
-                    <ArrowRight className="size-4 text-muted-foreground group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                  <div className="text-sm font-semibold text-foreground flex items-center justify-between">
+                    <span>Timed assessment</span>
+                    <ArrowRight className="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                     Simulate real technical interviews with camera and tab-focus telemetry monitoring.
                   </p>
                 </div>
               </div>
-              <div className="text-[11px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-emerald-400" />
-                <span>Proctoring Audit</span>
+              <div className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/60">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>Proctoring audit</span>
               </div>
             </Link>
           </div>
         </motion.div>
 
         {/* Quick Join Duel by Code & Instant Friend Challenge */}
-        <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-12">
+        <motion.div variants={itemVariants} className="grid gap-4 md:grid-cols-12">
           {/* Quick Join Input (7 cols) */}
-          <SpotlightCard className="md:col-span-7 p-6 rounded-3xl border-border/80 bg-card/85 space-y-4 shadow-md">
+          <div className="md:col-span-7 p-5 sm:p-6 rounded-xl border border-border/80 bg-card space-y-3 shadow-sm">
             <div>
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Hash className="size-4 text-primary" />
-                Enter Room Code or Challenge Link
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Hash className="size-4 text-muted-foreground" />
+                <span>Enter room code or challenge link</span>
               </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Paste a battle invite link or 4 to 8 digit room code to synchronize and face off.
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Paste a battle invite link or 4 to 8 character code to face off immediately.
               </p>
             </div>
 
-            <form onSubmit={handleQuickJoin} className="space-y-3">
+            <form onSubmit={handleQuickJoin} className="space-y-2.5">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                  <Hash className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Hash className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={quickCode}
                     onChange={(e) => setQuickCode(e.target.value)}
-                    placeholder="e.g. DUEL-7X9B or paste URL"
-                    className="w-full pl-10 pr-3 py-3 rounded-2xl bg-background border border-border font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 shadow-inner"
+                    placeholder="e.g. DUEL-7X9B or battle URL"
+                    className="w-full pl-8 pr-3 py-2 rounded-lg bg-background border border-border font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!quickCode.trim()}
-                  className="px-5 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs transition-all active:scale-95 disabled:opacity-40 shrink-0 shadow-md flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors disabled:opacity-40 shrink-0 shadow-sm flex items-center gap-1.5"
                 >
                   <Swords className="size-3.5" />
-                  <span>Enter Room</span>
+                  <span>Enter</span>
                 </button>
               </div>
             </form>
 
             <div className="flex items-center gap-3 pt-1 text-[11px] text-muted-foreground font-mono">
               <span>Quick links:</span>
-              <Link href="/problems" className="text-foreground hover:underline">
-                Problem Directory →
+              <Link href="/problems" className="hover:text-foreground transition-colors">
+                Problems &rarr;
               </Link>
-              <span>•</span>
-              <Link href="/rankings" className="text-foreground hover:underline">
-                Global Rankings →
+              <span>&middot;</span>
+              <Link href="/rankings" className="hover:text-foreground transition-colors">
+                Leaderboard &rarr;
               </Link>
             </div>
-          </SpotlightCard>
+          </div>
 
           {/* Instant Challenge Generator (5 cols) */}
-          <SpotlightCard className="md:col-span-5 p-6 rounded-3xl border-border/80 bg-card/85 space-y-4 shadow-md flex flex-col justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                <Share2 className="size-4" />
-                <span>Challenge a Friend 1v1</span>
+          <div className="md:col-span-5 p-5 sm:p-6 rounded-xl border border-border/80 bg-card space-y-3 shadow-sm flex flex-col justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
+                <Share2 className="size-4 text-muted-foreground" />
+                <span>Challenge a friend 1v1</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Generate an instant synchronized battle link. Share it via Discord, WhatsApp, or Slack to spar immediately on the same problem.
+                Generate a synchronized battle link. Share it via Discord, WhatsApp, or Slack to spar on the same problem.
               </p>
             </div>
 
@@ -798,26 +939,22 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={handleGenerateChallenge}
-                className={`w-full py-3 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm ${
-                  copiedInvite
-                    ? 'bg-emerald-500 text-stone-950 font-black'
-                    : 'bg-secondary hover:bg-muted text-foreground border border-border/80'
-                }`}
+                className="w-full py-2.5 px-4 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2 shadow-sm bg-secondary hover:bg-muted text-foreground border border-border"
               >
                 {copiedInvite ? (
                   <>
-                    <CheckCircle2 className="size-4 text-stone-950" />
-                    <span>Invite Link Copied to Clipboard!</span>
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                    <span className="text-emerald-500">Invite link copied to clipboard</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="size-4 text-primary" />
-                    <span>Generate Instant Invite Link</span>
+                    <Copy className="size-3.5 text-muted-foreground" />
+                    <span>Copy private duel link</span>
                   </>
                 )}
               </button>
             </div>
-          </SpotlightCard>
+          </div>
         </motion.div>
       </motion.div>
     </div>
