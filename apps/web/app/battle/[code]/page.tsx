@@ -52,6 +52,8 @@ import ProctorWidget from '../../../components/proctoring/ProctorWidget';
 import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
 import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
 import { getWsUrl, getApiUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
+import RoundClock from '../../../components/battle/RoundClock';
+import BattleBeginsModal from '../../../components/battle/BattleBeginsModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -110,6 +112,8 @@ export default function BattleRoomPage() {
   const [opponentStreams, setOpponentStreams] = useState<Record<string, { code: string; language: string }>>({});
   const [opponentTyping, setOpponentTyping] = useState<boolean>(false);
   const [countdownVal, setCountdownVal] = useState<number | null>(null);
+  const [showBattleBeginsAnimation, setShowBattleBeginsAnimation] = useState<boolean>(false);
+  const hasShownBattleBeginsRef = useRef<boolean>(false);
   const [revealedSolutions, setRevealedSolutions] = useState<Record<string, { code: string; language: string; username: string }>>({});
   const [inspectingOpponent, setInspectingOpponent] = useState<boolean>(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -273,6 +277,10 @@ export default function BattleRoomPage() {
         if (state.endTime && state.status === 'active') {
           setRemainingSeconds(Math.max(0, Math.floor((state.endTime - Date.now()) / 1000)));
         }
+        if (state.status === 'active' && !hasShownBattleBeginsRef.current) {
+          hasShownBattleBeginsRef.current = true;
+          setShowBattleBeginsAnimation(true);
+        }
         if (state.winner) {
           setMatchWinner(state.winner);
         }
@@ -280,7 +288,13 @@ export default function BattleRoomPage() {
     });
 
     socket.on('battle:state_update', (state: any) => {
-      if (state) setBattle(state);
+      if (state) {
+        setBattle(state);
+        if (state.status === 'active' && !hasShownBattleBeginsRef.current) {
+          hasShownBattleBeginsRef.current = true;
+          setShowBattleBeginsAnimation(true);
+        }
+      }
     });
 
     socket.on('battle:countdown_tick', (data: { count: number }) => {
@@ -289,6 +303,8 @@ export default function BattleRoomPage() {
 
     socket.on('battle:countdown_complete', () => {
       setCountdownVal(0);
+      setShowBattleBeginsAnimation(true);
+      hasShownBattleBeginsRef.current = true;
       setTimeout(() => setCountdownVal(null), 1000);
     });
 
@@ -596,18 +612,24 @@ export default function BattleRoomPage() {
           </div>
         </div>
 
-        {/* Center: Synchronized Timer & Survival / Spectator Count */}
+        {/* Center: Synchronized Round Clock & Survival / Spectator Count */}
         <div className="flex items-center gap-3">
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono font-medium ${
-              remainingSeconds < 180
-                ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                : 'bg-muted text-foreground border-border'
-            }`}
-          >
-            <Clock className="size-3.5 text-amber-400" />
-            <span className="tabular-nums">{formatTimer(remainingSeconds)}</span>
-          </div>
+          <RoundClock
+            remainingSeconds={remainingSeconds}
+            totalSeconds={(battle?.durationMinutes || 15) * 60}
+            isActive={battle?.status === 'active'}
+          />
+
+          {battle?.status === 'active' && (
+            <button
+              onClick={() => setShowBattleBeginsAnimation(true)}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted border border-border text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Replay Battle Begins Animation"
+            >
+              <Swords className="size-3 text-primary" />
+              <span>Replay Intro</span>
+            </button>
+          )}
 
           {isBattleRoyale ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs text-primary font-bold font-mono">
@@ -748,6 +770,21 @@ export default function BattleRoomPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ================= BATTLE BEGINS ANIMATION (DUEL & MULTIPLAYER) ================= */}
+      <BattleBeginsModal
+        isOpen={showBattleBeginsAnimation}
+        onClose={() => setShowBattleBeginsAnimation(false)}
+        mode={battle?.mode}
+        isBattleRoyale={isBattleRoyale}
+        currentUsername={username}
+        opponentUsername={opponentPlayer?.username || (role === 'spectator' ? activeSpectatorPlayer?.username : 'Challenger')}
+        playerCount={totalCombatants}
+        questionTitle={question?.title || 'Algorithmic Problem'}
+        questionDifficulty={question?.difficulty || 'Medium'}
+        questionCategory={question?.category || 'DSA'}
+        timeLimitMinutes={battle?.durationMinutes || 15}
+      />
 
       {/* ================= FIGHTER HUD: LIVE OPPONENT METER OR KNOCKOUT ARENA HUD ================= */}
       {role === 'fighter' && (
