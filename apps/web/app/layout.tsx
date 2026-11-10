@@ -27,11 +27,11 @@ export default function RootLayout({
             <header className="border-b border-border/70 bg-background/85 backdrop-blur-xl sticky top-0 z-40 shadow-sm">
               <div className="container mx-auto px-4 h-14 flex items-center justify-between">
                 <div className="flex items-center gap-8">
-                  <Link href="/" className="flex items-center gap-2.5 group active:scale-[0.96] transition-transform">
-                    <span className="size-8 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary border border-primary/30 flex items-center justify-center group-hover:border-primary/60 group-hover:bg-primary/25 transition-all shadow-sm">
-                      <Swords className="size-4 text-primary group-hover:scale-110 transition-transform duration-200" />
+                  <Link href="/" className="flex items-center gap-2.5 group">
+                    <span className="size-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center transition-colors group-hover:border-foreground/30">
+                      <Swords className="size-4" />
                     </span>
-                    <span className="font-bold text-base tracking-tight text-foreground">
+                    <span className="font-semibold text-base tracking-tight text-foreground">
                       CodeClash
                     </span>
                   </Link>
@@ -97,13 +97,10 @@ export default function RootLayout({
 
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted border border-border/80 text-xs font-medium text-foreground transition-all duration-150 active:scale-[0.96] shadow-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted border border-border text-xs font-medium text-foreground transition-colors"
                   >
-                    <span className="relative flex size-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full size-2 bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-                    </span>
-                    <span className="font-mono">Dashboard</span>
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span>Dashboard</span>
                   </Link>
                 </div>
               </div>
