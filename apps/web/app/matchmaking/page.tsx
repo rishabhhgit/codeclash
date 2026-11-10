@@ -245,7 +245,7 @@ function MatchmakingContent() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const userRating = currentUser?.rating || 1200;
+  const userRating = currentUser?.rating || 1000;
   const username = currentUser?.username || 'Challenger';
   const isGuest = currentUser?.handle?.toLowerCase().startsWith('guest');
 
@@ -287,7 +287,7 @@ function MatchmakingContent() {
                     {matchedData.opponent?.username || 'Challenger'}
                   </div>
                   <div className="text-[11px] font-mono text-muted-foreground tabular-nums">
-                    {matchedData.opponent?.rating || 1200} Elo
+                    {matchedData.opponent?.rating || 1000} Elo
                   </div>
                 </div>
               </div>

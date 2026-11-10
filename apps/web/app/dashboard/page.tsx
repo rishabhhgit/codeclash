@@ -114,7 +114,7 @@ export default function DashboardPage() {
       const storedUser = typeof window !== 'undefined' ? localStorage.getItem('battle_username') : null;
       setUser({
         username: storedUser || 'Challenger',
-        rating: 1200,
+        rating: 1000,
         rank: 'newbie',
         totalBattles: 0,
         wins: 0,
@@ -208,7 +208,7 @@ export default function DashboardPage() {
     );
   }
 
-  const rating = user?.rating || 1200;
+  const rating = user?.rating || 1000;
   const rankMeta = getRankMeta(rating);
   const totalBattles = user?.totalBattles || stats?.totalBattles || 0;
   const wins = user?.battleWins ?? stats?.wins ?? 0;

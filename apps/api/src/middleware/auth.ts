@@ -23,7 +23,7 @@ export function createDeterministicGuest(seed?: string, fallbackHandle?: string)
 
   if (seed && seed !== 'guest-token') {
     idHex = crypto.createHash('md5').update(seed).digest('hex').substring(0, 24);
-    suffix = seed.replace(/[^a-zA-Z0-9]/g, '').slice(-4) || '1200';
+    suffix = seed.replace(/[^a-zA-Z0-9]/g, '').slice(-4) || '1000';
   } else {
     const rand = Math.random().toString(36).substring(2, 10);
     idHex = crypto.createHash('md5').update(rand).digest('hex').substring(0, 24);
@@ -38,9 +38,9 @@ export function createDeterministicGuest(seed?: string, fallbackHandle?: string)
     username: handle,
     avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${handle}`,
     bio: 'Competitive Coder',
-    rating: 1200,
-    maxRating: 1200,
-    rank: 'pupil',
+    rating: 1000,
+    maxRating: 1000,
+    rank: 'newbie',
     contribution: 0,
     battleWins: 0,
     battleLosses: 0,

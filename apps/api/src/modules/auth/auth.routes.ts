@@ -146,7 +146,7 @@ router.post('/leetcode/verify', async (req, res) => {
     const normalizedHandle = officialUsername.toLowerCase();
 
     // Determine initial Elo rating from LeetCode contest rating or solve counts
-    let initialRating = 1500;
+    let initialRating = 1000;
     if (lcProfile?.contestRating && lcProfile.contestRating > 0) {
       initialRating = lcProfile.contestRating;
     } else if (lcProfile?.totalSolved && lcProfile.totalSolved > 0) {
@@ -321,7 +321,7 @@ router.post('/leetcode', async (req, res) => {
     const officialUsername = lcProfile?.exists ? lcProfile.username : cleanHandle;
     const normalizedHandle = cleanHandle.toLowerCase();
 
-    let initialRating = 1500;
+    let initialRating = 1000;
     if (lcProfile?.contestRating && lcProfile.contestRating > 0) {
       initialRating = lcProfile.contestRating;
     } else if (lcProfile?.totalSolved && lcProfile.totalSolved > 0) {

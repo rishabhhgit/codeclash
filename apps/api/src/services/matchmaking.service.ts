@@ -70,7 +70,7 @@ export function joinQueue(
   const entry: QueueEntry = {
     userId,
     username: preferences.username,
-    rating: preferences.rating || 1200,
+    rating: preferences.rating || 1000,
     preferredTopics: preferences.preferredTopics || [],
     preferredDifficulty: preferences.preferredDifficulty || 'all',
     mode: preferences.mode || 'quick',

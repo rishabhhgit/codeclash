@@ -258,7 +258,7 @@ export function BattleLobbyQueue({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Rating: 1450 Elo • Room Owner
+                      Rating: {hostPlayer?.rating || 1000} Elo • Room Owner
                     </span>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export function BattleLobbyQueue({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Rating: 1200 Elo • Contender
+                      Rating: {player?.rating || 1000} Elo • Contender
                     </span>
                   </div>
                 </div>

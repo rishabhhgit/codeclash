@@ -67,8 +67,8 @@ router.get('/me/stats', authenticate, async (req: AuthRequest, res) => {
     data: {
       winRate: totalBattles > 0 ? (wins / totalBattles) * 100 : 0,
       averageSolveTime: avgSolveTime,
-      rating: user.rating || 1200,
-      maxRating: user.maxRating || 1200,
+      rating: user.rating || 1000,
+      maxRating: user.maxRating || 1000,
       totalBattles,
       wins,
       losses: user.battleLosses || 0,
@@ -237,8 +237,8 @@ router.get('/:idOrHandle/stats', async (req, res) => {
     success: true,
     data: {
       winRate,
-      rating: user?.rating || 1200,
-      maxRating: user?.maxRating || 1200,
+      rating: user?.rating || 1000,
+      maxRating: user?.maxRating || 1000,
       totalBattles,
       wins,
       losses,

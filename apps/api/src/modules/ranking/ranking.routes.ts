@@ -82,7 +82,7 @@ async function fetchRealLeaderboard(): Promise<LiveLeaderboardPlayer[]> {
           const wins = u.battleWins || 0;
           const losses = u.battleLosses || 0;
           const winRate = totalBattles > 0 ? parseFloat(((wins / totalBattles) * 100).toFixed(1)) : 0;
-          const rating = u.rating || 1200;
+          const rating = u.rating || 1000;
           const rank = u.rank || 'newbie';
           const rankLabel = rank.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -214,7 +214,7 @@ router.get('/rank/:userId', async (req, res) => {
 
   res.json({
     success: true,
-    data: { rank: 1, rating: 1200, rankTitle: 'Newbie' },
+    data: { rank: 1, rating: 1000, rankTitle: 'Newbie' },
   });
 });
 

@@ -51,7 +51,7 @@ async function handleMatchmaking(req: AuthRequest, res: Response, next: NextFunc
     const user = req.user!;
     const userId = user._id ? user._id.toString() : 'guest-' + Date.now();
     const username = user.username || user.handle || 'Coder';
-    const rating = user.rating || 1200;
+    const rating = user.rating || 1000;
 
     // Prevent duplicate active ranked participation
     const activeCheck = isUserInActiveBattle(userId);

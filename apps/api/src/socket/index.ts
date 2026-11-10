@@ -329,7 +329,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
           const candidateId = socket.handshake.auth?.candidateId as string;
           if (token && token.startsWith('guest-') && token !== 'guest-token' && token.length > 8) {
             socket.userId = crypto.createHash('md5').update(token).digest('hex').substring(0, 24);
-            socket.handle = candidateId || `Guest_${token.replace(/[^a-zA-Z0-9]/g, '').slice(-4) || '1200'}`;
+            socket.handle = candidateId || `Guest_${token.replace(/[^a-zA-Z0-9]/g, '').slice(-4) || '1000'}`;
           } else if (candidateId && candidateId !== 'Player' && !candidateId.startsWith('Coder_')) {
             socket.userId = crypto.createHash('md5').update(`${candidateId}-${socket.id}`).digest('hex').substring(0, 24);
             socket.handle = candidateId;

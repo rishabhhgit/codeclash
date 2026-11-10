@@ -319,7 +319,7 @@ router.post('/', authenticate, validate(createBattleSchema), async (req: AuthReq
             id: hostId.toString(),
             username: req.user?.username || 'Guest',
             handle: (req.user?.username || (req.user as any)?.handle) || 'Guest',
-            rating: req.user?.rating || 1200,
+            rating: req.user?.rating || 1000,
             rank: req.user?.rank || 'newbie',
             avatar: req.user?.avatar || '',
           },
@@ -332,7 +332,7 @@ router.post('/', authenticate, validate(createBattleSchema), async (req: AuthReq
           isReady: true,
         },
       ],
-      creator: { username: req.user?.username || 'Guest', rating: req.user?.rating || 1200 },
+      creator: { username: req.user?.username || 'Guest', rating: req.user?.rating || 1000 },
       createdAt: new Date().toISOString(),
       questionSlug: chosenQuestion.slug,
       problem: {
