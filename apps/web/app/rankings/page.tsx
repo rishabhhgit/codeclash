@@ -181,7 +181,7 @@ export default function LiveLeaderboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header and Live Status */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -190,19 +190,6 @@ export default function LiveLeaderboardPage() {
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">
             Global competitive rankings, active arena battles, and proctored assessment records.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground">
-            <span
-              className={`size-1.5 rounded-full ${
-                socketConnected ? 'bg-emerald-500' : 'bg-muted-foreground/40'
-              }`}
-            />
-            <span className="font-mono text-muted-foreground text-[11px]">
-              {socketConnected ? 'Live stream connected' : 'Connecting...'}
-            </span>
-          </div>
         </div>
       </div>
 

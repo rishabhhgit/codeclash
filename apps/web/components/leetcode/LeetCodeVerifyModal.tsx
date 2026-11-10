@@ -283,8 +283,7 @@ export default function LeetCodeVerifyModal({
                   <div className="text-xs font-semibold text-foreground truncate">
                     @{currentUser.leetcodeUsername}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
-                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                  <div className="text-[11px] text-muted-foreground font-mono">
                     <span>Verified account owner</span>
                   </div>
                 </div>

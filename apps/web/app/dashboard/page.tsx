@@ -260,8 +260,8 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants}>
           <div className="p-5 sm:p-6 rounded-xl border border-border/80 bg-card flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
             <div className="flex items-center gap-4 sm:gap-5">
-              {/* Avatar with Status */}
-              <div className="relative shrink-0">
+              {/* Avatar */}
+              <div className="shrink-0">
                 <div className="size-16 rounded-xl bg-secondary border border-border overflow-hidden flex items-center justify-center font-semibold text-lg text-foreground">
                   {user?.avatar ? (
                     <img src={user.avatar} alt={user.username} className="size-full object-cover" />
@@ -269,7 +269,6 @@ export default function DashboardPage() {
                     user?.username?.substring(0, 2).toUpperCase() || 'CC'
                   )}
                 </div>
-                <span className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-emerald-500 border-2 border-card" title="Online" />
               </div>
 
               {/* Username & Metadata */}
@@ -292,7 +291,6 @@ export default function DashboardPage() {
                     >
                       <LeetCodeBrandIcon className="size-3 text-amber-500" />
                       <span>@{user.leetcodeUsername}</span>
-                      <span className={`size-1.5 rounded-full ${user.leetcodeVerified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                       <span className="text-[10px] text-muted-foreground font-sans">
                         {user.leetcodeVerified ? 'Verified' : 'Unverified'}
                       </span>
@@ -458,9 +456,8 @@ export default function DashboardPage() {
                 <LeetCodeBrandIcon className="size-3.5 text-amber-500" />
                 <span>LeetCode solved</span>
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-foreground flex items-center gap-1">
-                <span className={`size-1.5 rounded-full ${user?.leetcodeVerified ? 'bg-emerald-500' : user?.leetcodeUsername ? 'bg-amber-500' : 'bg-muted-foreground'}`} />
-                <span>{user?.leetcodeVerified ? 'Verified' : user?.leetcodeUsername ? 'Unverified' : 'Connect'}</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-foreground">
+                {user?.leetcodeVerified ? 'Verified' : user?.leetcodeUsername ? 'Unverified' : 'Connect'}
               </span>
             </div>
 
@@ -655,8 +652,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              <div className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/60">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
+              <div className="text-[11px] font-mono text-muted-foreground pt-1 border-t border-border/60">
                 <span>Proctoring audit</span>
               </div>
             </Link>
