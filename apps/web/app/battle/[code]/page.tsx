@@ -42,6 +42,7 @@ import {
   Crosshair,
   Package,
   Heart,
+  UserX,
 } from 'lucide-react';
 
 import { getQuestionBySlug, getAllQuestions } from '../../../lib/questions/data';
@@ -54,6 +55,7 @@ import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel'
 import { getWsUrl, getApiUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
 import RoundClock from '../../../components/battle/RoundClock';
 import BattleBeginsModal from '../../../components/battle/BattleBeginsModal';
+import BattleLobbyQueue from '../../../components/battle/BattleLobbyQueue';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -89,6 +91,9 @@ export default function BattleRoomPage() {
   const [policyAccepted, setPolicyAccepted] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [lobbyError, setLobbyError] = useState<string>('');
+  const [isKicked, setIsKicked] = useState<boolean>(false);
+  const [kickReason, setKickReason] = useState<string>('');
 
   // Match & Room State
   const [battle, setBattle] = useState<any>(null);
@@ -277,9 +282,12 @@ export default function BattleRoomPage() {
         if (state.endTime && state.status === 'active') {
           setRemainingSeconds(Math.max(0, Math.floor((state.endTime - Date.now()) / 1000)));
         }
-        if (state.status === 'active' && !hasShownBattleBeginsRef.current) {
-          hasShownBattleBeginsRef.current = true;
-          setShowBattleBeginsAnimation(true);
+        if (state.status === 'active') {
+          setIsProctorActive(true);
+          if (!hasShownBattleBeginsRef.current) {
+            hasShownBattleBeginsRef.current = true;
+            setShowBattleBeginsAnimation(true);
+          }
         }
         if (state.winner) {
           setMatchWinner(state.winner);
@@ -290,10 +298,25 @@ export default function BattleRoomPage() {
     socket.on('battle:state_update', (state: any) => {
       if (state) {
         setBattle(state);
-        if (state.status === 'active' && !hasShownBattleBeginsRef.current) {
-          hasShownBattleBeginsRef.current = true;
-          setShowBattleBeginsAnimation(true);
+        if (state.status === 'active') {
+          setIsProctorActive(true);
+          if (!hasShownBattleBeginsRef.current) {
+            hasShownBattleBeginsRef.current = true;
+            setShowBattleBeginsAnimation(true);
+          }
         }
+      }
+    });
+
+    socket.on('battle:kicked', (data: { reason?: string }) => {
+      setIsKicked(true);
+      setKickReason(data?.reason || 'You were kicked from this battle lobby by the host.');
+    });
+
+    socket.on('battle:error', (data: { message: string }) => {
+      if (data?.message) {
+        setLobbyError(data.message);
+        setTimeout(() => setLobbyError(''), 4500);
       }
     });
 
@@ -546,6 +569,21 @@ export default function BattleRoomPage() {
     return playersList.find((p) => p.username === username) || null;
   }, [playersList, username]);
 
+  const isHost = useMemo(() => {
+    if (battle?.hostId) {
+      return currentPlayer?.userId === battle.hostId || username === battle.creatorUsername;
+    }
+    return playersList[0]?.username === username;
+  }, [battle?.hostId, battle?.creatorUsername, currentPlayer?.userId, username, playersList]);
+
+  // Automatically activate proctored mode during test/active battle
+  useEffect(() => {
+    if (battle?.status === 'active' && !isProctorActive) {
+      setIsProctorActive(true);
+      startCameraAndMic().catch(() => {});
+    }
+  }, [battle?.status, isProctorActive]);
+
   const isStormHazard = useMemo(() => {
     if (!isBattleRoyale || battle?.status !== 'active') return false;
     const req = battle?.storm?.phase || 1;
@@ -558,6 +596,21 @@ export default function BattleRoomPage() {
       battleCode: codeParam,
     });
   };
+
+  const handleStartBattle = useCallback(() => {
+    if (!socketRef.current?.connected) return;
+    socketRef.current.emit('battle:start_battle', {
+      battleCode: codeParam,
+    });
+  }, [codeParam]);
+
+  const handleKickPlayer = useCallback((targetUserId: string) => {
+    if (!socketRef.current?.connected) return;
+    socketRef.current.emit('battle:kick_player', {
+      battleCode: codeParam,
+      targetUserId,
+    });
+  }, [codeParam]);
 
   return (
     <div
@@ -786,8 +839,28 @@ export default function BattleRoomPage() {
         timeLimitMinutes={battle?.durationMinutes || 15}
       />
 
-      {/* ================= FIGHTER HUD: LIVE OPPONENT METER OR KNOCKOUT ARENA HUD ================= */}
-      {role === 'fighter' && (
+      {/* ================= BATTLE STAGING LOBBY / WAITING QUEUE ================= */}
+      {battle?.status === 'waiting' ? (
+        <BattleLobbyQueue
+          battle={battle}
+          code={codeParam}
+          question={question}
+          isHost={isHost}
+          currentPlayer={currentPlayer}
+          playersList={playersList}
+          onStartBattle={handleStartBattle}
+          onToggleReady={handleToggleReady}
+          onKickPlayer={handleKickPlayer}
+          onCopyInviteLink={handleCopyInviteLink}
+          onCopyCode={handleCopyCode}
+          copiedLink={copiedLink}
+          copiedCode={copiedCode}
+          lobbyError={lobbyError}
+        />
+      ) : (
+        <>
+          {/* ================= FIGHTER HUD: LIVE OPPONENT METER OR KNOCKOUT ARENA HUD ================= */}
+          {role === 'fighter' && (
         isBattleRoyale ? (
           <div className="bg-gradient-to-r from-blue-950/60 via-card to-purple-950/60 border-b border-blue-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs shrink-0 gap-3">
             <div className="flex items-center gap-3">
@@ -1561,6 +1634,8 @@ export default function BattleRoomPage() {
           </div>
         </div>
       )}
+        </>
+      )}
 
       {/* ================= HACKERRANK PRE-ASSESSMENT VERIFICATION MODAL ================= */}
       {false && role === 'fighter' && !isVerified && (
@@ -1865,6 +1940,36 @@ export default function BattleRoomPage() {
                 )}
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= KICKED FROM LOBBY OVERLAY ================= */}
+      <AnimatePresence>
+        {isKicked && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          >
+            <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+              <div className="size-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
+                <UserX className="size-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-foreground">Removed from Battle</h3>
+                <p className="text-xs text-muted-foreground">
+                  {kickReason || 'You were kicked from this battle lobby by the host.'}
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/matchmaking')}
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Return to Matchmaking
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

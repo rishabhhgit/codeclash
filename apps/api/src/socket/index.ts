@@ -93,6 +93,8 @@ export interface LiveBattleState {
   startTime: number;
   endTime: number;
   status: 'waiting' | 'ready_check' | 'countdown' | 'active' | 'completed' | 'cancelled' | 'aborted';
+  hostId?: string;
+  creatorUsername?: string;
   winner?: string;
   countdownSeconds?: number;
   maxPlayers?: number;
@@ -136,6 +138,8 @@ export function createOrGetLiveBattle(code: string, opts?: Partial<LiveBattleSta
       startTime: now,
       endTime: now + durationMinutes * 60 * 1000,
       status: (opts?.status as any) || 'waiting',
+      hostId: opts?.hostId,
+      creatorUsername: opts?.creatorUsername,
       countdownSeconds: 0,
       maxPlayers,
       aliveCount: 0,
@@ -378,6 +382,14 @@ export function setupSocketHandlers(io: SocketIOServer) {
 
         const playerId = socket.userId || socket.id;
 
+        // Auto-assign host if none exists
+        if (!battle.hostId) {
+          battle.hostId = playerId;
+          battle.creatorUsername = username;
+        }
+
+        const isHost = playerId === battle.hostId;
+
         // Register player or spectator
         if (role === 'fighter') {
           if (!battle.players[playerId]) {
@@ -398,7 +410,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
               battle.players[playerId] = {
                 userId: playerId,
                 username,
-                isReady: false,
+                isReady: isHost,
                 score: 0,
                 passedCases: 0,
                 totalCases: 4,
@@ -420,31 +432,18 @@ export function setupSocketHandlers(io: SocketIOServer) {
               battle.aliveCount = Object.values(battle.players).filter((p) => p.status === 'alive').length;
               battle.totalParticipants = fighterCount;
 
-              if (battle.mode === 'battle_royale') {
-                if (fighterCount >= 2 && battle.status === 'waiting') {
-                  battle.status = 'ready_check';
-                }
+              if (fighterCount >= 2) {
                 battle.feed.unshift({
                   id: 'f-' + Date.now(),
                   time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
-                  text: `👥 @${username} joined the Knockout Arena! [${fighterCount}/${maxFighters} Active Coders]`,
-                  type: 'info',
-                });
-              } else if (fighterCount >= 2) {
-                if (battle.status === 'waiting') {
-                  battle.status = 'ready_check';
-                }
-                battle.feed.unshift({
-                  id: 'f-' + Date.now(),
-                  time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
-                  text: `${username} joined as challenger! Ready Check initiated. Both fighters confirm ready to begin!`,
+                  text: `👥 @${username} joined the battle! Ready check active.`,
                   type: 'info',
                 });
               } else {
                 battle.feed.unshift({
                   id: 'f-' + Date.now(),
                   time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
-                  text: `${username} entered arena. Waiting for an opponent to join...`,
+                  text: `👑 @${username} entered the lobby. Waiting for friends to join...`,
                   type: 'info',
                 });
               }
@@ -482,7 +481,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
       }
     });
 
-    // Fighter Ready Check & Match Start Countdown Lifecycle
+    // Fighter Ready Check & Readiness State
     socket.on('battle:toggle_ready', (data: { battleCode: string; isReady?: boolean }) => {
       const { battleCode, isReady } = data;
       const codeUpper = battleCode.toUpperCase();
@@ -495,52 +494,134 @@ export function setupSocketHandlers(io: SocketIOServer) {
         battle.feed.unshift({
           id: 'f-' + Date.now(),
           time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
-          text: `${battle.players[playerId].username} is ${battle.players[playerId].isReady ? 'READY' : 'NOT READY'}!`,
+          text: `🟢 ${battle.players[playerId].username} is ${battle.players[playerId].isReady ? 'READY' : 'NOT READY'}!`,
           type: 'info',
         });
 
-        const fighters = Object.values(battle.players);
-        const allReady = fighters.length >= 2 && fighters.every((p) => p.isReady);
+        persistBattle(battle);
+        io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
+        io.to(`battle:${codeUpper}`).emit('battle:state_update', battle);
+      }
+    });
 
-        if (allReady && (battle.status === 'ready_check' || battle.status === 'waiting')) {
-          battle.status = 'countdown';
-          battle.countdownSeconds = 3;
-          persistBattle(battle);
-          io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
+    // Battle Owner Starts Match (Only when invited players confirm ready)
+    socket.on('battle:start_battle', (data: { battleCode: string }) => {
+      const { battleCode } = data;
+      const codeUpper = battleCode.toUpperCase();
+      const battle = createOrGetLiveBattle(codeUpper);
+      const playerId = socket.userId || socket.id;
 
-          let count = 3;
-          const countdownInterval = setInterval(() => {
-            count -= 1;
-            battle.countdownSeconds = count;
+      if (!battle) return;
 
-            if (count > 0) {
-              io.to(`battle:${codeUpper}`).emit('battle:countdown_tick', { count });
-            } else {
-              clearInterval(countdownInterval);
-              battle.status = 'active';
-              battle.startTime = Date.now();
-              battle.endTime = Date.now() + battle.durationMinutes * 60 * 1000;
-              battle.feed.unshift({
-                id: 'f-' + Date.now(),
-                time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
-                text: battle.mode === 'battle_royale'
-                  ? `⚔️ KNOCKOUT ARENA COMMENCED! Solve benchmarks and advance through phase cutoffs!`
-                  : `⚔️ BATTLE STARTED! Coding workspace unlocked. Solve and submit first to win!`,
-                type: 'info',
-              });
-              persistBattle(battle);
-              io.to(`battle:${codeUpper}`).emit('battle:countdown_complete');
-              io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
+      const isHost = playerId === battle.hostId || Object.keys(battle.players)[0] === playerId;
+      if (!isHost) {
+        socket.emit('battle:error', { message: 'Only the lobby owner can start the battle.' });
+        return;
+      }
 
-              if (battle.mode === 'battle_royale') {
-                startBattleRoyaleStormLoop(io, codeUpper);
-              }
-            }
-          }, 1000);
+      const fighters = Object.values(battle.players);
+      const guestFighters = fighters.filter((p) => p.userId !== battle.hostId);
+
+      // In duels/arenas, require at least one guest player unless solo practice
+      if (guestFighters.length === 0 && battle.maxPlayers !== 1) {
+        socket.emit('battle:error', { message: 'Waiting for an invited friend or opponent to join before starting.' });
+        return;
+      }
+
+      // Check if all guests are ready
+      const allGuestsReady = guestFighters.every((p) => p.isReady);
+      if (!allGuestsReady) {
+        socket.emit('battle:error', { message: 'Cannot start match: all invited players must confirm READY!' });
+        return;
+      }
+
+      battle.status = 'countdown';
+      battle.countdownSeconds = 3;
+      persistBattle(battle);
+      io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
+
+      let count = 3;
+      const countdownInterval = setInterval(() => {
+        count -= 1;
+        battle.countdownSeconds = count;
+
+        if (count > 0) {
+          io.to(`battle:${codeUpper}`).emit('battle:countdown_tick', { count });
         } else {
+          clearInterval(countdownInterval);
+          battle.status = 'active';
+          battle.startTime = Date.now();
+          battle.endTime = Date.now() + battle.durationMinutes * 60 * 1000;
+          battle.feed.unshift({
+            id: 'f-' + Date.now(),
+            time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
+            text: battle.mode === 'battle_royale'
+              ? `⚔️ KNOCKOUT ARENA COMMENCED! Solve benchmarks and advance through phase cutoffs!`
+              : `⚔️ BATTLE STARTED! Coding workspace unlocked. Solve and submit first to win!`,
+            type: 'info',
+          });
           persistBattle(battle);
+          io.to(`battle:${codeUpper}`).emit('battle:countdown_complete');
           io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
+
+          if (battle.mode === 'battle_royale') {
+            startBattleRoyaleStormLoop(io, codeUpper);
+          }
         }
+      }, 1000);
+    });
+
+    // Battle Owner Kicks Player from Lobby
+    socket.on('battle:kick_player', (data: { battleCode: string; targetUserId: string }) => {
+      const { battleCode, targetUserId } = data;
+      const codeUpper = battleCode.toUpperCase();
+      const battle = createOrGetLiveBattle(codeUpper);
+      const playerId = socket.userId || socket.id;
+
+      if (!battle) return;
+
+      const isHost = playerId === battle.hostId || Object.keys(battle.players)[0] === playerId;
+      if (!isHost) {
+        socket.emit('battle:error', { message: 'Only the lobby owner can kick players.' });
+        return;
+      }
+
+      if (targetUserId === battle.hostId) {
+        socket.emit('battle:error', { message: 'The host cannot kick themselves.' });
+        return;
+      }
+
+      if (battle.players[targetUserId]) {
+        const kickedUsername = battle.players[targetUserId].username || 'Player';
+        delete battle.players[targetUserId];
+        battle.totalParticipants = Object.keys(battle.players).length;
+        battle.aliveCount = battle.totalParticipants;
+
+        battle.feed.unshift({
+          id: 'kick-' + Date.now(),
+          time: new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
+          text: `🚫 @${kickedUsername} was kicked from the lobby by the host.`,
+          type: 'info',
+        });
+
+        persistBattle(battle);
+
+        // Find sockets belonging to targetUserId and notify them
+        const socketsInRoom = io.sockets.adapter.rooms.get(`battle:${codeUpper}`);
+        if (socketsInRoom) {
+          for (const sId of socketsInRoom) {
+            const s = io.sockets.sockets.get(sId) as any;
+            if (s && ((s.userId && s.userId === targetUserId) || s.id === targetUserId)) {
+              s.emit('battle:kicked', {
+                battleCode: codeUpper,
+                reason: 'You were kicked from this lobby by the host.',
+              });
+              s.leave(`battle:${codeUpper}`);
+            }
+          }
+        }
+
+        io.to(`battle:${codeUpper}`).emit('battle:state_sync', battle);
       }
     });
 

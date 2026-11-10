@@ -247,6 +247,8 @@ router.post('/', authenticate, validate(createBattleSchema), async (req: AuthReq
         maxPlayers,
         durationMinutes: timeControl,
         status: 'waiting',
+        hostId: String(hostId),
+        creatorUsername: req.user!.username || (req.user as any)!.handle,
       });
 
       const usersMap = await populateUsersMap(room);

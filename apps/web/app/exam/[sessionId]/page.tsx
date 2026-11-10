@@ -129,6 +129,17 @@ export default function SynchronizedExamPage() {
     examSessionId: sessionId,
   });
 
+  // Automatically activate proctored mode when entering test
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search);
+      if (q.get('start') === 'true' || q.get('proctor') === 'true') {
+        setHasStarted(true);
+        startCameraAndMic().catch(() => {});
+      }
+    }
+  }, []);
+
   // Sync user's default language preference from settings (defaults to 'cpp')
   useEffect(() => {
     if (typeof window !== 'undefined') {
