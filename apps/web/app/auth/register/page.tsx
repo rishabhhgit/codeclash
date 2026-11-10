@@ -462,22 +462,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         </SpotlightCard>
-
-        {/* Value Prop Badges */}
-        <div className="grid grid-cols-3 gap-3 text-center text-xs text-muted-foreground pt-2 font-mono">
-          <div className="p-3 rounded-2xl bg-card/60 border border-border/60">
-            <span className="block text-foreground font-bold font-sans">3,600+</span>
-            <span>Problems</span>
-          </div>
-          <div className="p-3 rounded-2xl bg-card/60 border border-border/60">
-            <span className="block text-foreground font-bold font-sans">1v1 Realtime</span>
-            <span>Synchronized</span>
-          </div>
-          <div className="p-3 rounded-2xl bg-card/60 border border-border/60">
-            <span className="block text-foreground font-bold font-sans">Proctoring</span>
-            <span>AI Verified</span>
-          </div>
-        </div>
       </motion.div>
 
       <LeetCodeVerifyModal
