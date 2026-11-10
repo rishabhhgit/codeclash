@@ -74,13 +74,18 @@ const DEFAULT_HARD = 989;
 const profileCache = new Map<string, { data: LeetCodeProfileData; timestamp: number }>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-export async function fetchLeetCodeProfile(handle: string): Promise<LeetCodeProfileData | null> {
+export async function fetchLeetCodeProfile(
+  handle: string,
+  options?: { forceFresh?: boolean }
+): Promise<LeetCodeProfileData | null> {
   const cleanHandle = handle.trim();
   if (!cleanHandle) return null;
 
-  const cached = profileCache.get(cleanHandle.toLowerCase());
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
+  if (!options?.forceFresh) {
+    const cached = profileCache.get(cleanHandle.toLowerCase());
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
+    }
   }
 
   try {
@@ -204,4 +209,47 @@ export function removeFromShowcase(handle: string): boolean {
 
 export function getShowcaseHandles(): string[] {
   return Array.from(SHOWCASE_HANDLES);
+}
+
+export function invalidateProfileCache(handle: string): void {
+  profileCache.delete(handle.trim().toLowerCase());
+}
+
+export interface VerificationChallenge {
+  handle: string;
+  token: string;
+  createdAt: number;
+  expiresAt: number;
+}
+
+const activeChallenges = new Map<string, VerificationChallenge>();
+
+export function generateVerificationChallenge(handle: string): VerificationChallenge {
+  const clean = handle.trim().toLowerCase();
+  // Generate distinct readable 8-character verification string, e.g. codeclash-verify-7k9p
+  const randomSuffix = Math.random().toString(36).substring(2, 8).toLowerCase();
+  const token = `codeclash-verify-${randomSuffix}`;
+  const challenge: VerificationChallenge = {
+    handle: clean,
+    token,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+  };
+  activeChallenges.set(clean, challenge);
+  return challenge;
+}
+
+export function getVerificationChallenge(handle: string): VerificationChallenge | null {
+  const clean = handle.trim().toLowerCase();
+  const challenge = activeChallenges.get(clean);
+  if (!challenge) return null;
+  if (Date.now() > challenge.expiresAt) {
+    activeChallenges.delete(clean);
+    return null;
+  }
+  return challenge;
+}
+
+export function removeVerificationChallenge(handle: string): void {
+  activeChallenges.delete(handle.trim().toLowerCase());
 }

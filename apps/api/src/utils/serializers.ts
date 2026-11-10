@@ -32,6 +32,7 @@ export function serializeUser(user: IUser | null | undefined) {
     leetcodeGlobalRanking: user.leetcodeGlobalRanking || 0,
     leetcodeAcceptanceRate: user.leetcodeAcceptanceRate || 0,
     leetcodeSyncedAt: user.leetcodeSyncedAt || undefined,
+    leetcodeVerified: user.leetcodeVerified || false,
   };
 }
 

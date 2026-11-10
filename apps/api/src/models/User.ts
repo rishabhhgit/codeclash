@@ -30,6 +30,7 @@ export interface IUser extends Document {
   leetcodeGlobalRanking?: number;
   leetcodeAcceptanceRate?: number;
   leetcodeSyncedAt?: Date;
+  leetcodeVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,6 +65,7 @@ const userSchema = new Schema<IUser>(
     leetcodeGlobalRanking: { type: Number, default: 0 },
     leetcodeAcceptanceRate: { type: Number, default: 0 },
     leetcodeSyncedAt: { type: Date },
+    leetcodeVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

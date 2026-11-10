@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
+import LeetCodeVerifyModal from '../../../components/leetcode/LeetCodeVerifyModal';
 
 function LeetCodeBrandIcon({ className = 'size-5' }: { className?: string }) {
   return (
@@ -51,6 +52,7 @@ export default function RegisterPage() {
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
   const [previewData, setPreviewData] = useState<LeetCodePreviewData | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   // Debounced auto-preview when typing LeetCode handle
   useEffect(() => {
@@ -85,38 +87,7 @@ export default function RegisterPage() {
   const handleLeetCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handle.trim()) return;
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const res = await fetch(`${apiUrl}/api/auth/leetcode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ handle: handle.trim() }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to sign up with LeetCode handle');
-      }
-
-      if (data.data?.token) {
-        localStorage.setItem('token', data.data.token);
-      }
-      if (data.data?.user?.username) {
-        localStorage.setItem('battle_username', data.data.user.username);
-        localStorage.setItem('codeclash_handle', data.data.user.handle || data.data.user.username);
-      }
-      localStorage.setItem('codeclash_leetcode_handle', handle.trim());
-
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to connect account');
-    } finally {
-      setLoading(false);
-    }
+    setShowVerifyModal(true);
   };
 
   const handleCustomSubmit = async (e: React.FormEvent) => {
@@ -513,6 +484,15 @@ export default function RegisterPage() {
           </div>
         </div>
       </motion.div>
+
+      <LeetCodeVerifyModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        initialHandle={handle.trim()}
+        onSuccess={() => {
+          router.push('/dashboard');
+        }}
+      />
     </div>
   );
 }

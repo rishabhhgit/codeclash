@@ -25,6 +25,7 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
+import LeetCodeVerifyModal from '../../components/leetcode/LeetCodeVerifyModal';
 
 function LeetCodeBrandIcon({ className = 'size-4' }: { className?: string }) {
   return (
@@ -75,12 +76,8 @@ export default function DashboardPage() {
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [practicedCount, setPracticedCount] = useState(0);
 
-  // Sync / Connect Modal
+  // LeetCode Ownership Verification Modal
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const [isChangingHandle, setIsChangingHandle] = useState(false);
-  const [connectLcInput, setConnectLcInput] = useState('');
-  const [connectingLc, setConnectingLc] = useState(false);
-  const [connectError, setConnectError] = useState('');
 
   useEffect(() => {
     const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || 'guest-token';
@@ -138,7 +135,8 @@ export default function DashboardPage() {
 
   const handleSyncLeetCode = async () => {
     const handle = user?.leetcodeUsername;
-    if (!handle) {
+    const isVerified = user?.leetcodeVerified;
+    if (!handle || !isVerified) {
       setShowSyncModal(true);
       return;
     }
@@ -147,70 +145,27 @@ export default function DashboardPage() {
     setSyncFeedback(null);
 
     try {
+      const token = (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || '';
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const res = await fetch(`${apiUrl}/api/auth/leetcode`, {
+      const res = await fetch(`${apiUrl}/api/auth/leetcode/sync`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ handle }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
       if (data.success && data.data?.user) {
         setUser(data.data.user);
         setSyncFeedback('Metrics synced from LeetCode');
         setTimeout(() => setSyncFeedback(null), 3000);
+      } else {
+        setShowSyncModal(true);
       }
     } catch {
-      // Ignored
+      setShowSyncModal(true);
     } finally {
       setSyncingLeetCode(false);
-    }
-  };
-
-  const handleConnectLeetCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    let handle = connectLcInput.trim();
-    if (!handle) return;
-
-    if (handle.includes('/u/')) {
-      const match = handle.match(/\/u\/([^/?#]+)/);
-      if (match) handle = match[1];
-    }
-    handle = handle.replace(/^@/, '');
-
-    setConnectingLc(true);
-    setConnectError('');
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const res = await fetch(`${apiUrl}/api/auth/leetcode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ handle }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to connect LeetCode handle');
-      }
-
-      if (data.data?.token) {
-        localStorage.setItem('token', data.data.token);
-      }
-      if (data.data?.user) {
-        setUser(data.data.user);
-        localStorage.setItem('battle_username', data.data.user.username);
-        localStorage.setItem('codeclash_handle', data.data.user.handle || data.data.user.username);
-      }
-      localStorage.setItem('codeclash_leetcode_handle', handle);
-      setIsChangingHandle(false);
-      setShowSyncModal(false);
-      setConnectLcInput('');
-      setSyncFeedback('LeetCode handle connected');
-      setTimeout(() => setSyncFeedback(null), 3000);
-    } catch (err: any) {
-      setConnectError(err?.message || 'Failed to connect handle');
-    } finally {
-      setConnectingLc(false);
     }
   };
 
@@ -278,191 +233,22 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      {/* Comprehensive LeetCode Profile Sync Inspector Modal */}
-      <AnimatePresence>
-        {showSyncModal && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ scale: 0.98, opacity: 0, y: 6 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.98, opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
-              className="w-full max-w-md p-5 sm:p-6 rounded-xl bg-card border border-border shadow-xl space-y-4"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="size-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground">
-                    <LeetCodeBrandIcon className="size-4 text-amber-500" />
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">LeetCode profile sync</h3>
-                    <p className="text-xs text-muted-foreground">Synchronized with LeetCode GraphQL</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowSyncModal(false);
-                    setIsChangingHandle(false);
-                    setConnectError('');
-                  }}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-
-              {connectError && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{connectError}</span>
-                </div>
-              )}
-
-              {/* Already Connected View */}
-              {user?.leetcodeUsername && !isChangingHandle ? (
-                <div className="space-y-4 pt-1">
-                  {/* Connected Account Card */}
-                  <div className="p-3.5 rounded-lg bg-background border border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="size-10 rounded-lg bg-secondary border border-border overflow-hidden shrink-0 flex items-center justify-center">
-                        {user.leetcodeAvatar || user.avatar ? (
-                          <img
-                            src={user.leetcodeAvatar || user.avatar}
-                            alt={user.leetcodeUsername}
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <User className="size-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-foreground truncate">
-                          @{user.leetcodeUsername}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <span className="size-1.5 rounded-full bg-emerald-500" />
-                          <span>Connected &amp; verified</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <a
-                      href={`https://leetcode.com/u/${user.leetcodeUsername}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                      title="Open LeetCode profile"
-                    >
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  </div>
-
-                  {/* Solved Distribution Stats */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-muted-foreground">Questions solved</span>
-                      <span className="text-foreground font-semibold tabular-nums">
-                        {totalSolved} / {totalTarget}
-                      </span>
-                    </div>
-
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
-                      <div style={{ width: `${easyPct}%` }} className="bg-emerald-500 h-full" />
-                      <div style={{ width: `${medPct}%` }} className="bg-amber-500 h-full" />
-                      <div style={{ width: `${hardPct}%` }} className="bg-rose-500 h-full" />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono text-xs">
-                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
-                        <div className="text-[10px] text-emerald-500 font-medium">Easy</div>
-                        <div className="text-foreground font-semibold tabular-nums">{easySolved}</div>
-                      </div>
-                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
-                        <div className="text-[10px] text-amber-500 font-medium">Medium</div>
-                        <div className="text-foreground font-semibold tabular-nums">{medSolved}</div>
-                      </div>
-                      <div className="p-2 rounded-lg bg-background border border-border space-y-0.5">
-                        <div className="text-[10px] text-rose-500 font-medium">Hard</div>
-                        <div className="text-foreground font-semibold tabular-nums">{hardSolved}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sync Actions */}
-                  <div className="pt-2 flex items-center justify-between gap-2 border-t border-border/70">
-                    <button
-                      type="button"
-                      onClick={() => setIsChangingHandle(true)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
-                    >
-                      Change handle
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await handleSyncLeetCode();
-                        setShowSyncModal(false);
-                      }}
-                      disabled={syncingLeetCode}
-                      className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-40"
-                    >
-                      <RefreshCw className={`size-3.5 ${syncingLeetCode ? 'animate-spin' : ''}`} />
-                      <span>{syncingLeetCode ? 'Syncing...' : 'Sync now'}</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Connect / Change Handle Form */
-                <form onSubmit={handleConnectLeetCode} className="space-y-4 pt-1">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-mono text-muted-foreground block">
-                      LeetCode username
-                    </label>
-                    <input
-                      type="text"
-                      value={connectLcInput}
-                      onChange={(e) => setConnectLcInput(e.target.value)}
-                      required
-                      autoFocus
-                      placeholder="e.g. rishabhh-dev"
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/40 transition-colors"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/70">
-                    {user?.leetcodeUsername && (
-                      <button
-                        type="button"
-                        onClick={() => setIsChangingHandle(false)}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
-                      >
-                        Back
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={connectingLc || !connectLcInput.trim()}
-                      className="ml-auto px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-40"
-                    >
-                      {connectingLc ? (
-                        <>
-                          <RefreshCw className="size-3.5 animate-spin" />
-                          <span>Connecting...</span>
-                        </>
-                      ) : (
-                        <span>Verify &amp; sync</span>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Authoritative LeetCode Profile Ownership Verification Modal */}
+      <LeetCodeVerifyModal
+        isOpen={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
+        currentUser={user}
+        onSuccess={(updatedUser) => {
+          setUser(updatedUser);
+          setSyncFeedback('LeetCode profile ownership verified & authenticated');
+          setTimeout(() => setSyncFeedback(null), 3500);
+        }}
+        onSyncComplete={(updatedUser) => {
+          setUser(updatedUser);
+          setSyncFeedback('Metrics synced from LeetCode');
+          setTimeout(() => setSyncFeedback(null), 3000);
+        }}
+      />
 
       <motion.div
         variants={containerVariants}
@@ -506,7 +292,10 @@ export default function DashboardPage() {
                     >
                       <LeetCodeBrandIcon className="size-3 text-amber-500" />
                       <span>@{user.leetcodeUsername}</span>
-                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      <span className={`size-1.5 rounded-full ${user.leetcodeVerified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      <span className="text-[10px] text-muted-foreground font-sans">
+                        {user.leetcodeVerified ? 'Verified' : 'Unverified'}
+                      </span>
                     </button>
                   ) : (
                     <button
@@ -670,8 +459,8 @@ export default function DashboardPage() {
                 <span>LeetCode solved</span>
               </span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-foreground flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                <span>{user?.leetcodeUsername ? 'Synced' : 'Connect'}</span>
+                <span className={`size-1.5 rounded-full ${user?.leetcodeVerified ? 'bg-emerald-500' : user?.leetcodeUsername ? 'bg-amber-500' : 'bg-muted-foreground'}`} />
+                <span>{user?.leetcodeVerified ? 'Verified' : user?.leetcodeUsername ? 'Unverified' : 'Connect'}</span>
               </span>
             </div>
 

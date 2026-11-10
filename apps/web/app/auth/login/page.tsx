@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
+import LeetCodeVerifyModal from '../../../components/leetcode/LeetCodeVerifyModal';
 
 function LeetCodeBrandIcon({ className = 'size-5' }: { className?: string }) {
   return (
@@ -31,6 +32,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   useEffect(() => {
     if (method !== 'leetcode' || handle.trim().length < 3) {
@@ -60,12 +62,17 @@ export default function LoginPage() {
     e.preventDefault();
     if (!handle.trim()) return;
 
+    if (method === 'leetcode') {
+      setShowVerifyModal(true);
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const endpoint = method === 'leetcode' ? `${apiUrl}/api/auth/leetcode` : `${apiUrl}/api/auth/login`;
+      const endpoint = `${apiUrl}/api/auth/login`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -85,9 +92,6 @@ export default function LoginPage() {
       if (data.data?.user?.username) {
         localStorage.setItem('battle_username', data.data.user.username);
         localStorage.setItem('codeclash_handle', data.data.user.handle || data.data.user.username);
-      }
-      if (method === 'leetcode') {
-        localStorage.setItem('codeclash_leetcode_handle', handle.trim());
       }
 
       router.push('/dashboard');
@@ -265,6 +269,15 @@ export default function LoginPage() {
           </p>
         </SpotlightCard>
       </motion.div>
+
+      <LeetCodeVerifyModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        initialHandle={handle.trim()}
+        onSuccess={() => {
+          router.push('/dashboard');
+        }}
+      />
     </div>
   );
 }

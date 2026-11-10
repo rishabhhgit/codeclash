@@ -5,7 +5,14 @@ import { User } from '../../models/User';
 import { authenticate, generateToken, AuthRequest, DEFAULT_GUEST_USER, inMemoryUsers } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { getUserInfo, getUserRating } from '../../services/competitive';
-import { fetchLeetCodeProfile, addToShowcase } from '../../services/leetcode.service';
+import {
+  fetchLeetCodeProfile,
+  addToShowcase,
+  generateVerificationChallenge,
+  getVerificationChallenge,
+  removeVerificationChallenge,
+  invalidateProfileCache,
+} from '../../services/leetcode.service';
 import { serializeUser } from '../../utils/serializers';
 import { getRankFromRating } from '@codeclash/shared';
 
@@ -47,20 +54,96 @@ router.get('/leetcode/preview/:handle', async (req, res) => {
   }
 });
 
-// Sign up / sign in with LeetCode handle
-router.post('/leetcode', async (req, res) => {
+// 1. Generate challenge verification code for LeetCode profile ownership
+router.post('/leetcode/challenge', async (req, res) => {
   try {
     const rawHandle = req.body?.handle || req.body?.leetcodeHandle;
-    const cleanHandle = String(rawHandle || '').trim();
+    const cleanHandle = String(rawHandle || '').trim().replace(/^@/, '');
 
     if (!cleanHandle || cleanHandle.length < 2) {
       return res.status(400).json({ success: false, error: 'A valid LeetCode handle is required' });
     }
 
-    // Attempt to fetch public LeetCode stats
-    const lcProfile = await fetchLeetCodeProfile(cleanHandle);
-    const officialUsername = lcProfile?.exists ? lcProfile.username : cleanHandle;
-    const normalizedHandle = cleanHandle.toLowerCase();
+    // Fresh lookup from LeetCode GraphQL
+    const lcProfile = await fetchLeetCodeProfile(cleanHandle, { forceFresh: true });
+    if (!lcProfile || !lcProfile.exists) {
+      return res.status(404).json({
+        success: false,
+        error: `LeetCode profile "${cleanHandle}" was not found or is private`,
+      });
+    }
+
+    const challenge = generateVerificationChallenge(lcProfile.username);
+
+    return res.json({
+      success: true,
+      message: 'Verification challenge generated',
+      data: {
+        handle: lcProfile.username,
+        verificationCode: challenge.token,
+        profileSettingsUrl: 'https://leetcode.com/profile/',
+        publicProfileUrl: `https://leetcode.com/u/${lcProfile.username}/`,
+        currentAboutMe: lcProfile.aboutMe || '',
+        expiresAt: challenge.expiresAt,
+        instructions: `Add the string "${challenge.token}" to your LeetCode profile 'About Me' at https://leetcode.com/profile/, save changes, and click 'Verify Ownership'.`,
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to generate verification challenge',
+    });
+  }
+});
+
+// 2. Authenticate profile ownership via LeetCode 'About Me' string and log in user
+router.post('/leetcode/verify', async (req, res) => {
+  try {
+    const rawHandle = req.body?.handle || req.body?.leetcodeHandle;
+    const cleanHandle = String(rawHandle || '').trim().replace(/^@/, '');
+
+    if (!cleanHandle) {
+      return res.status(400).json({ success: false, error: 'A valid LeetCode handle is required' });
+    }
+
+    const challenge = getVerificationChallenge(cleanHandle);
+    if (!challenge) {
+      return res.status(400).json({
+        success: false,
+        error: 'No active verification challenge found or challenge has expired (15 min limit). Please generate a new challenge code.',
+      });
+    }
+
+    // Force fresh fetch from LeetCode GraphQL without cache
+    invalidateProfileCache(cleanHandle);
+    const lcProfile = await fetchLeetCodeProfile(cleanHandle, { forceFresh: true });
+
+    if (!lcProfile || !lcProfile.exists) {
+      return res.status(404).json({
+        success: false,
+        error: `LeetCode profile "${cleanHandle}" was not found or is private`,
+      });
+    }
+
+    const currentAboutMe = lcProfile.aboutMe || '';
+    const hasToken = currentAboutMe.toLowerCase().includes(challenge.token.toLowerCase());
+
+    if (!hasToken) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: `Verification string "${challenge.token}" was not found in your LeetCode About Me.`,
+        expectedCode: challenge.token,
+        currentAboutMe: currentAboutMe || '(empty bio)',
+        profileSettingsUrl: 'https://leetcode.com/profile/',
+      });
+    }
+
+    // Challenge verified! Remove it
+    removeVerificationChallenge(cleanHandle);
+
+    const officialUsername = lcProfile.username;
+    const normalizedHandle = officialUsername.toLowerCase();
 
     // Determine initial Elo rating from LeetCode contest rating or solve counts
     let initialRating = 1500;
@@ -73,7 +156,180 @@ router.post('/leetcode', async (req, res) => {
     const rank = getRankFromRating(initialRating);
     const avatar =
       lcProfile?.avatar ||
-      `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanHandle}`;
+      `https://api.dicebear.com/7.x/bottts/svg?seed=${officialUsername}`;
+
+    let user: any = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        user = await User.findOne({
+          $or: [
+            { handle: normalizedHandle },
+            { leetcodeUsername: officialUsername },
+          ],
+        });
+
+        if (user) {
+          user.leetcodeUsername = officialUsername;
+          user.leetcodeVerified = true;
+          if (lcProfile.avatar) user.avatar = lcProfile.avatar;
+          user.leetcodeAvatar = lcProfile.avatar;
+          user.leetcodeTotalSolved = lcProfile.totalSolved;
+          user.leetcodeEasySolved = lcProfile.easySolved;
+          user.leetcodeMediumSolved = lcProfile.mediumSolved;
+          user.leetcodeHardSolved = lcProfile.hardSolved;
+          user.leetcodeContestRating = lcProfile.contestRating || 0;
+          user.leetcodeGlobalRanking = lcProfile.globalRanking || 0;
+          user.leetcodeSyncedAt = new Date();
+          if (lcProfile.contestRating && lcProfile.contestRating > user.maxRating) {
+            user.maxRating = lcProfile.contestRating;
+          }
+          await user.save();
+        } else {
+          user = await User.create({
+            handle: normalizedHandle,
+            username: officialUsername,
+            avatar,
+            rating: initialRating,
+            maxRating: initialRating,
+            rank,
+            bio: lcProfile?.aboutMe || `LeetCode Verified Challenger [${officialUsername}]`,
+            leetcodeUsername: officialUsername,
+            leetcodeAvatar: lcProfile?.avatar || avatar,
+            leetcodeTotalSolved: lcProfile?.totalSolved || 0,
+            leetcodeEasySolved: lcProfile?.easySolved || 0,
+            leetcodeMediumSolved: lcProfile?.mediumSolved || 0,
+            leetcodeHardSolved: lcProfile?.hardSolved || 0,
+            leetcodeContestRating: lcProfile?.contestRating || 0,
+            leetcodeGlobalRanking: lcProfile?.globalRanking || 0,
+            leetcodeSyncedAt: new Date(),
+            leetcodeVerified: true,
+          });
+        }
+      } catch (dbErr) {
+        // Fallback to memory user
+      }
+    }
+
+    if (!user) {
+      user = {
+        ...DEFAULT_GUEST_USER,
+        handle: normalizedHandle,
+        username: officialUsername,
+        avatar,
+        rating: initialRating,
+        maxRating: initialRating,
+        rank,
+        leetcodeUsername: officialUsername,
+        leetcodeAvatar: lcProfile?.avatar || avatar,
+        leetcodeTotalSolved: lcProfile?.totalSolved || 0,
+        leetcodeEasySolved: lcProfile?.easySolved || 0,
+        leetcodeMediumSolved: lcProfile?.mediumSolved || 0,
+        leetcodeHardSolved: lcProfile?.hardSolved || 0,
+        leetcodeContestRating: lcProfile?.contestRating || 0,
+        leetcodeGlobalRanking: lcProfile?.globalRanking || 0,
+        leetcodeSyncedAt: new Date(),
+        leetcodeVerified: true,
+      };
+    }
+
+    if (user) {
+      if (user._id) inMemoryUsers.set(user._id.toString(), user);
+      if (user.handle) inMemoryUsers.set(user.handle.toLowerCase(), user);
+      if (user.leetcodeUsername) {
+        inMemoryUsers.set(user.leetcodeUsername.toLowerCase(), user);
+        addToShowcase(user.leetcodeUsername);
+      }
+    }
+
+    const token = generateToken(user);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: `Ownership of @${officialUsername} successfully verified! You are now authenticated.`,
+      data: {
+        token,
+        user: serializeUser(user),
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to authenticate LeetCode ownership',
+    });
+  }
+});
+
+// 3. Refresh solve stats for an already authenticated user
+router.post('/leetcode/sync', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user || !user.leetcodeUsername) {
+      return res.status(400).json({ success: false, error: 'No LeetCode profile linked to this account' });
+    }
+
+    invalidateProfileCache(user.leetcodeUsername);
+    const lcProfile = await fetchLeetCodeProfile(user.leetcodeUsername, { forceFresh: true });
+
+    if (lcProfile?.exists) {
+      user.leetcodeTotalSolved = lcProfile.totalSolved;
+      user.leetcodeEasySolved = lcProfile.easySolved;
+      user.leetcodeMediumSolved = lcProfile.mediumSolved;
+      user.leetcodeHardSolved = lcProfile.hardSolved;
+      user.leetcodeContestRating = lcProfile.contestRating || user.leetcodeContestRating || 0;
+      user.leetcodeGlobalRanking = lcProfile.globalRanking || user.leetcodeGlobalRanking || 0;
+      user.leetcodeSyncedAt = new Date();
+      if (lcProfile.avatar) user.leetcodeAvatar = lcProfile.avatar;
+
+      if (typeof (user as any).save === 'function') {
+        try {
+          await (user as any).save();
+        } catch {}
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'LeetCode solve metrics refreshed',
+      data: {
+        user: serializeUser(user),
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to sync stats' });
+  }
+});
+
+// Legacy / Direct Sync fallback for backward compatibility
+router.post('/leetcode', async (req, res) => {
+  try {
+    const rawHandle = req.body?.handle || req.body?.leetcodeHandle;
+    const cleanHandle = String(rawHandle || '').trim().replace(/^@/, '');
+
+    if (!cleanHandle || cleanHandle.length < 2) {
+      return res.status(400).json({ success: false, error: 'A valid LeetCode handle is required' });
+    }
+
+    invalidateProfileCache(cleanHandle);
+    const lcProfile = await fetchLeetCodeProfile(cleanHandle, { forceFresh: true });
+    const officialUsername = lcProfile?.exists ? lcProfile.username : cleanHandle;
+    const normalizedHandle = cleanHandle.toLowerCase();
+
+    let initialRating = 1500;
+    if (lcProfile?.contestRating && lcProfile.contestRating > 0) {
+      initialRating = lcProfile.contestRating;
+    } else if (lcProfile?.totalSolved && lcProfile.totalSolved > 0) {
+      initialRating = Math.min(2400, 1300 + Math.floor(lcProfile.totalSolved * 1.5));
+    }
+
+    const rank = getRankFromRating(initialRating);
+    const avatar = lcProfile?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanHandle}`;
 
     let user: any = null;
     if (mongoose.connection.readyState === 1) {
@@ -86,7 +342,6 @@ router.post('/leetcode', async (req, res) => {
         });
 
         if (user) {
-          // Update existing user with latest LeetCode stats
           user.leetcodeUsername = officialUsername;
           if (lcProfile?.avatar) user.avatar = lcProfile.avatar;
           if (lcProfile?.exists) {
@@ -104,7 +359,6 @@ router.post('/leetcode', async (req, res) => {
           }
           await user.save();
         } else {
-          // Create new user with LeetCode identity
           user = await User.create({
             handle: normalizedHandle,
             username: officialUsername,
@@ -171,17 +425,12 @@ router.post('/leetcode', async (req, res) => {
     return res.json({
       success: true,
       data: {
-        user: serializeUser(user),
         token,
-        verifiedLeetcode: !!lcProfile?.exists,
-        profile: lcProfile || null,
+        user: serializeUser(user),
       },
     });
   } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      error: error?.message || 'Failed to sign in with LeetCode',
-    });
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to authenticate handle' });
   }
 });
 
