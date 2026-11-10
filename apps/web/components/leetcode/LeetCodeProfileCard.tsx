@@ -12,6 +12,7 @@ import {
   Trophy,
   Trash2,
 } from 'lucide-react';
+import ChallengeInviteModal from './ChallengeInviteModal';
 
 export interface LeetCodeCardData {
   username: string;
@@ -39,12 +40,15 @@ export interface LeetCodeCardData {
 export default function LeetCodeProfileCard({
   data,
   onRemove,
+  onChallenge,
 }: {
   data: LeetCodeCardData;
   onRemove?: (username: string) => void;
+  onChallenge?: (data: LeetCodeCardData) => void;
 }) {
   const [imgError, setImgError] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const fallbackAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
     data.username
@@ -242,13 +246,20 @@ export default function LeetCodeProfileCard({
 
       {/* Bottom Action Footer */}
       <div className="pt-2 flex items-center gap-2 border-t border-border/60">
-        <Link
-          href={`/battle/create?opponent=${encodeURIComponent(data.username)}`}
+        <button
+          type="button"
+          onClick={() => {
+            if (onChallenge) {
+              onChallenge(data);
+            } else {
+              setShowInviteModal(true);
+            }
+          }}
           className="flex-1 py-2 px-3 rounded-lg bg-primary text-primary-foreground font-medium text-xs hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
         >
           <Swords className="size-3.5" />
-          <span>Challenge 1v1</span>
-        </Link>
+          <span>Invite to Duel</span>
+        </button>
 
         <a
           href={`https://leetcode.com/u/${data.username}/`}
@@ -260,6 +271,12 @@ export default function LeetCodeProfileCard({
           <ExternalLink className="size-3.5" />
         </a>
       </div>
+
+      <ChallengeInviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        opponent={data}
+      />
     </div>
   );
 }
