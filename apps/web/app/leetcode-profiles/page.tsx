@@ -159,11 +159,6 @@ export default function LeetCodeProfilesPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Hero Section */}
         <div className="space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary border border-border text-xs font-mono text-muted-foreground">
-            <LeetCodeBrandIcon className="size-3.5 text-amber-500" />
-            <span>LeetCode verified combatants</span>
-          </div>
-
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground leading-[1.15]">
             LeetCode Hall of Fame
           </h1>
