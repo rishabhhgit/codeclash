@@ -150,10 +150,6 @@ export default function LobbyPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Match Lobby
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live Servers
-            </span>
           </div>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1 max-w-xl">
             Join an open arena or spectate ongoing duels in real time.
