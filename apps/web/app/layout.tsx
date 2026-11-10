@@ -67,6 +67,13 @@ export default function RootLayout({
                     >
                       Leaderboard
                     </Link>
+                    <Link
+                      href="/leetcode-profiles"
+                      className="px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors duration-150 active:scale-[0.96] flex items-center gap-1.5"
+                    >
+                      <span className="size-1.5 rounded-full bg-amber-400" />
+                      <span>Profiles</span>
+                    </Link>
                   </nav>
                 </div>
 

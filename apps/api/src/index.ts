@@ -15,6 +15,7 @@ import { problemsRouter } from './modules/problems/problems.routes';
 import { rankingRouter } from './modules/ranking/ranking.routes';
 import { matchmakingRouter } from './modules/matchmaking/matchmaking.routes';
 import { adminRouter } from './modules/admin/admin.routes';
+import { leetcodeRouter } from './modules/leetcode/leetcode.routes';
 import { setupSocketHandlers } from './socket';
 
 const app = express();
@@ -101,6 +102,7 @@ app.use('/api/problems', problemsRouter);
 app.use('/api/rankings', rankingRouter);
 app.use('/api/matchmaking', matchmakingRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/leetcode', leetcodeRouter);
 
 // Socket.IO handlers
 setupSocketHandlers(io);

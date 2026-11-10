@@ -8,23 +8,45 @@ export interface LeetCodeProfileData {
   easySolved: number;
   mediumSolved: number;
   hardSolved: number;
+  totalQuestions: number;
+  easyTotal: number;
+  mediumTotal: number;
+  hardTotal: number;
   contestRating?: number;
   globalRanking?: number;
   topPercentage?: number;
   aboutMe?: string;
+  githubUrl?: string;
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  websiteUrl?: string;
+  countryName?: string;
+  company?: string;
+  school?: string;
 }
 
 const LEETCODE_GRAPHQL_ENDPOINT = 'https://leetcode.com/graphql';
 
-const LEETCODE_USER_QUERY = `
-query getLeetCodeUserData($username: String!) {
+const LEETCODE_EXTENDED_USER_QUERY = `
+query getExtendedData($username: String!) {
+  allQuestionsCount {
+    difficulty
+    count
+  }
   matchedUser(username: $username) {
     username
+    githubUrl
+    twitterUrl
+    linkedinUrl
     profile {
       realName
       userAvatar
       ranking
       aboutMe
+      countryName
+      company
+      school
+      websites
     }
     submitStatsGlobal {
       acSubmissionNum {
@@ -42,23 +64,38 @@ query getLeetCodeUserData($username: String!) {
 }
 `;
 
+// Initial default question counts if external query fails
+const DEFAULT_TOTAL = 4110;
+const DEFAULT_EASY = 975;
+const DEFAULT_MEDIUM = 2146;
+const DEFAULT_HARD = 989;
+
+// In-memory cache for profiles
+const profileCache = new Map<string, { data: LeetCodeProfileData; timestamp: number }>();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
 export async function fetchLeetCodeProfile(handle: string): Promise<LeetCodeProfileData | null> {
   const cleanHandle = handle.trim();
   if (!cleanHandle) return null;
 
+  const cached = profileCache.get(cleanHandle.toLowerCase());
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(LEETCODE_GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Referer': 'https://leetcode.com',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Referer': `https://leetcode.com/u/${cleanHandle}/`,
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       },
       body: JSON.stringify({
-        query: LEETCODE_USER_QUERY,
+        query: LEETCODE_EXTENDED_USER_QUERY,
         variables: { username: cleanHandle },
       }),
       signal: controller.signal,
@@ -74,22 +111,33 @@ export async function fetchLeetCodeProfile(handle: string): Promise<LeetCodeProf
     const matchedUser = payload?.data?.matchedUser;
 
     if (!matchedUser) {
-      return {
+      const fallback: LeetCodeProfileData = {
         exists: false,
         username: cleanHandle,
         totalSolved: 0,
         easySolved: 0,
         mediumSolved: 0,
         hardSolved: 0,
+        totalQuestions: DEFAULT_TOTAL,
+        easyTotal: DEFAULT_EASY,
+        mediumTotal: DEFAULT_MEDIUM,
+        hardTotal: DEFAULT_HARD,
       };
+      return fallback;
     }
 
     const contestRanking = payload?.data?.userContestRanking;
     const acSubmissions = matchedUser?.submitStatsGlobal?.acSubmissionNum || [];
+    const allQuestions = payload?.data?.allQuestionsCount || [];
 
     const getCount = (diff: string) => {
       const item = acSubmissions.find((s: any) => s.difficulty?.toLowerCase() === diff.toLowerCase());
       return item?.count || 0;
+    };
+
+    const getTotal = (diff: string, defaultVal: number) => {
+      const item = allQuestions.find((s: any) => s.difficulty?.toLowerCase() === diff.toLowerCase());
+      return item?.count || defaultVal;
     };
 
     const easySolved = getCount('easy');
@@ -97,23 +145,64 @@ export async function fetchLeetCodeProfile(handle: string): Promise<LeetCodeProf
     const hardSolved = getCount('hard');
     const totalSolved = getCount('all') || easySolved + mediumSolved + hardSolved;
 
-    return {
+    const easyTotal = getTotal('easy', DEFAULT_EASY);
+    const mediumTotal = getTotal('medium', DEFAULT_MEDIUM);
+    const hardTotal = getTotal('hard', DEFAULT_HARD);
+    const totalQuestions = getTotal('all', DEFAULT_TOTAL);
+
+    const websites = matchedUser.profile?.websites || [];
+    const websiteUrl = websites.length > 0 ? websites[0] : undefined;
+
+    const profileData: LeetCodeProfileData = {
       exists: true,
       username: matchedUser.username || cleanHandle,
       realName: matchedUser.profile?.realName || undefined,
       avatar: matchedUser.profile?.userAvatar || undefined,
       ranking: matchedUser.profile?.ranking || undefined,
       aboutMe: matchedUser.profile?.aboutMe || undefined,
+      githubUrl: matchedUser.githubUrl || undefined,
+      twitterUrl: matchedUser.twitterUrl || undefined,
+      linkedinUrl: matchedUser.linkedinUrl || undefined,
+      websiteUrl,
+      countryName: matchedUser.profile?.countryName || undefined,
+      company: matchedUser.profile?.company || undefined,
+      school: matchedUser.profile?.school || undefined,
       totalSolved,
       easySolved,
       mediumSolved,
       hardSolved,
+      totalQuestions,
+      easyTotal,
+      mediumTotal,
+      hardTotal,
       contestRating: contestRanking?.rating ? Math.round(contestRanking.rating) : undefined,
       globalRanking: contestRanking?.globalRanking || undefined,
       topPercentage: contestRanking?.topPercentage || undefined,
     };
+
+    profileCache.set(cleanHandle.toLowerCase(), { data: profileData, timestamp: Date.now() });
+    return profileData;
   } catch (err) {
-    // Return null on network abort / timeout
     return null;
   }
+}
+
+// Default community showcase profiles
+export const SHOWCASE_HANDLES = new Set<string>([
+  'neal_wu',
+  'druv_kotwani',
+  'lee215',
+  'tourist',
+  'StefanPochmann',
+]);
+
+export function addToShowcase(handle: string): boolean {
+  const clean = handle.trim().toLowerCase();
+  if (clean.length < 2) return false;
+  SHOWCASE_HANDLES.add(clean);
+  return true;
+}
+
+export function getShowcaseHandles(): string[] {
+  return Array.from(SHOWCASE_HANDLES);
 }
