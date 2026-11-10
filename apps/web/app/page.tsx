@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { getApiUrl } from '../lib/api';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
-import { LiveDuelVisualizer } from '../components/home/LiveDuelVisualizer';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -125,183 +124,168 @@ export default function Home() {
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] bg-background text-foreground flex flex-col">
-      {/* Hero Section */}
-      <section className="border-b border-border/80 relative overflow-hidden">
+      {/* Centered Hero Section */}
+      <section className="border-b border-border/80 relative overflow-hidden py-14 md:py-20">
         {/* Subtle Ambient Background Glows */}
-        <div className="absolute top-0 left-1/4 size-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute top-1/3 right-1/4 size-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/3 size-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-1/2 right-1/3 size-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="container mx-auto px-4 py-10 md:py-16 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            
-            {/* Left: Value Proposition and Quick Matchmaking */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="lg:col-span-7 space-y-6"
-            >
-              <motion.div variants={itemVariants} className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/80 bg-card/60 text-xs font-mono text-muted-foreground shadow-sm">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-semibold text-foreground">Live Season 1</span>
-                  <span className="text-muted-foreground/60">&bull;</span>
-                  <span>Instant Matchmaking</span>
-                </div>
+        <div className="container mx-auto px-4 max-w-4xl">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center space-y-6 max-w-3xl mx-auto"
+          >
+            <motion.div variants={itemVariants} className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/80 bg-card/60 text-xs font-mono text-muted-foreground shadow-sm">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-semibold text-foreground">Live Season 1</span>
+                <span className="text-muted-foreground/60">&bull;</span>
+                <span>Instant Matchmaking</span>
+              </div>
 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-[1.12]">
-                  Multiplayer coding duels.
-                </h1>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+                Multiplayer coding duels.
+              </h1>
 
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl">
-                  Two programmers get the same problem. Timers start together. First to pass all hidden benchmarks wins the match and claims Elo rating points.
-                </p>
-              </motion.div>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                Two programmers get the same problem. Timers start together. First to pass all hidden benchmarks wins the match and claims Elo rating points.
+              </p>
+            </motion.div>
 
-              {/* Match Mode Selection Pills */}
-              <motion.div variants={itemVariants} className="space-y-2.5 pt-1">
-                <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
-                  <span>Select Game Mode</span>
-                  <span>No account required</span>
-                </div>
+            {/* Match Mode Selection Pills */}
+            <motion.div variants={itemVariants} className="space-y-3 pt-2 max-w-xl mx-auto">
+              <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-1">
+                <span>Select Game Mode</span>
+                <span>No sign-up required</span>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setActiveMode('ranked')}
-                    className={`p-3 rounded-xl border text-left transition-all relative ${
-                      activeMode === 'ranked'
-                        ? 'border-primary bg-primary/10 shadow-sm'
-                        : 'border-border bg-card hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-foreground">Ranked</span>
-                      <Swords className={`size-3.5 ${activeMode === 'ranked' ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground font-mono">10 min &bull; Elo match</div>
-                  </motion.button>
-
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setActiveMode('blitz')}
-                    className={`p-3 rounded-xl border text-left transition-all relative ${
-                      activeMode === 'blitz'
-                        ? 'border-amber-500 bg-amber-500/10 shadow-sm'
-                        : 'border-border bg-card hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-foreground">Blitz</span>
-                      <Zap className={`size-3.5 ${activeMode === 'blitz' ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground font-mono">5 min &bull; Speed race</div>
-                  </motion.button>
-
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setActiveMode('knockout')}
-                    className={`p-3 rounded-xl border text-left transition-all relative ${
-                      activeMode === 'knockout'
-                        ? 'border-orange-500 bg-orange-500/10 shadow-sm'
-                        : 'border-border bg-card hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-foreground">Knockout</span>
-                      <Flame className={`size-3.5 ${activeMode === 'knockout' ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground font-mono">10 players &bull; Royal</div>
-                  </motion.button>
-                </div>
-
-                {/* Primary CTA */}
-                <div className="pt-1">
-                  <Link
-                    href={
-                      activeMode === 'ranked'
-                        ? '/matchmaking?mode=ranked&difficulty=medium'
-                        : activeMode === 'blitz'
-                        ? '/matchmaking?mode=quick&difficulty=easy'
-                        : '/battle/create?mode=battle_royale'
-                    }
-                    className="w-full py-3 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
-                  >
-                    <Play className="size-4 fill-current" />
-                    <span>
-                      {activeMode === 'ranked'
-                        ? 'Find Ranked Match'
-                        : activeMode === 'blitz'
-                        ? 'Start Blitz Race'
-                        : 'Launch Knockout Battle'}
-                    </span>
-                    <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </motion.div>
-
-              {/* Inline Room Code Input & Direct Duel */}
-              <motion.div variants={itemVariants} className="pt-2 border-t border-border/70 space-y-2">
-                <form onSubmit={handleJoinByCode} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <div className="relative flex-1">
-                    <Hash className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={roomCode}
-                      onChange={(e) => setRoomCode(e.target.value)}
-                      placeholder="Enter room code or link..."
-                      className="w-full pl-8 pr-3 py-2 rounded-xl bg-card border border-border text-xs font-mono uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                    />
+              <div className="grid grid-cols-3 gap-2.5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setActiveMode('ranked')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative ${
+                    activeMode === 'ranked'
+                      ? 'border-primary bg-primary/10 shadow-sm'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-foreground">Ranked</span>
+                    <Swords className={`size-3.5 ${activeMode === 'ranked' ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
+                  <div className="text-[11px] text-muted-foreground font-mono">10 min &bull; Elo match</div>
+                </motion.button>
 
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-secondary hover:bg-muted text-foreground border border-border font-semibold text-xs transition-colors active:scale-[0.98] shrink-0"
-                  >
-                    Join Room
-                  </button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setActiveMode('blitz')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative ${
+                    activeMode === 'blitz'
+                      ? 'border-amber-500 bg-amber-500/10 shadow-sm'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-foreground">Blitz</span>
+                    <Zap className={`size-3.5 ${activeMode === 'blitz' ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground font-mono">5 min &bull; Speed race</div>
+                </motion.button>
 
-                  <Link
-                    href="/battle/create"
-                    className="px-3.5 py-2 rounded-xl border border-border bg-card text-foreground font-semibold text-xs text-center transition-colors hover:bg-muted active:scale-[0.98] shrink-0"
-                  >
-                    Create Custom Room
-                  </Link>
-                </form>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setActiveMode('knockout')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative ${
+                    activeMode === 'knockout'
+                      ? 'border-orange-500 bg-orange-500/10 shadow-sm'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-xs text-foreground">Knockout</span>
+                    <Flame className={`size-3.5 ${activeMode === 'knockout' ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground font-mono">10 players &bull; Royal</div>
+                </motion.button>
+              </div>
 
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={handleCreateDemo}
-                    className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    {copiedDemo ? (
-                      <>
-                        <Check className="size-3 text-emerald-400" />
-                        <span className="text-emerald-400 font-medium">Duel link copied to clipboard</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="size-3 text-primary" />
-                        <span>Copy private duel link for friends</span>
-                      </>
-                    )}
-                  </button>
+              {/* Primary Launch CTA */}
+              <div className="pt-2">
+                <Link
+                  href={
+                    activeMode === 'ranked'
+                      ? '/matchmaking?mode=ranked&difficulty=medium'
+                      : activeMode === 'blitz'
+                      ? '/matchmaking?mode=quick&difficulty=easy'
+                      : '/battle/create?mode=battle_royale'
+                  }
+                  className="w-full py-3.5 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
+                >
+                  <Play className="size-4 fill-current" />
+                  <span>
+                    {activeMode === 'ranked'
+                      ? 'Find Ranked Match'
+                      : activeMode === 'blitz'
+                      ? 'Start Blitz Race'
+                      : 'Launch Knockout Battle'}
+                  </span>
+                  <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Room Code Form & Instant Invite Link */}
+            <motion.div variants={itemVariants} className="pt-4 border-t border-border/70 max-w-xl mx-auto space-y-3">
+              <form onSubmit={handleJoinByCode} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="relative flex-1">
+                  <Hash className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value)}
+                    placeholder="Enter room code or link..."
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl bg-card border border-border text-xs font-mono uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
                 </div>
-              </motion.div>
-            </motion.div>
 
-            {/* Right: Live Interactive Visualizer */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="lg:col-span-5"
-            >
-              <LiveDuelVisualizer />
-            </motion.div>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 rounded-xl bg-secondary hover:bg-muted text-foreground border border-border font-semibold text-xs transition-colors active:scale-[0.98] shrink-0"
+                >
+                  Join Room
+                </button>
 
-          </div>
+                <Link
+                  href="/battle/create"
+                  className="px-4 py-2.5 rounded-xl border border-border bg-card text-foreground font-semibold text-xs text-center transition-colors hover:bg-muted active:scale-[0.98] shrink-0"
+                >
+                  Create Custom Room
+                </Link>
+              </form>
+
+              <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={handleCreateDemo}
+                  className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {copiedDemo ? (
+                    <>
+                      <Check className="size-3 text-emerald-400" />
+                      <span className="text-emerald-400 font-medium">Duel link copied to clipboard</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3 text-primary" />
+                      <span>Copy private duel link for friends</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
