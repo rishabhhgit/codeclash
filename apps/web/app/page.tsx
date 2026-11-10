@@ -213,36 +213,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Architectural Telemetry Bar */}
-      <section className="py-8 border-b border-border/70 bg-muted/15">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center sm:text-left">
-            <div className="space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Problems</div>
-              <div className="text-xl sm:text-2xl font-semibold text-foreground tabular-nums">3,129</div>
-              <p className="text-xs text-muted-foreground">Curated algorithmic catalog with full test cases</p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Stress tests</div>
-              <div className="text-xl sm:text-2xl font-semibold text-foreground tabular-nums">50 to 100</div>
-              <p className="text-xs text-muted-foreground">Hidden test cases prevent hardcoded shortcuts</p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">Rating engine</div>
-              <div className="text-xl sm:text-2xl font-semibold text-foreground tabular-nums">Elo Glicko-2</div>
-              <p className="text-xs text-muted-foreground">Instant rating adjustments on verified verdict</p>
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-xs font-mono text-muted-foreground">LeetCode sync</div>
-              <div className="text-xl sm:text-2xl font-semibold text-foreground tabular-nums">Live API</div>
-              <p className="text-xs text-muted-foreground">Mirror contest ranks and verified solved counters</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Live Active Matches */}
       <section className="py-12 border-b border-border/70">
