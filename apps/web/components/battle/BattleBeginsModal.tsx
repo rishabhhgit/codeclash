@@ -104,7 +104,7 @@ export function BattleBeginsModal({
 
             {/* Central Brand Clash Emblem */}
             <div className="relative py-1 flex items-center justify-center">
-              <CodeClashEmblem size={84} />
+              <CodeClashEmblem size={92} />
             </div>
 
             {/* Title & Subtitle */}
