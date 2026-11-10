@@ -37,6 +37,7 @@ import { useTheme } from '../../../lib/theme/ThemeContext';
 import ProctorWidget from '../../../components/proctoring/ProctorWidget';
 import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
 import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
+import RoundClock from '../../../components/battle/RoundClock';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -273,16 +274,12 @@ export default function SynchronizedExamPage() {
         {/* Center: Authoritative Timer & Live Sync Badge */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Synchronized Countdown Clock */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-xs font-mono font-semibold tabular-nums ${
-              remainingSeconds < 300
-                ? 'bg-rose-500/10 text-rose-500 border-rose-500/30'
-                : 'bg-muted/70 text-foreground border-border'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>{formatTimer(remainingSeconds)}</span>
-          </div>
+          <RoundClock
+            remainingSeconds={remainingSeconds}
+            totalSeconds={(session.durationMinutes || 45) * 60}
+            isActive={session.status === 'active' || hasStarted}
+            label="Assessment Clock"
+          />
 
           {/* Sync Status Badge */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 border border-border text-[11px] text-muted-foreground">
