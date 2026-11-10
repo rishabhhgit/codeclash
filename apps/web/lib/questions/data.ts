@@ -64,12 +64,21 @@ export function getQuestionBySlug(slug: string): LeetCodeQuestion | undefined {
 }
 
 export const TOPIC_ALIASES: Record<string, string[]> = {
-  arrays: ['array', 'arrays'],
+  arrays: ['array', 'arrays', 'arrays & hashing', 'hash table', 'hashing'],
+  array: ['array', 'arrays', 'arrays & hashing'],
+  arrays_and_hashing: ['arrays & hashing', 'array', 'arrays', 'hash table', 'hashing'],
+  arrays_hashing: ['arrays & hashing', 'array', 'arrays', 'hash table', 'hashing'],
   strings: ['string', 'strings'],
+  string: ['string', 'strings'],
   linked_lists: ['linked list', 'linked lists', 'linkedlist'],
+  linked_list: ['linked list', 'linked lists', 'linkedlist'],
   stacks: ['stack', 'stacks'],
+  stack: ['stack', 'stacks'],
   queues: ['queue', 'queues'],
-  heaps: ['heap', 'priority queue'],
+  queue: ['queue', 'queues'],
+  heaps: ['heap', 'priority queue', 'heap / priority queue'],
+  heap: ['heap', 'priority queue', 'heap / priority queue'],
+  heap_priority_queue: ['heap', 'priority queue', 'heap / priority queue'],
   binary_search: ['binary search'],
   sliding_window: ['sliding window'],
   greedy: ['greedy'],
@@ -79,11 +88,22 @@ export const TOPIC_ALIASES: Record<string, string[]> = {
     '2-d dynamic programming',
     'dp',
   ],
+  dp: ['dynamic programming', '1-d dynamic programming', '2-d dynamic programming', 'dp'],
+  '1_d_dynamic_programming': ['1-d dynamic programming', 'dynamic programming', 'dp'],
+  '2_d_dynamic_programming': ['2-d dynamic programming', 'dynamic programming', 'dp'],
   trees: ['tree', 'trees', 'binary tree', 'binary search tree', 'bst'],
+  tree: ['tree', 'trees', 'binary tree', 'binary search tree', 'bst'],
+  binary_tree: ['tree', 'trees', 'binary tree', 'binary search tree', 'bst'],
+  tries: ['trie', 'tries'],
+  trie: ['trie', 'tries'],
   graphs: ['graph', 'graphs', 'advanced graphs'],
+  graph: ['graph', 'graphs', 'advanced graphs'],
+  advanced_graphs: ['advanced graphs', 'graph', 'graphs'],
   backtracking: ['backtracking'],
-  bit_manipulation: ['bit manipulation', 'bits'],
+  bit_manipulation: ['bit manipulation', 'bits', 'bitwise'],
   math: ['math', 'math & geometry', 'geometry'],
+  math_and_geometry: ['math', 'math & geometry', 'geometry'],
+  math_geometry: ['math', 'math & geometry', 'geometry'],
   intervals: ['interval', 'intervals'],
   two_pointers: ['two pointers'],
   hash_map: ['hash table', 'hash map', 'hash', 'hash function', 'hashmap', 'hashing'],
@@ -96,6 +116,7 @@ export const TOPIC_ALIASES: Record<string, string[]> = {
   design: ['design'],
   divide_and_conquer: ['divide and conquer'],
   sorting: ['sorting', 'sort'],
+  javascript: ['javascript', 'js'],
 };
 
 function matchesTerm(text: string, term: string): boolean {
@@ -114,7 +135,8 @@ export function getQuestionsByTopics(
   difficulty?: string
 ): LeetCodeQuestion[] {
   const all = getAllQuestions();
-  if (!topics || topics.length === 0) {
+  const cleanTopics = Array.isArray(topics) ? topics.filter(Boolean) : [];
+  if (cleanTopics.length === 0) {
     if (difficulty && difficulty !== 'all') {
       return all.filter((q) => q.difficulty.toLowerCase() === difficulty.toLowerCase());
     }
@@ -122,8 +144,8 @@ export function getQuestionsByTopics(
   }
 
   const searchTerms: string[] = [];
-  for (const rawTopic of topics) {
-    const key = rawTopic.toLowerCase().trim().replace(/[-\s]+/g, '_');
+  for (const rawTopic of cleanTopics) {
+    const key = rawTopic.toLowerCase().trim().replace(/[-\s&/]+/g, '_');
     if (TOPIC_ALIASES[key]) {
       searchTerms.push(...TOPIC_ALIASES[key]);
     } else {
@@ -131,13 +153,33 @@ export function getQuestionsByTopics(
     }
   }
 
-  const matched = all.filter((q) => {
+  const scored: { q: LeetCodeQuestion; score: number }[] = [];
+  for (const q of all) {
     const cat = q.category || '';
     const qTopics = q.topics || [];
-    return searchTerms.some(
-      (term) => matchesTerm(cat, term) || qTopics.some((t) => matchesTerm(t, term))
-    );
-  });
+    let score = 0;
+
+    for (const term of searchTerms) {
+      if (matchesTerm(cat, term)) {
+        score += 10;
+      }
+      for (const t of qTopics) {
+        if (matchesTerm(t, term)) {
+          score += 4;
+        }
+      }
+    }
+
+    if (score > 0) {
+      if (q.core150 || q.blind75 || q.mastery250 || q.neetcode150 || q.neetcode250) {
+        score += 3;
+      }
+      scored.push({ q, score });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  const matched = scored.map((s) => s.q);
 
   if (difficulty && difficulty !== 'all') {
     const diffMatched = matched.filter(
@@ -154,17 +196,36 @@ export function pickQuestionForBattle(opts?: {
   difficulty?: string;
   excludeSlugs?: string[];
 }): LeetCodeQuestion {
-  const candidates = getQuestionsByTopics(opts?.topics, opts?.difficulty);
+  const topics = Array.isArray(opts?.topics) ? opts.topics.filter(Boolean) : [];
+  const candidates = getQuestionsByTopics(topics, opts?.difficulty);
   const exclude = new Set((opts?.excludeSlugs || []).map((s) => s.toLowerCase()));
   const filtered = candidates.filter((q) => !exclude.has(q.slug.toLowerCase()));
   const pool = filtered.length > 0 ? filtered : candidates;
 
   if (pool.length > 0) {
-    const idx = Math.floor(Math.random() * pool.length);
-    return pool[idx];
+    const curatedMatches = pool.filter(
+      (q) => q.core150 || q.blind75 || q.mastery250 || q.neetcode150 || q.neetcode250
+    );
+    const selectionPool = curatedMatches.length > 0 ? curatedMatches : pool;
+    const idx = Math.floor(Math.random() * selectionPool.length);
+    return selectionPool[idx];
   }
 
-  // Fallback to two-sum or first available question
+  // If specific topics were requested, NEVER fall back to two-sum or an unrelated problem!
+  // Fall back to any question strictly belonging to the requested topic:
+  if (topics.length > 0) {
+    const topicPool = getQuestionsByTopics(topics);
+    if (topicPool.length > 0) {
+      const curated = topicPool.filter(
+        (q) => q.core150 || q.blind75 || q.mastery250 || q.neetcode150 || q.neetcode250
+      );
+      const fallbackPool = curated.length > 0 ? curated : topicPool;
+      const idx = Math.floor(Math.random() * fallbackPool.length);
+      return fallbackPool[idx];
+    }
+  }
+
+  // Fallback to two-sum or first available question only when no topic was requested
   return getQuestionBySlug('two-sum') || getAllQuestions()[0];
 }
 

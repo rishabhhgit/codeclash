@@ -150,6 +150,11 @@ export async function finalizeBattle(room: IRoom, winnerId?: Types.ObjectId) {
 }
 
 export async function assignFairProblem(room: IRoom): Promise<IRoom> {
+  // If the room already has a problem assigned (e.g. topic-based problem chosen at room creation), preserve it
+  if (room.problems && room.problems.length > 0 && room.problems[0]?.name) {
+    return room;
+  }
+
   if (room.mode === 'battle_royale') {
     const rating = getBattleRoyaleRating(room.currentRound);
     room.difficulty = rating < 1200 ? 'easy' : rating < 1700 ? 'medium' : 'hard';

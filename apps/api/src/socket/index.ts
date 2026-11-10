@@ -9,6 +9,12 @@ import {
   persistBattle,
   loadAllBattlesOnStartup,
 } from '../services/battle-persistence.service';
+
+export {
+  getPersistedBattle,
+  persistBattle,
+  loadAllBattlesOnStartup,
+};
 import { onUserDisconnect } from '../services/matchmaking.service';
 import { evaluateBattleSubmission } from '../services/battle-judge.service';
 
@@ -169,8 +175,9 @@ export function createOrGetLiveBattle(code: string, opts?: Partial<LiveBattleSta
       chat: [],
     };
     persistBattle(battle);
-  } else if (opts?.questionSlug && (!battle.questionSlug || battle.questionSlug === 'concatenation-of-array' || battle.questionSlug === 'two-sum')) {
+  } else if (opts?.questionSlug && (battle.status === 'waiting' || !battle.questionSlug || battle.questionSlug === 'concatenation-of-array' || battle.questionSlug === 'two-sum')) {
     battle.questionSlug = opts.questionSlug;
+    if (opts?.difficulty) battle.difficulty = opts.difficulty;
     persistBattle(battle);
   }
 
@@ -353,7 +360,7 @@ export function setupSocketHandlers(io: SocketIOServer) {
     // LIVE BATTLE & PROCTORED ARENA SPECTATOR / COMBAT EVENTS
     // ========================================================
 
-    socket.on('battle:join', (data: { battleCode: string; role?: 'fighter' | 'spectator'; username?: string; questionSlug?: string }) => {
+    socket.on('battle:join', (data: { battleCode: string; role?: 'fighter' | 'spectator'; username?: string; questionSlug?: string; mode?: string }) => {
       try {
         const { battleCode, role = 'fighter', username = socket.handle || socket.userId || 'Anonymous', questionSlug } = data;
         const codeUpper = battleCode.toUpperCase();
@@ -364,8 +371,9 @@ export function setupSocketHandlers(io: SocketIOServer) {
         socket.data.username = username;
 
         let battle = createOrGetLiveBattle(codeUpper, { questionSlug, mode: data.mode });
-        if (questionSlug && (!battle.questionSlug || battle.questionSlug === 'concatenation-of-array')) {
+        if (questionSlug && (battle.status === 'waiting' || !battle.questionSlug || battle.questionSlug === 'concatenation-of-array' || battle.questionSlug === 'two-sum')) {
           battle.questionSlug = questionSlug;
+          persistBattle(battle);
         }
 
         const playerId = socket.userId || socket.id;

@@ -51,7 +51,7 @@ import { useProctoring } from '../../../lib/proctoring/useProctoring';
 import ProctorWidget from '../../../components/proctoring/ProctorWidget';
 import ProctorViolationModal from '../../../components/proctoring/ProctorViolationModal';
 import ProctorAuditPanel from '../../../components/proctoring/ProctorAuditPanel';
-import { getWsUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
+import { getWsUrl, getApiUrl, getClientAuthToken, getClientUsername } from '../../../lib/api';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -212,6 +212,31 @@ export default function BattleRoomPage() {
       }
     }
   }, []);
+
+  // Synchronize authoritative room metadata and topic question on mount
+  useEffect(() => {
+    if (!codeParam) return;
+    const apiUrl = getApiUrl();
+    fetch(`${apiUrl}/api/battles/${codeParam}`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData?.success && resData?.data) {
+          const roomData = resData.data;
+          const assignedSlug = roomData.questionSlug || roomData.problem?.slug;
+          if (assignedSlug) {
+            setBattle((prev: any) => ({
+              ...(prev || {}),
+              questionSlug: assignedSlug,
+              problem: roomData.problem,
+              mode: roomData.mode || prev?.mode,
+              difficulty: roomData.difficulty || prev?.difficulty,
+              topics: roomData.topics || prev?.topics,
+            }));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [codeParam]);
 
   // Socket.IO Connection for Real-Time Duel & Spectating
   useEffect(() => {
