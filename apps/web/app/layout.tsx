@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { Swords } from 'lucide-react';
+import { CodeClashLogo } from '../components/ui/CodeClashLogo';
 import './globals.css';
 import { ThemeProvider } from '../lib/theme/ThemeContext';
 import ThemeToggle from '../components/theme/ThemeToggle';
@@ -28,10 +29,10 @@ export default function RootLayout({
               <div className="container mx-auto px-4 h-14 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                   <Link href="/" className="flex items-center gap-2.5 group">
-                    <span className="size-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center transition-colors group-hover:border-foreground/30">
-                      <Swords className="size-4" />
+                    <span className="size-8 rounded-lg bg-secondary/80 border border-border text-foreground flex items-center justify-center transition-colors group-hover:border-foreground/30 shadow-xs">
+                      <CodeClashLogo size={20} />
                     </span>
-                    <span className="font-semibold text-base tracking-tight text-foreground">
+                    <span className="font-bold text-base tracking-tight text-foreground">
                       CodeClash
                     </span>
                   </Link>
