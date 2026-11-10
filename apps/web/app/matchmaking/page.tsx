@@ -621,33 +621,6 @@ function MatchmakingContent() {
             </div>
           </div>
         )}
-
-        {/* Quiet Architecture / Rules Spec Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-muted-foreground font-mono">
-          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Stamina deduction</span>
-            <div className="text-foreground font-medium font-sans">Accuracy penalties</div>
-            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
-              Non-accepted submissions deduct 25 accuracy stamina points.
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Instant updates</span>
-            <div className="text-foreground font-medium font-sans">True Skill Elo</div>
-            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
-              Authoritative server rating adjustments upon accepted solution.
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg border border-border/70 bg-card/50 space-y-0.5">
-            <span className="text-[10px] text-muted-foreground uppercase block font-semibold">Blind duel</span>
-            <div className="text-foreground font-medium font-sans">Code privacy shield</div>
-            <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
-              Opponent source code remains hidden until the match concludes.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
