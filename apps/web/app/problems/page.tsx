@@ -352,6 +352,13 @@ export default function ProblemsDirectoryPage() {
 
           <div className="flex items-center gap-2">
             <Link
+              href="/roadmap"
+              className="px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 text-xs font-bold transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
+            >
+              <span>🗺️ Practice Roadmap</span>
+            </Link>
+
+            <Link
               href="/lobby"
               className="px-3.5 py-2 rounded-xl bg-secondary hover:bg-muted text-foreground border border-border text-xs font-semibold transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
             >

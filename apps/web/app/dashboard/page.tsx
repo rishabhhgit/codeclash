@@ -16,6 +16,7 @@ import {
   Hash,
   Share2,
   BookOpen,
+  GitFork,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -202,6 +203,22 @@ export default function DashboardPage() {
           </div>
 
           <div className="space-y-3">
+            <Link
+              href="/roadmap"
+              className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/60 transition-colors duration-150 active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="size-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform duration-150">
+                  <GitFork className="size-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-foreground">DSA Practice Roadmap</div>
+                  <div className="text-[11px] text-muted-foreground">Prerequisite progression across 18 patterns with progress tracking.</div>
+                </div>
+              </div>
+              <ArrowRight className="size-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all duration-150" />
+            </Link>
+
             <Link
               href="/problems"
               className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/60 transition-colors duration-150 active:scale-[0.99] group"
