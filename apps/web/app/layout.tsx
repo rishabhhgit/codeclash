@@ -40,10 +40,10 @@ export default function RootLayout({
 
                   <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
                     <Link
-                      href="/problems"
+                      href="/matchmaking"
                       className="px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors duration-150 active:scale-[0.96]"
                     >
-                      Problems
+                      Compete
                     </Link>
                     <Link
                       href="/lobby"
@@ -52,26 +52,10 @@ export default function RootLayout({
                       Arena
                     </Link>
                     <Link
-                      href="/battle/join"
-                      className="px-3 py-1.5 rounded-lg text-primary font-semibold hover:bg-primary/10 transition-colors duration-150 active:scale-[0.96] flex items-center gap-1.5"
-                    >
-                      <span className="relative flex size-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full size-2 bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-                      </span>
-                      <span>Join Battle</span>
-                    </Link>
-                    <Link
-                      href="/battle/create?mode=battle_royale"
-                      className="px-3 py-1.5 rounded-lg text-amber-400 font-semibold hover:bg-amber-500/10 transition-colors duration-150 active:scale-[0.96]"
-                    >
-                      Knockout Arena
-                    </Link>
-                    <Link
-                      href="/battle/create"
+                      href="/problems"
                       className="px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors duration-150 active:scale-[0.96]"
                     >
-                      Challenge Friends
+                      Problems
                     </Link>
                     <Link
                       href="/rankings"
@@ -82,12 +66,12 @@ export default function RootLayout({
                   </nav>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <Link
-                    href="/problems"
-                    className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors duration-150 tabular-nums active:scale-[0.96]"
+                    href="/battle/join"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted/80 text-xs font-mono font-medium text-foreground transition-all duration-150 active:scale-[0.96]"
                   >
-                    3,129 Questions
+                    <span># Enter Code</span>
                   </Link>
 
                   <ThemeToggle />

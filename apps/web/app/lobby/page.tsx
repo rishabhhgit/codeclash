@@ -148,14 +148,15 @@ export default function LobbyPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Competitive Match Lobby
+              Match Lobby
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono bg-primary/10 text-primary border border-primary/20 font-semibold">
-              🏆 Knockout Arenas &amp; 1v1 Blitz Duels
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Live Servers
             </span>
           </div>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1 max-w-xl">
-            Enter multi-player knockout arenas or challenge your friends to 1v1 blitz duels. Spectate active matches live.
+            Join an open arena or spectate ongoing duels in real time.
           </p>
         </div>
 

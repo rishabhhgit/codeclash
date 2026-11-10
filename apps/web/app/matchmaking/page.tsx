@@ -239,12 +239,12 @@ export default function MatchmakingPage() {
         {/* Top Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/60 text-xs font-medium text-muted-foreground">
-            <Radar className="size-3.5 text-primary" />
-            <span>Authoritative Real-Time 1v1 Arena</span>
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Ranked Matchmaking</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">Competitive Matchmaking</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">Find an Opponent</h1>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto text-pretty">
-            Queue into instantaneous skill-ranked battles. Test your algorithmic speed, solve clean, and climb the global ladder.
+            Pair with an opponent near your Elo rating in seconds. Both get the same problem and timer.
           </p>
         </div>
 

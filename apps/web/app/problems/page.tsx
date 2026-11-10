@@ -107,51 +107,31 @@ export default function ProblemsDirectoryPage() {
     <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-5">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-5 border-b border-border">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/30 flex items-center gap-1.5">
-                <Swords className="size-3.5 text-orange-400" />
-                Multiplayer Battleground
-              </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tabular-nums">
-                All Solvable Questions ({allQuestions.length.toLocaleString()} Problems)
-              </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground border border-border">
-                18 Core Topics
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground text-balance">
-              Algorithmic Battleground & Practice Arena
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Problem Library
             </h1>
-            <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl leading-relaxed text-pretty">
-              Solve LeetCode-grade problems with deep editorials, or practice with your friends in real-time synchronized 1v1 coding battles.
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-xl">
+              {allQuestions.length.toLocaleString()} algorithmic problems across 18 topics with verified test suites.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <Link
               href="/lobby"
-              className="px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-medium transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-secondary hover:bg-muted text-foreground border border-border text-xs font-medium transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5"
             >
-              <Swords className="size-3.5" />
-              Practice with Friends
+              <Swords className="size-3.5 text-orange-400" />
+              Arena Matches
             </Link>
 
             <Link
-              href={`/problems/${randomProblemSlug}/question`}
-              className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted text-foreground text-xs font-medium border border-border transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5"
+              href={`/problems/${randomProblemSlug}`}
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
             >
-              <Shuffle className="size-3.5 text-muted-foreground" />
+              <Shuffle className="size-3.5" />
               Pick Random
-            </Link>
-
-            <Link
-              href="/problems/concatenation-of-array/question"
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5"
-            >
-              <Play className="size-3 fill-current" />
-              Practice Solo
             </Link>
           </div>
         </div>

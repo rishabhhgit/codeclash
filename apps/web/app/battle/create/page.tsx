@@ -17,12 +17,12 @@ const TOPICS = [
 ];
 
 const MODES = [
-  { value: 'battle_royale', label: '🏆 Knockout Arena (Multi-Player)', desc: 'Multi-player arena: 4 timed phase cutoffs, accuracy stamina, complexity blueprints' },
-  { value: 'deathmatch', label: '⚔️ 1v1 Blitz Duel', desc: 'Head-to-head speed battle, synchronized clocks, direct challenge link' },
-  { value: 'survival', label: '🛡️ High-Precision Sprint', desc: 'Strict mode: failed submissions deduct accuracy stamina' },
-  { value: 'bestof3', label: '⚔️ Best of 3 Grand Prix', desc: 'Three consecutive rounds across difficulty tiers' },
-  { value: 'speedrun', label: '⚡ Algorithmic Speedrun', desc: 'First accepted submission claims the victory' },
-  { value: 'topicdraft', label: '🎯 Topic Draft', desc: 'Pick topics, random challenge selection' },
+  { value: 'deathmatch', label: '1v1 Duel', desc: 'Head-to-head duel, synchronized clocks, direct challenge link' },
+  { value: 'battle_royale', label: 'Knockout Arena', desc: 'Multiplayer arena with timed elimination phases' },
+  { value: 'survival', label: 'Precision Sprint', desc: 'Failed submissions deduct stamina' },
+  { value: 'bestof3', label: 'Best of 3', desc: 'Three consecutive rounds across difficulty tiers' },
+  { value: 'speedrun', label: 'Speedrun', desc: 'First accepted submission claims the match' },
+  { value: 'topicdraft', label: 'Topic Draft', desc: 'Filter by specific DSA patterns' },
 ];
 
 export default function CreateBattlePage() {
